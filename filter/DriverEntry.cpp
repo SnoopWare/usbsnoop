@@ -290,12 +290,12 @@ void DumpStackLocation(PIO_STACK_LOCATION stack)
 	if (stack == NULL)
 		return ;
 
-	sprintf(TempBuff,"    MajorFunction=%d, MinorFunction=%d\n",
+	sprintf(TempBuff,"\tMajorFunction=%d, MinorFunction=%d\n",
 		stack->MajorFunction,stack->MinorFunction);
 	FillRollingBuffer(TempBuff);
-	sprintf(TempBuff,"    DeviceObject=%p\n",stack->DeviceObject);
+	sprintf(TempBuff,"\tDeviceObject=%p\n",stack->DeviceObject);
 	FillRollingBuffer(TempBuff);
-	sprintf(TempBuff,"    CompletionRoutine=%p Context=%p\n",
+	sprintf(TempBuff,"\tCompletionRoutine=%p Context=%p\n",
 		stack->CompletionRoutine,stack->Context);
 	FillRollingBuffer(TempBuff);
 
@@ -308,25 +308,25 @@ void DumpIrp(PIRP Irp)
 	if (Irp==NULL)
 		return ;
 
-	sprintf(TempBuff,"  Type=%d, Size=%d\n",Irp->Type,Irp->Size);
+	sprintf(TempBuff,"\tType=%d, Size=%d\n",Irp->Type,Irp->Size);
 	FillRollingBuffer(TempBuff);
-	sprintf(TempBuff,"  StackCount=%d, CurrentLocation=%d\n",
+	sprintf(TempBuff,"\tStackCount=%d, CurrentLocation=%d\n",
 		Irp->StackCount,Irp->CurrentLocation);
 	FillRollingBuffer(TempBuff);
 	for (CHAR i=0;i<Irp->StackCount;i++)
 	{
 		PIO_STACK_LOCATION stack = (PIO_STACK_LOCATION) (Irp+1) + i;
-		sprintf(TempBuff,"  [%d] MajorFunction=%d, MinorFunction=%d, DeviceObject=%p\n",
+		sprintf(TempBuff,"\t[%d] MajorFunction=%d, MinorFunction=%d, DeviceObject=%p\n",
 			i,stack->MajorFunction, stack->MinorFunction,
 			stack->DeviceObject);
 		FillRollingBuffer(TempBuff);
-		sprintf(TempBuff,"      Arg1=%p, Arg2=%p, Arg3=%p, Arg4=%p\n",
+		sprintf(TempBuff,"\tArg1=%p, Arg2=%p, Arg3=%p, Arg4=%p\n",
 			stack->Parameters.Others.Argument1,
 			stack->Parameters.Others.Argument2,
 			stack->Parameters.Others.Argument3,
 			stack->Parameters.Others.Argument4);
 		FillRollingBuffer(TempBuff);
-		sprintf(TempBuff,"      CompletionRoutine=%p Context=%p\n",
+		sprintf(TempBuff,"\tCompletionRoutine=%p Context=%p\n",
 			stack->CompletionRoutine,stack->Context);
 		FillRollingBuffer(TempBuff);
 	}
@@ -336,36 +336,36 @@ void DumpDriverObject(PDRIVER_OBJECT p)
 {
 	sprintf(TempBuff,"UsbSnoop - DumpDriverObject : p = %p\n",p);
 	FillRollingBuffer(TempBuff);
-	sprintf(TempBuff,"  Type = %d\n",p->Type);
+	sprintf(TempBuff,"\tType = %d\n",p->Type);
 	FillRollingBuffer(TempBuff);
-	sprintf(TempBuff,"  Size = %d\n",p->Size);
+	sprintf(TempBuff,"\tSize = %d\n",p->Size);
 	FillRollingBuffer(TempBuff);
-	sprintf(TempBuff,"  DeviceObject = %p\n",p->DeviceObject);
+	sprintf(TempBuff,"\tDeviceObject = %p\n",p->DeviceObject);
 	FillRollingBuffer(TempBuff);
-	sprintf(TempBuff,"  Flags = 0x%x\n",p->Flags);
+	sprintf(TempBuff,"\tFlags = 0x%x\n",p->Flags);
 	FillRollingBuffer(TempBuff);
-	sprintf(TempBuff,"  DriverStart = %p\n",p->DriverStart);
+	sprintf(TempBuff,"\tDriverStart = %p\n",p->DriverStart);
 	FillRollingBuffer(TempBuff);
-	sprintf(TempBuff,"  DriverSize = %d\n",p->DriverSize);
+	sprintf(TempBuff,"\tDriverSize = %d\n",p->DriverSize);
 	FillRollingBuffer(TempBuff);
-	sprintf(TempBuff,"  DriverSection = %p\n",p->DriverSection);
+	sprintf(TempBuff,"\tDriverSection = %p\n",p->DriverSection);
 	FillRollingBuffer(TempBuff);
-	sprintf(TempBuff,"  DriverExtension = %p\n",p->DriverExtension);
+	sprintf(TempBuff,"\tDriverExtension = %p\n",p->DriverExtension);
 	FillRollingBuffer(TempBuff);
-	sprintf(TempBuff,"  DriverExtension->AddDevice = %p\n",
+	sprintf(TempBuff,"\tDriverExtension->AddDevice = %p\n",
 		p->DriverExtension->AddDevice);
 	FillRollingBuffer(TempBuff);
-	sprintf(TempBuff,"  FastIoDispatch = %p\n",p->FastIoDispatch);
+	sprintf(TempBuff,"\tFastIoDispatch = %p\n",p->FastIoDispatch);
 	FillRollingBuffer(TempBuff);
 	sprintf(TempBuff,"  DriverInit = %p\n",p->DriverInit);
 	FillRollingBuffer(TempBuff);
-	sprintf(TempBuff,"  DriverStartIo = %p\n",p->DriverStartIo);
+	sprintf(TempBuff,"\tDriverStartIo = %p\n",p->DriverStartIo);
 	FillRollingBuffer(TempBuff);
-	sprintf(TempBuff,"  DriverUnload = %p\n",p->DriverUnload);
+	sprintf(TempBuff,"\tDriverUnload = %p\n",p->DriverUnload);
 	FillRollingBuffer(TempBuff);
 	for (int i=0;i<IRP_MJ_MAXIMUM_FUNCTION + 1;i++)
 	{
-		sprintf(TempBuff,"  MajorFunction[%d] = %p\n",i,
+		sprintf(TempBuff,"\tMajorFunction[%d] = %p\n",i,
 			p->MajorFunction[i]);
 		FillRollingBuffer(TempBuff);
 	}
@@ -375,28 +375,28 @@ void DumpDeviceObject(PDEVICE_OBJECT p)
 {
 	sprintf(TempBuff,"UsbSnoop - DumpDeviceObject : p = %p\n",p);
 	FillRollingBuffer(TempBuff);
-	sprintf(TempBuff,"  DriverObject = %p\n",p->DriverObject);
+	sprintf(TempBuff,"\tDriverObject = %p\n",p->DriverObject);
 	FillRollingBuffer(TempBuff);
-	sprintf(TempBuff,"  NextDevice = %p\n",p->NextDevice);
+	sprintf(TempBuff,"\tNextDevice = %p\n",p->NextDevice);
 	FillRollingBuffer(TempBuff);
-	sprintf(TempBuff,"  AttachedDevice = %p\n",p->AttachedDevice);
+	sprintf(TempBuff,"\tAttachedDevice = %p\n",p->AttachedDevice);
 	FillRollingBuffer(TempBuff);
-	sprintf(TempBuff,"  StackSize=%d\n",p->StackSize);
+	sprintf(TempBuff,"\tStackSize=%d\n",p->StackSize);
 	FillRollingBuffer(TempBuff);
-	sprintf(TempBuff,"  CurrentIrp = %p\n",p->CurrentIrp);
+	sprintf(TempBuff,"\tCurrentIrp = %p\n",p->CurrentIrp);
 	FillRollingBuffer(TempBuff);
-	sprintf(TempBuff,"  DeviceObjectExtension = %p\n",
+	sprintf(TempBuff,"\tDeviceObjectExtension = %p\n",
 		p->DeviceObjectExtension);
 	FillRollingBuffer(TempBuff);
 
 	PDEVICE_EXTENSION pdx = (PDEVICE_EXTENSION)p->DeviceObjectExtension;
 
-	sprintf(TempBuff,"   ->DeviceObject=%p\n",pdx->DeviceObject);
+	sprintf(TempBuff,"\t->DeviceObject=%p\n",pdx->DeviceObject);
 	FillRollingBuffer(TempBuff);
-	sprintf(TempBuff,"   ->LowerDeviceObject=%p\n",
+	sprintf(TempBuff,"\t->LowerDeviceObject=%p\n",
 		pdx->LowerDeviceObject);
 	FillRollingBuffer(TempBuff);
-	sprintf(TempBuff,"   ->Pdo=%p\n",pdx->Pdo);
+	sprintf(TempBuff,"\t->Pdo=%p\n",pdx->Pdo);
 	FillRollingBuffer(TempBuff);
 }
 
@@ -404,10 +404,10 @@ void DumpContext(PCONTEXT Context)
 {
 	sprintf(TempBuff,"DumpContext : Context=%p\n",Context);
 	FillRollingBuffer(TempBuff);
-	sprintf(TempBuff,"  CompletionRoutine=%p, Context=%p, Control=%x\n",
+	sprintf(TempBuff,"\tCompletionRoutine=%p, Context=%p, Control=%x\n",
 		Context->CompletionRoutine,Context->Context,Context->Control);
 	FillRollingBuffer(TempBuff);
-	sprintf(TempBuff,"  pUrb=%p, uSequenceNumber=%d, Stack=%p\n",
+	sprintf(TempBuff,"\tpUrb=%p, uSequenceNumber=%d, Stack=%p\n",
 		Context->pUrb,Context->uSequenceNumber,Context->Stack);
 	FillRollingBuffer(TempBuff);
 }
@@ -839,11 +839,11 @@ void DumpTransferBuffer(PUCHAR pBuffer, PMDL pMdl, ULONG uBufferSize, BOOLEAN bP
 {
 	if(bPrintHeader)
 	{
-		sprintf(TempBuff,"\tTransferBufferLength = %08x\n", uBufferSize);
+		sprintf(TempBuff,"\tTransferBufferLength\t= %08x\n", uBufferSize);
 		FillRollingBuffer(TempBuff);
-		sprintf(TempBuff,"\tTransferBuffer\t\t\t= %08x\n", pBuffer);
+		sprintf(TempBuff,"\tTransferBuffer\t= %08x\n", pBuffer);
 		FillRollingBuffer(TempBuff);
-		sprintf(TempBuff,"\tTransferBufferMDL\t\t= %08x\n", pMdl);
+		sprintf(TempBuff,"\tTransferBufferMDL\t= %08x\n", pMdl);
 		FillRollingBuffer(TempBuff);
 	}
 	else
@@ -854,6 +854,7 @@ void DumpTransferBuffer(PUCHAR pBuffer, PMDL pMdl, ULONG uBufferSize, BOOLEAN bP
 			{
 				//KdPrint(("??? weird transfer buffer, both MDL and flat specified. Ignoring MDL\n"));
 			}
+			KdPrint(("BufferSize : %d\n", uBufferSize));
 			DumpBuffer(pBuffer,uBufferSize);
 		}
 		else if(pMdl)
@@ -889,7 +890,7 @@ void DumpGetStatusRequest(struct _URB_CONTROL_GET_STATUS_REQUEST *pGetStatusRequ
 		DumpTransferBuffer((PUCHAR)pGetStatusRequest->TransferBuffer, pGetStatusRequest->TransferBufferMDL, pGetStatusRequest->TransferBufferLength, FALSE);
 	}
 
-	sprintf(TempBuff,"  Index                = %02x\n",
+	sprintf(TempBuff,"\tIndex\t\t= %02x\n",
 		pGetStatusRequest->Index);
 	FillRollingBuffer(TempBuff);
 	
@@ -908,7 +909,7 @@ void DumpFeatureRequest(struct _URB_CONTROL_FEATURE_REQUEST *pFeatureRequest, BO
 	sprintf(TempBuff,"\tFeatureSelector = %04x\n", 
 		pFeatureRequest->FeatureSelector);
 	FillRollingBuffer(TempBuff);
-	sprintf(TempBuff,"\tIndex           = %04x\n",
+	sprintf(TempBuff,"\tIndex\t\t= %04x\n",
 		pFeatureRequest->Index);
 	FillRollingBuffer(TempBuff);
 	if(pFeatureRequest->UrbLink)
@@ -929,7 +930,7 @@ void DumpDescriptorRequest(struct _URB_CONTROL_DESCRIPTOR_REQUEST *pDescriptorRe
 		DumpTransferBuffer((PUCHAR)pDescriptorRequest->TransferBuffer, pDescriptorRequest->TransferBufferMDL, pDescriptorRequest->TransferBufferLength, FALSE);
 	}
 
-	sprintf(TempBuff,"\tIndex\t\t\t\t= %02x\n",
+	sprintf(TempBuff,"\tIndex\t\t= %02x\n",
 		pDescriptorRequest->Index);
 	FillRollingBuffer(TempBuff);
 	sprintf(TempBuff,"\tDescriptorType\t= %02x (%s)\n",
@@ -938,7 +939,7 @@ void DumpDescriptorRequest(struct _URB_CONTROL_DESCRIPTOR_REQUEST *pDescriptorRe
 		pDescriptorRequest->DescriptorType == USB_CONFIGURATION_DESCRIPTOR_TYPE ? "USB_CONFIGURATION_DESCRIPTOR_TYPE" :
 		pDescriptorRequest->DescriptorType == USB_STRING_DESCRIPTOR_TYPE ? "USB_STRING_DESCRIPTOR_TYPE" : "<illegal descriptor type!>");
 	FillRollingBuffer(TempBuff);
-	sprintf(TempBuff,"\tLanguageId\t\t\t= %04x\n",
+	sprintf(TempBuff,"\tLanguageId\t= %04x\n",
 		pDescriptorRequest->LanguageId);
 	FillRollingBuffer(TempBuff);
 	
@@ -1107,7 +1108,7 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 			for(ULONG i = 0; i < uNumInterfaces; i++)
 			{
 				sprintf(TempBuff,
-					"\tInterface[%d]: Length\t\t\t\t\t= %d\n", i, 
+					"\tInterface[%d]: Length\t\t\t\t= %d\n", i, 
 					pInterface->Length);
 				FillRollingBuffer(TempBuff);
 				sprintf(TempBuff,
@@ -1449,9 +1450,9 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 			}
 
 			BOOLEAN bReadFromDevice = (BOOLEAN)(pControlTransfer->TransferFlags & USBD_TRANSFER_DIRECTION_IN);
-			DumpPipeHandle("  PipeHandle          ",pControlTransfer->PipeHandle);
+			DumpPipeHandle("\tPipeHandle\t\t",pControlTransfer->PipeHandle);
 			sprintf(TempBuff,
-				"  TransferFlags        = %08x (%s, %sUSBD_SHORT_TRANSFER_OK)\n",
+				"\tTransferFlags\t\t= %08x (%s, %sUSBD_SHORT_TRANSFER_OK)\n",
 				pControlTransfer->TransferFlags,
 				bReadFromDevice ? "USBD_TRANSFER_DIRECTION_IN" : "USBD_TRANSFER_DIRECTION_OUT",
 				pControlTransfer->TransferFlags & USBD_SHORT_TRANSFER_OK ? "":"~");
@@ -1462,10 +1463,10 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 				DumpTransferBuffer((PUCHAR)pControlTransfer->TransferBuffer, pControlTransfer->TransferBufferMDL, pControlTransfer->TransferBufferLength, FALSE);
 			}
 
-			sprintf(TempBuff,"  UrbLink              = %08x\n",
+			sprintf(TempBuff,"\tUrbLink\t\t\t= %08x\n",
 				pControlTransfer->UrbLink);
 			FillRollingBuffer(TempBuff);
-			sprintf(TempBuff,"  SetupPacket          :");
+			sprintf(TempBuff,"\tSetupPacket\t\t\t:");
 			FillRollingBuffer(TempBuff);
 
 			for(int b=0; b<sizeof(pControlTransfer->SetupPacket); b++)
@@ -1547,7 +1548,7 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 			BOOLEAN bReadFromDevice = (BOOLEAN)(pIsochTransfer->TransferFlags & USBD_TRANSFER_DIRECTION_IN);
 			DumpPipeHandle("  PipeHandle          ",pIsochTransfer->PipeHandle);
 			sprintf(TempBuff,
-				"\tTransferFlags\t\t\t= %08x (%s, %sUSBD_SHORT_TRANSFER_OK%sn",
+				"\tTransferFlags\t\t\t= %08x (%s, %sUSBD_SHORT_TRANSFER_OK%s\n",
 				pIsochTransfer->TransferFlags,
 				bReadFromDevice ? "USBD_TRANSFER_DIRECTION_IN" : "USBD_TRANSFER_DIRECTION_OUT",
 				pIsochTransfer->TransferFlags & USBD_SHORT_TRANSFER_OK ? "":"~",
@@ -1581,15 +1582,15 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 			}
 			for(ULONG p=0; p < pIsochTransfer->NumberOfPackets; p++)
 			{
-				sprintf(TempBuff,"\tIsoPacket[%d].Offset = %08x\n",
+				sprintf(TempBuff,"\tIsoPacket[%d].Offset = %u\n",
 					pIsochTransfer->IsoPacket[p].Offset);
 				FillRollingBuffer(TempBuff);
-				sprintf(TempBuff,"\tIsoPacket[%d].Length = %08x\n",
+				sprintf(TempBuff,"\tIsoPacket[%d].Length = %u\n",
 					pIsochTransfer->IsoPacket[p].Length);
 				FillRollingBuffer(TempBuff);
 				if(bReturnedFromHCD)
 				{
-					sprintf(TempBuff,"\tIsoPacket[%d].Status = %08x\n",
+					sprintf(TempBuff,"\tIsoPacket[%d].Status = %u\n",
 					pIsochTransfer->IsoPacket[p].Status);
 					FillRollingBuffer(TempBuff);
 				}
