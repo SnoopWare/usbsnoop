@@ -1,5 +1,5 @@
 # Microsoft Developer Studio Project File - Name="UsbSnoop" - Package Owner=<4>
-# Microsoft Developer Studio Generated Build File, Format Version 60000
+# Microsoft Developer Studio Generated Build File, Format Version 6.00
 # ** DO NOT EDIT **
 
 # TARGTYPE "Win32 (x86) Application" 0x0101
@@ -25,7 +25,7 @@ CFG=UsbSnoop - Win32 Debug
 # PROP AllowPerConfigDependencies 0
 # PROP Scc_ProjName ""$/CD/Entertainment/Tools/Snoopy/USBSnoop", CNJCAAAA"
 # PROP Scc_LocalPath "."
-CPP=snCl.exe
+CPP=cl.exe
 MTL=midl.exe
 RSC=rc.exe
 
@@ -52,14 +52,14 @@ RSC=rc.exe
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LINK32=snLink.exe
+LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib int64.lib wdm.lib usbd.lib /nologo /base:"0x10000" /version:4.0 /entry:"DriverEntry@8" /subsystem:windows /pdb:none /machine:I386 /nodefaultlib /out:"release\UsbSnoop.sys" /libpath:"e:\NT5DDK\lib\i386\free" -MERGE:_PAGE=PAGE -MERGE:_TEXT=.text -MERGE:.rdata=.text -SECTION:INIT,d -OPT:REF -FORCE:MULTIPLE -RELEASE -FULLBUILD -IGNORE:4001,4037,4039,4065,4070,4078,4087,4089,4096 -osversion:4.00 -optidata -driver -align:0x20 -subsystem:native,4.00 -debug:notmapped,minimal
 # ADD LINK32 wdm.lib usbd.lib vxdwraps.clb /nologo /base:"0x10000" /version:4.0 /entry:"DriverEntry@8" /subsystem:windows /pdb:none /map /debug /debugtype:both /machine:I386 /nodefaultlib /out:"Release\UsbSnoop.sys" /libpath:"..\98DDK" -MERGE:_PAGE=PAGE -MERGE:_TEXT=.text -MERGE:.rdata=.text -SECTION:INIT,d -OPT:REF -FORCE:MULTIPLE -RELEASE -FULLBUILD -IGNORE:4001,4037,4039,4065,4070,4078,4087,4089,4096 -osversion:4.00 -optidata -driver -align:0x20 -subsystem:native,4.00 -debug:notmapped,minimal
 # Begin Custom Build
 InputPath=.\Release\UsbSnoop.sys
 SOURCE="$(InputPath)"
 
-"C:\WinNT\System32\Drivers\USBSnoop.sys" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+"C:\WinNT\System32\Drivers\USBSnpys.sys" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	ECHO copy $(InputPath) %WINDIR%\System32\Drivers 
 	copy $(InputPath) %WINDIR%\System32\Drivers 
 	
@@ -88,14 +88,14 @@ SOURCE="$(InputPath)"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LINK32=snLink.exe
+LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib int64.lib wdm.lib usbd.lib /nologo /base:"0x10000" /version:4.0 /entry:"DriverEntry@8" /subsystem:windows /pdb:none /debug /debugtype:both /machine:I386 /nodefaultlib /out:"debug\UsbSnoop.sys" /libpath:"e:\NT5DDK\lib\i386\checked" -MERGE:_PAGE=PAGE -MERGE:_TEXT=.text -MERGE:.rdata=.text -SECTION:INIT,d -OPT:REF -FORCE:MULTIPLE -RELEASE -FULLBUILD -IGNORE:4001,4037,4039,4065,4070,4078,4087,4089,4096 -osversion:4.00 -optidata -driver -align:0x20 -subsystem:native,4.00 -debug:notmapped,FULL
 # ADD LINK32 wdm.lib usbd.lib vxdwraps.clb /nologo /base:"0x10000" /version:4.0 /entry:"DriverEntry@8" /subsystem:windows /pdb:none /map /debug /debugtype:both /machine:I386 /nodefaultlib /out:"Debug\UsbSnoop.sys" /libpath:"..\98DDK" -MERGE:_PAGE=PAGE -MERGE:_TEXT=.text -MERGE:.rdata=.text -SECTION:INIT,d -OPT:REF -FORCE:MULTIPLE -RELEASE -FULLBUILD -IGNORE:4001,4037,4039,4065,4070,4078,4087,4089,4096 -osversion:4.00 -optidata -driver -align:0x20 -subsystem:native,4.00 -debug:notmapped,FULL
 # Begin Custom Build
 InputPath=.\Debug\UsbSnoop.sys
 SOURCE="$(InputPath)"
 
-"C:\WinNT\System32\Drivers\USBSnoop.sys" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+"C:\WinNT\System32\Drivers\USBSnpys.sys" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	ECHO copy $(InputPath) %WINDIR%\System32\Drivers 
 	copy $(InputPath) %WINDIR%\System32\Drivers 
 	

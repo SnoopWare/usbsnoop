@@ -54,7 +54,7 @@ STRINGTABLE
 BEGIN
     IDS_APPINFO         VER_PRODUCTNAME_STR
     IDS_COPYRIGHT       VER_LEGALCOPYRIGHT_STR
-    IDS_ABOUT_URL       "http://home.jps.net/~koma"
+    IDS_ABOUT_URL       "http://sourceforge.net/projects/usbsnoop/"
 END
 
 #include "common.ver"

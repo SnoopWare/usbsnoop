@@ -346,18 +346,26 @@ void CURB::GetDataDumpStr(LPTSTR sBuffer)
     _tcscpy(sBuffer, "");
 }
 
-int CURB::GetPayloadCount(void)
+int CURB::GetPacketCount(void)
 {
+    return 1;
+}
+
+int CURB::GetPayloadCount(int nPacket)
+{
+    ASSERT((-1 == nPacket) || (0 == nPacket));
     return 0;
 }
 
-PUCHAR CURB::GetPayload(void)
+PUCHAR CURB::GetPayload(int nPacket)
 {
+    ASSERT((-1 == nPacket) || (0 == nPacket));
     return NULL;
 }
 
-LPCTSTR CURB::GetPayloadXML(LPTSTR sBuffer)
+LPCTSTR CURB::GetPayloadXML(int nPacket, LPTSTR sBuffer)
 {
+    ASSERT((-1 == nPacket) || (0 == nPacket));
     _tcscpy(sBuffer, "");
     return sBuffer;
 }
@@ -652,21 +660,24 @@ void CURB_TransferBuffer::Serialize(CArchive &ar)
     }
 }
 
-int CURB_TransferBuffer::GetPayloadCount(void)
+int CURB_TransferBuffer::GetPayloadCount(int nPacket)
 {
+    ASSERT((-1 == nPacket) || (0 == nPacket));
     return m_TransferLength;
 }
 
-PUCHAR CURB_TransferBuffer::GetPayload(void)
+PUCHAR CURB_TransferBuffer::GetPayload(int nPacket)
 {
+    ASSERT((-1 == nPacket) || (0 == nPacket));
     return m_TransferBuffer;
 }
 
-LPCTSTR CURB_TransferBuffer::GetPayloadXML(LPTSTR sBuffer)
+LPCTSTR CURB_TransferBuffer::GetPayloadXML(int nPacket, LPTSTR sBuffer)
 {
-    if(NULL == GetPayload())
+    ASSERT((-1 == nPacket) || (0 == nPacket));
+    if(NULL == GetPayload(nPacket))
     {
-        return CURB::GetPayloadXML(sBuffer);
+        return CURB::GetPayloadXML(nPacket, sBuffer);
     }
     
     for(int nIndex = 0; nIndex < m_TransferLength; ++nIndex)
@@ -1488,6 +1499,50 @@ void CURB_IsochTransfer::Serialize(CArchive &ar)
     }
 }
 
+int CURB_IsochTransfer::GetPacketCount(void)
+{
+    return m_nTransferBufferCnt;
+}
+
+int CURB_IsochTransfer::GetPayloadCount(int nPacket)
+{
+    if(0 <= nPacket)
+    {
+        return m_nTransferBufferLength[nPacket];
+    }
+
+    int nTotalLength = 0;
+    for(DWORD nIndex = 0; nIndex < m_nTransferBufferCnt; ++nIndex)
+    {
+        nTotalLength += m_nTransferBufferLength[nIndex];
+    }
+    return nTotalLength;
+}
+
+PUCHAR CURB_IsochTransfer::GetPayload(int nPacket)
+{
+    ASSERT(0 <= nPacket);
+    ASSERT(nPacket < (int) m_nTransferBufferCnt);
+    return m_pTransferBuffer[nPacket];
+}
+
+LPCTSTR CURB_IsochTransfer::GetPayloadXML(int nPacket, LPTSTR sBuffer)
+{
+    if(NULL == GetPayload(nPacket))
+    {
+        return CURB::GetPayloadXML(nPacket, sBuffer);
+    }
+    
+    ASSERT(0 <= nPacket);
+    ASSERT(nPacket < (int) m_nTransferBufferCnt);
+    PUCHAR pTransferBuffer = m_pTransferBuffer[nPacket];
+    for(DWORD nIndex = 0; nIndex < m_nTransferBufferLength[nPacket]; ++nIndex)
+    {
+        sprintf(&sBuffer[nIndex << 1], "%02x", pTransferBuffer[nIndex]);
+    }
+    return sBuffer;
+}
+
 void CURB_IsochTransfer::GetDataDumpStr(LPTSTR sBuffer)
 {
     if(0 != m_nTransferBufferCnt)
@@ -1735,6 +1790,15 @@ void CMyDWORDArray::RemoveDuplicates(void)
 /*************************************************************************
 
   $Log: not supported by cvs2svn $
+ * 
+ * 6     10/07/02 2:52p Rbosa
+ * 
+ * 5     10/07/02 12:49p Rbosa
+  Revision 1.2  2002/10/05 01:10:43  rbosa
+  Added the basic framework for exporting a log into an XML file. The
+  output written is fairly poor. This checkin is mainly to get the
+  framework in place and get feedback on it.
+
   Revision 1.1  2002/08/14 23:03:34  rbosa
   the application to capture urbs and display them...
 

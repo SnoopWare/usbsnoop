@@ -54,6 +54,15 @@ BSC32=bscmake.exe
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /machine:I386
 # ADD LINK32 setupapi.lib /nologo /subsystem:windows /map /machine:I386
+# Begin Custom Build
+InputPath=.\Release\SnoopyPro.exe
+InputName=SnoopyPro
+SOURCE="$(InputPath)"
+
+"..\..\$(InputName).exe" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy $(InputPath) ..\..\$(InputName).exe
+
+# End Custom Build
 
 !ELSEIF  "$(CFG)" == "SnoopyPro - Win32 Debug"
 

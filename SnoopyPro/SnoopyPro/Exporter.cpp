@@ -53,14 +53,18 @@ void CExporterXML::ExportURB(CURB *pURB)
     OutputTag("function", pURB->GetFunctionStr());
     OutputTag("timestamp", "%d", pURB->GetTime(m_pAR));
     OutputTag("endpoint", "%d", pURB->GetEndpoint());
-    if(pURB->GetPayloadCount() > 0)
+    if(pURB->GetPayloadCount(-1) > 0)
     {
-        OutputFormat("<payload>");
-        IncreaseIndent();
-        OutputTag("payloadcount", "%d", pURB->GetPayloadCount());
-        OutputTag("payloadbytes", pURB->GetPayloadXML(sBuffer));
-        DecreaseIndent();
-        OutputFormat("</payload>");
+        OutputTag("packetcount", "%d", pURB->GetPacketCount());
+        for(int nPacket = 0 ; nPacket < pURB->GetPacketCount(); ++nPacket)
+        {
+            OutputFormat("<payload packet=\"%d\">", nPacket);
+            IncreaseIndent();
+            OutputTag("payloadcount", "%d", pURB->GetPayloadCount(nPacket));
+            OutputTag("payloadbytes", pURB->GetPayloadXML(nPacket, sBuffer));
+            DecreaseIndent();
+            OutputFormat("</payload>");
+        }
     }
     DecreaseIndent();
     OutputFormat("</urb>");
@@ -96,7 +100,7 @@ void CExporterXML::OutputTag(LPCTSTR sTag, LPCTSTR sFormat, ...)
 {
     va_list params;
     va_start(params, sFormat);
-    TCHAR sLine[1024];
+    TCHAR sLine[4096];
     vsprintf(sLine, sFormat, params);
     va_end(params);
     OutputFormat("<%s>%s</%s>", sTag, sLine, sTag);
@@ -134,7 +138,7 @@ CExporter* CExporter::Factory(EXPORTER_TYPE ExporterType)
 
 void CExporter::SetOutputFilename(LPCTSTR sFilename)
 {
-    //m_sFilename = sFilename;
+    m_sFilename = sFilename;
 }
 
 void CExporter::SetArrayURB(CArrayURB *pAR)
@@ -171,7 +175,7 @@ void CExporter::OutputFormat(LPCTSTR sFormat, ...)
 {
     va_list params;
     va_start(params, sFormat);
-    TCHAR sLine[1024];
+    TCHAR sLine[4096];
     vsprintf(sLine, sFormat, params);
     va_end(params);
     OutputLine(sLine);
@@ -194,5 +198,14 @@ void CExporter::EndExport(void)
 /*************************************************************************
 
   $Log: not supported by cvs2svn $
+ * 
+ * 2     10/07/02 2:51p Rbosa
+ * 
+ * 1     10/07/02 12:42p Rbosa
+  Revision 1.1  2002/10/05 01:10:43  rbosa
+  Added the basic framework for exporting a log into an XML file. The
+  output written is fairly poor. This checkin is mainly to get the
+  framework in place and get feedback on it.
+
 
 *************************************************************************/

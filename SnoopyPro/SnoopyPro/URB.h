@@ -73,9 +73,10 @@ public:
     LONG GetStatus(void);
     void GetStatusStr(LPTSTR sBuffer);
     DWORD GetLinkNo(void);
-    virtual int GetPayloadCount(void);
-    virtual PUCHAR GetPayload(void);
-    virtual LPCTSTR GetPayloadXML(LPTSTR sBuffer);
+    virtual int GetPacketCount(void);
+    virtual int GetPayloadCount(int nPacket);
+    virtual PUCHAR GetPayload(int nPacket);
+    virtual LPCTSTR GetPayloadXML(int nPacket, LPTSTR sBuffer);
     virtual void GetDataDumpStr(LPTSTR sBuffer);
 
     // for detailed output
@@ -149,9 +150,9 @@ public:
     virtual void Serialize(CArchive &ar);
     
     // access member
-    virtual int GetPayloadCount(void);
-    virtual PUCHAR GetPayload(void);
-    virtual LPCTSTR GetPayloadXML(LPTSTR sBuffer);
+    virtual int GetPayloadCount(int nPacket);
+    virtual PUCHAR GetPayload(int nPacket);
+    virtual LPCTSTR GetPayloadXML(int nPacket, LPTSTR sBuffer);
     virtual void GetDataDumpStr(LPTSTR sBuffer);
     
     // filter methods
@@ -285,7 +286,13 @@ public:
     DECLARE_SERIAL(CURB_IsochTransfer);
     virtual void Serialize(CArchive &ar);
     
+    // access functions
+    virtual int GetPacketCount(void);
+    virtual int GetPayloadCount(int nPacket);
+    virtual PUCHAR GetPayload(int nPacket);
+    virtual LPCTSTR GetPayloadXML(int nPacket, LPTSTR sBuffer);
     virtual void GetDataDumpStr(LPTSTR sBuffer);
+    
     virtual void RenderProperties(void);
 
     virtual void GrabData(PPACKET_HEADER ph);

@@ -1,5 +1,5 @@
 ==========================================================================
-SnoopyPro 0.21 Readme.txt
+SnoopyPro 0.22 Readme.txt
 ==========================================================================
 
 
@@ -47,6 +47,11 @@ A: Yes.
 ==========================================================================
 RECENT CHANGES:
 ==========================================================================
+
+0.22:
+[X] Bumped version info to 0.22, fixed a bug in the exporter where it
+    wouldn't take the filename selected as output file. Added XML output
+    for isochronous transfers.
 
 0.21:
 [X] Added export functionality. The only export format is XML for now, and
