@@ -78,16 +78,16 @@ void inline FillRollingBuffer(char *s)
 	bufflen = strlen(s);
 
 	if(LogBuffer.EndPos >= LogBuffer.StartPos)
-		if(LogBuffer.EndPos + bufflen < BUFFER_SIZE)
+		if(LogBuffer.EndPos + bufflen <= BUFFER_SIZE)
 		{
-			KdPrint(("Fillrollingbuffer 1\n"));
+			//KdPrint(("Fillrollingbuffer 1\n"));
 			memcpy(LogBuffer.Buffer + LogBuffer.EndPos,
 				s,bufflen);
 			LogBuffer.EndPos +=  bufflen;
 		}
 		else
 		{
-			KdPrint(("Fillrollingbuffer 2\n"));
+			//KdPrint(("Fillrollingbuffer 2\n"));
 			memcpy(LogBuffer.Buffer + LogBuffer.EndPos,
 				s,BUFFER_SIZE - LogBuffer.EndPos);
 			memcpy(LogBuffer.Buffer, s + BUFFER_SIZE - LogBuffer.EndPos,
@@ -98,20 +98,25 @@ void inline FillRollingBuffer(char *s)
 	else
 		if(LogBuffer.EndPos + bufflen < LogBuffer.StartPos)
 		{
-			KdPrint(("\n\nFillrollingbuffer 3\n"));
-			memcpy(LogBuffer.Buffer + LogBuffer.EndPos, s, bufflen);
-			LogBuffer.EndPos +=  bufflen;
+			//KdPrint(("\n\nFillrollingbuffer 3\n"));
+			//if(LogBuffer.EndPos + bufflen < BUFFER_SIZE)
+			//{
+				memcpy(LogBuffer.Buffer + LogBuffer.EndPos, s, bufflen);
+				LogBuffer.EndPos +=  bufflen;
+			//}
 		}
 		else
 		{
-			KdPrint(("Fillrollingbuffer 4\n"));
-			KdPrint(("usbsnoop : Buffer Overrun \nusbsnoop: Data lost : %s\n",s));
-			KdPrint(("usbsnoop : StartPos %d, Endpos : %d\n", 
-				LogBuffer.StartPos, LogBuffer.EndPos));
+			//KdPrint(("Fillrollingbuffer 4\n"));
+			KdPrint(("usbsnoop : Buffer Overrun \n"));
+			//KdPrint(("usbsnoop : StartPos %d, Endpos : %d\n", 
+			//	LogBuffer.StartPos, LogBuffer.EndPos));
 
 		}
-		KdPrint(("usbsnoop: Start %d, Stop %d\n",
-			LogBuffer.StartPos, LogBuffer.EndPos));
+		//KdPrint(("usbsnoop: Start %d, Stop %d\n",
+		//	LogBuffer.StartPos, LogBuffer.EndPos));
+		if(LogBuffer.EndPos == BUFFER_SIZE) 
+			LogBuffer.EndPos = 0 ;
 
 
 }
@@ -191,11 +196,11 @@ VOID LogToFile(PVOID Parameter)
 			endpos = LogBuffer.EndPos;
 			if(LogBuffer.StartPos != endpos)
 			{
-				KdPrint(("usbsnoop: Start %d, Stop %d\n",
-					LogBuffer.StartPos, endpos));
-				KdPrint(("UsbSnoop: offset %Ld\n",offset.QuadPart));
-				KdPrint(("UsbSnoop: string for file %.30s\n %Ld\n",
-					&(LogBuffer.Buffer[LogBuffer.StartPos])));
+				//KdPrint(("usbsnoop: Start %d, Stop %d\n",
+				//	LogBuffer.StartPos, endpos));
+				//KdPrint(("UsbSnoop: offset %Ld\n",offset.QuadPart));
+				//KdPrint(("UsbSnoop: string for file %.30s\n %Ld\n",
+				//	&(LogBuffer.Buffer[LogBuffer.StartPos])));
 				if( endpos > LogBuffer.StartPos)
 				{
 					status = ZwWriteFile(fileHandle,NULL,NULL,NULL,
@@ -444,7 +449,7 @@ extern "C" NTSTATUS DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRI
 	//	Initialize Semaphore
 	//
 	//	Added 09 09 2001
-	KeInitializeSemaphore(&DataToBeRead,0,10);
+	KeInitializeSemaphore(&DataToBeRead,0,1000);
 
 
 
@@ -1553,6 +1558,14 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 			{
 				DumpTransferBuffer((PUCHAR)pIsochTransfer->TransferBuffer, pIsochTransfer->TransferBufferMDL, pIsochTransfer->TransferBufferLength, FALSE);
 			}
+			else
+			{
+				sprintf(TempBuff,"bReadFromDevice = %x\nbReturnedFromHCD=%x",
+					bReadFromDevice, bReturnedFromHCD);
+			FillRollingBuffer(TempBuff);
+			
+			}
+
 
 			sprintf(TempBuff,"  StartFrame           = %08x\n",
 				pIsochTransfer->StartFrame);
