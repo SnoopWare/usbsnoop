@@ -6,10 +6,10 @@
 
 #include "usbdi.h"
 
-//	CONSTANT ECARATION
+//	CONSTANT DECLARATION
 //	ADDED By Valette Jean-Sébastien
 
-#define BIG_BUFFER_SIZE 512
+#define BUFFER_SIZE 4096
 
 
 ///////////////////////////////////////////////////////////////////////////////
