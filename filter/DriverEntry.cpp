@@ -13,7 +13,7 @@ NTSTATUS DispatchPnp(IN PDEVICE_OBJECT fido, IN PIRP Irp);
 NTSTATUS DispatchWmi(IN PDEVICE_OBJECT fido, IN PIRP Irp);
 NTSTATUS DispatchInternalIOCTL(IN PDEVICE_OBJECT fido, IN PIRP Irp);
 NTSTATUS MyDispatchInternalIOCTL(IN PDEVICE_OBJECT fido, IN PIRP Irp);
-void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD);
+void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD, char *outbuf, int * outbufpos);
 
 BOOLEAN win98 = FALSE;
 UNICODE_STRING servkey;
@@ -34,6 +34,10 @@ struct RollingBuffer
 struct RollingBuffer LogBuffer;
 
 char TempBuff[256];
+char SendBuf[LOG_URBSIZE];
+int	SendBufSize;
+char ReceiveBuf[LOG_URBSIZE];
+int	ReceiveBufSize;
 
 // functions to handle conversion from PipeHandle to endpint number
 
@@ -47,6 +51,18 @@ struct ENDPOINT_INFO TabEndpointInfo[10] =
 {
 	{ NULL, 0 },
 };
+
+int my_strncpy(char *dest, char *sce, int size)
+{
+	char *p;
+
+	p = dest;
+	//KdPrint(("strncpy size : %d\n", size));
+	while(*sce && (size > (p - dest -1))) *p++ = *sce++;
+	//KdPrint(("strncpy dest = %s\n",dest)); /*	Debug */
+	*p=0;
+	return p - dest;
+}
 
 bool GetEndpointInfo(USBD_PIPE_HANDLE inPipeHandle, unsigned char * outEndpoint)
 {
@@ -158,6 +174,7 @@ VOID LogToFile(PVOID Parameter)
 			"RtlAnsiStringToUnicodeString failed, status = 0x%xx\n",
 			status);
 		FillRollingBuffer(TempBuff);
+		KeReleaseSemaphore(&DataToBeRead,0,1,FALSE);
 	}
 	InitializeObjectAttributes(&objectAttributes,&unicodeObjectName,
 		0,NULL,NULL);
@@ -192,7 +209,7 @@ VOID LogToFile(PVOID Parameter)
 			FALSE,&Timeout);
 		if(status == STATUS_SUCCESS)
 		{
-			KdPrint(("usbsnoop: LogToFile AWAKE !\n"));
+			//KdPrint(("usbsnoop: LogToFile AWAKE !\n"));
 			endpos = LogBuffer.EndPos;
 			if(LogBuffer.StartPos != endpos)
 			{
@@ -279,137 +296,138 @@ void AddEndpointInfo(USBD_PIPE_HANDLE inPipeHandle, unsigned char inEndpoint)
 
 	sprintf(TempBuff,"AddEndpointInfo failed!\n");
 	FillRollingBuffer(TempBuff);
+	KeReleaseSemaphore(&DataToBeRead,0,1,FALSE);
 }
 
 
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void DumpStackLocation(PIO_STACK_LOCATION stack)
+void DumpStackLocation(PIO_STACK_LOCATION stack, char *outbuf, int *outbufpos )
 {
 	if (stack == NULL)
 		return ;
 
 	sprintf(TempBuff,"\tMajorFunction=%d, MinorFunction=%d\n",
 		stack->MajorFunction,stack->MinorFunction);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	sprintf(TempBuff,"\tDeviceObject=%p\n",stack->DeviceObject);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	sprintf(TempBuff,"\tCompletionRoutine=%p Context=%p\n",
 		stack->CompletionRoutine,stack->Context);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 
 }
 
-void DumpIrp(PIRP Irp)
+void DumpIrp(PIRP Irp, char *outbuf, int *outbufpos)
 {
 	sprintf(TempBuff,"Dumping IRP %p\n",Irp);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	if (Irp==NULL)
 		return ;
 
 	sprintf(TempBuff,"\tType=%d, Size=%d\n",Irp->Type,Irp->Size);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	sprintf(TempBuff,"\tStackCount=%d, CurrentLocation=%d\n",
 		Irp->StackCount,Irp->CurrentLocation);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	for (CHAR i=0;i<Irp->StackCount;i++)
 	{
 		PIO_STACK_LOCATION stack = (PIO_STACK_LOCATION) (Irp+1) + i;
 		sprintf(TempBuff,"\t[%d] MajorFunction=%d, MinorFunction=%d, DeviceObject=%p\n",
 			i,stack->MajorFunction, stack->MinorFunction,
 			stack->DeviceObject);
-		FillRollingBuffer(TempBuff);
+		*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 		sprintf(TempBuff,"\tArg1=%p, Arg2=%p, Arg3=%p, Arg4=%p\n",
 			stack->Parameters.Others.Argument1,
 			stack->Parameters.Others.Argument2,
 			stack->Parameters.Others.Argument3,
 			stack->Parameters.Others.Argument4);
-		FillRollingBuffer(TempBuff);
+		*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 		sprintf(TempBuff,"\tCompletionRoutine=%p Context=%p\n",
 			stack->CompletionRoutine,stack->Context);
-		FillRollingBuffer(TempBuff);
+		*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	}
 }
 
-void DumpDriverObject(PDRIVER_OBJECT p)
+void DumpDriverObject(PDRIVER_OBJECT p, char *outbuf, int *outbufpos)
 {
 	sprintf(TempBuff,"UsbSnoop - DumpDriverObject : p = %p\n",p);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	sprintf(TempBuff,"\tType = %d\n",p->Type);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	sprintf(TempBuff,"\tSize = %d\n",p->Size);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	sprintf(TempBuff,"\tDeviceObject = %p\n",p->DeviceObject);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	sprintf(TempBuff,"\tFlags = 0x%x\n",p->Flags);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	sprintf(TempBuff,"\tDriverStart = %p\n",p->DriverStart);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	sprintf(TempBuff,"\tDriverSize = %d\n",p->DriverSize);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	sprintf(TempBuff,"\tDriverSection = %p\n",p->DriverSection);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	sprintf(TempBuff,"\tDriverExtension = %p\n",p->DriverExtension);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	sprintf(TempBuff,"\tDriverExtension->AddDevice = %p\n",
 		p->DriverExtension->AddDevice);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	sprintf(TempBuff,"\tFastIoDispatch = %p\n",p->FastIoDispatch);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	sprintf(TempBuff,"  DriverInit = %p\n",p->DriverInit);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	sprintf(TempBuff,"\tDriverStartIo = %p\n",p->DriverStartIo);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	sprintf(TempBuff,"\tDriverUnload = %p\n",p->DriverUnload);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	for (int i=0;i<IRP_MJ_MAXIMUM_FUNCTION + 1;i++)
 	{
 		sprintf(TempBuff,"\tMajorFunction[%d] = %p\n",i,
 			p->MajorFunction[i]);
-		FillRollingBuffer(TempBuff);
+		*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	}
 }
 
-void DumpDeviceObject(PDEVICE_OBJECT p)
+void DumpDeviceObject(PDEVICE_OBJECT p, char *outbuf, int *outbufpos)
 {
 	sprintf(TempBuff,"UsbSnoop - DumpDeviceObject : p = %p\n",p);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	sprintf(TempBuff,"\tDriverObject = %p\n",p->DriverObject);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	sprintf(TempBuff,"\tNextDevice = %p\n",p->NextDevice);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	sprintf(TempBuff,"\tAttachedDevice = %p\n",p->AttachedDevice);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	sprintf(TempBuff,"\tStackSize=%d\n",p->StackSize);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	sprintf(TempBuff,"\tCurrentIrp = %p\n",p->CurrentIrp);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	sprintf(TempBuff,"\tDeviceObjectExtension = %p\n",
 		p->DeviceObjectExtension);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 
 	PDEVICE_EXTENSION pdx = (PDEVICE_EXTENSION)p->DeviceObjectExtension;
 
 	sprintf(TempBuff,"\t->DeviceObject=%p\n",pdx->DeviceObject);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	sprintf(TempBuff,"\t->LowerDeviceObject=%p\n",
 		pdx->LowerDeviceObject);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	sprintf(TempBuff,"\t->Pdo=%p\n",pdx->Pdo);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 }
 
-void DumpContext(PCONTEXT Context)
+void DumpContext(PCONTEXT Context, char * outbuf, int *outbufpos)
 {
 	sprintf(TempBuff,"DumpContext : Context=%p\n",Context);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	sprintf(TempBuff,"\tCompletionRoutine=%p, Context=%p, Control=%x\n",
 		Context->CompletionRoutine,Context->Context,Context->Control);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	sprintf(TempBuff,"\tpUrb=%p, uSequenceNumber=%d, Stack=%p\n",
 		Context->pUrb,Context->uSequenceNumber,Context->Stack);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 }
 
 #pragma INITCODE
@@ -463,6 +481,7 @@ extern "C" NTSTATUS DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRI
 			"UsbSnoop - Expected version of WDM (%d.%2.2d) not available\n",
 			1, 0);
 		FillRollingBuffer(TempBuff);
+		KeReleaseSemaphore(&DataToBeRead,0,1,FALSE);
 		return STATUS_UNSUCCESSFUL;
 	}
 	
@@ -491,6 +510,7 @@ extern "C" NTSTATUS DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRI
 		"UsbSnoop - DriverEntry(%p) : Windows NT WDM version %d.%d\n",
 			DriverEntry,MajorVersion,MinorVersion);
 	FillRollingBuffer(TempBuff);
+	KeReleaseSemaphore(&DataToBeRead,0,1,FALSE);
 //	DumpDriverObject(DriverObject);
 
 	// Save the name of the service key
@@ -502,6 +522,7 @@ extern "C" NTSTATUS DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRI
 			"UsbSnoop - Unable to allocate %d bytes for copy of service key name\n", 
 			RegistryPath->MaximumLength);
 		FillRollingBuffer(TempBuff);
+		KeReleaseSemaphore(&DataToBeRead,0,1,FALSE);
 		return STATUS_INSUFFICIENT_RESOURCES;
 	}
 	servkey.MaximumLength = RegistryPath->MaximumLength;
@@ -556,6 +577,7 @@ VOID DriverUnload(IN PDRIVER_OBJECT DriverObject)
 	FillRollingBuffer(TempBuff);
 	sprintf(TempBuff,"usbsnoop: status %x\n",status);
 	FillRollingBuffer(TempBuff);
+	KeReleaseSemaphore(&DataToBeRead,0,1,FALSE);
 
 
 }
@@ -611,6 +633,7 @@ NTSTATUS MyDispatchPnp(IN PDEVICE_OBJECT fdo, IN PIRP Irp)
 			"UsbSnoop - MyDispatchPNP(%p) : IRP_MJ_PNP (0x%x)\n",
 			MyDispatchPnp,fcn);
 	FillRollingBuffer(TempBuff);
+	KeReleaseSemaphore(&DataToBeRead,0,1,FALSE);
 	
 	PDEVICE_OBJECT fido = fdo->AttachedDevice;
 	NTSTATUS status;
@@ -729,7 +752,7 @@ NTSTATUS AddDevice(IN PDRIVER_OBJECT DriverObject, IN PDEVICE_OBJECT pdo)
 			IoDeleteDevice(fido);
 		}					// need to cleanup
 	}						// cleanup side effects
-	
+	KeReleaseSemaphore(&DataToBeRead,0,1,FALSE);
 	return status;
 }
 
@@ -805,15 +828,16 @@ NTSTATUS DispatchAny(IN PDEVICE_OBJECT fido, IN PIRP Irp)
 	IoSkipCurrentIrpStackLocation(Irp);
 	status = IoCallDriver(pdx->LowerDeviceObject, Irp);
 	IoReleaseRemoveLock(&pdx->RemoveLock, Irp);
+	KeReleaseSemaphore(&DataToBeRead,0,1,FALSE);
 	return status;
 }
 
-void DumpBuffer(unsigned char * buf, int len)
+void DumpBuffer(unsigned char * buf, int len, char *outbuf, int *outbufpos )
 {
 #define NB_BYTE 16 /* number of bytes displayed per line */
 
 	char str[NB_BYTE*3 + 1];
-
+	
 	for (int i=0;i<len;i+=NB_BYTE)
 	{
 		char * p = str;
@@ -829,22 +853,21 @@ void DumpBuffer(unsigned char * buf, int len)
 			*p++ = (c<10) ? c+'0' : c-10+'a';
 		}
 		*p = 0;
-
-		sprintf(TempBuff,"\t\t%04x:%s\n",i,str);
-		FillRollingBuffer(TempBuff);
+		sprintf(TempBuff,"\t\t%04x:%s\n",i,str);	
+		*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	}
 }
 
-void DumpTransferBuffer(PUCHAR pBuffer, PMDL pMdl, ULONG uBufferSize, BOOLEAN bPrintHeader)
+void DumpTransferBuffer(PUCHAR pBuffer, PMDL pMdl, ULONG uBufferSize, BOOLEAN bPrintHeader, char *outbuf, int *outbufpos)
 {
 	if(bPrintHeader)
 	{
 		sprintf(TempBuff,"\tTransferBufferLength\t= %08x\n", uBufferSize);
-		FillRollingBuffer(TempBuff);
+		*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 		sprintf(TempBuff,"\tTransferBuffer\t\t= %08x\n", pBuffer);
-		FillRollingBuffer(TempBuff);
+		*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 		sprintf(TempBuff,"\tTransferBufferMDL\t= %08x\n", pMdl);
-		FillRollingBuffer(TempBuff);
+		*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	}
 	else
 	{
@@ -854,147 +877,148 @@ void DumpTransferBuffer(PUCHAR pBuffer, PMDL pMdl, ULONG uBufferSize, BOOLEAN bP
 			{
 				//KdPrint(("??? weird transfer buffer, both MDL and flat specified. Ignoring MDL\n"));
 			}
-			KdPrint(("BufferSize : %d\n", uBufferSize));
-			DumpBuffer(pBuffer,uBufferSize);
+			//KdPrint(("BufferSize : %d\n", uBufferSize));
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
+			DumpBuffer(pBuffer,uBufferSize, outbuf, outbufpos);
 		}
 		else if(pMdl)
 		{
 			PUCHAR pMDLBuf = (PUCHAR)MmGetSystemAddressForMdl(pMdl);
 			if(pMDLBuf)
-				DumpBuffer(pMDLBuf,uBufferSize);
+				DumpBuffer(pMDLBuf,uBufferSize, outbuf, outbufpos);
 			else
 			{
 				sprintf(TempBuff,"*** error: can't map MDL!\n");
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
 		}
 		else
 		{
 			sprintf(TempBuff,"\n\t\tno data supplied\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 		}
 	}
 }
 
-void DumpGetStatusRequest(struct _URB_CONTROL_GET_STATUS_REQUEST *pGetStatusRequest, BOOLEAN bReturnedFromHCD)
+void DumpGetStatusRequest(struct _URB_CONTROL_GET_STATUS_REQUEST *pGetStatusRequest, BOOLEAN bReturnedFromHCD, char *outbuf, int *outbufpos)
 {
-	DumpTransferBuffer((PUCHAR)pGetStatusRequest->TransferBuffer, pGetStatusRequest->TransferBufferMDL, pGetStatusRequest->TransferBufferLength, TRUE);
+	DumpTransferBuffer((PUCHAR)pGetStatusRequest->TransferBuffer, pGetStatusRequest->TransferBufferMDL, pGetStatusRequest->TransferBufferLength, TRUE, outbuf, outbufpos);
 	if(pGetStatusRequest->TransferBufferLength != 1)
 	{
 		sprintf(TempBuff,
 			"*** error - TransferBufferLength should be 1!\n");
-		FillRollingBuffer(TempBuff);
+		*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	}
 	if(bReturnedFromHCD)
 	{
-		DumpTransferBuffer((PUCHAR)pGetStatusRequest->TransferBuffer, pGetStatusRequest->TransferBufferMDL, pGetStatusRequest->TransferBufferLength, FALSE);
+		DumpTransferBuffer((PUCHAR)pGetStatusRequest->TransferBuffer, pGetStatusRequest->TransferBufferMDL, pGetStatusRequest->TransferBufferLength, FALSE, outbuf, outbufpos);
 	}
 
 	sprintf(TempBuff,"\tIndex\t\t= %02x\n",
 		pGetStatusRequest->Index);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	
 	if(pGetStatusRequest->UrbLink)
 	{
 		sprintf(TempBuff,"---> Linked URB:\n");
-		FillRollingBuffer(TempBuff);
-		DumpURB(pGetStatusRequest->UrbLink, bReturnedFromHCD);
+		*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
+		DumpURB(pGetStatusRequest->UrbLink, bReturnedFromHCD, outbuf, outbufpos);
 		sprintf(TempBuff,"---< Linked URB\n");
-		FillRollingBuffer(TempBuff);
+		*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	}
 }
 
-void DumpFeatureRequest(struct _URB_CONTROL_FEATURE_REQUEST *pFeatureRequest, BOOLEAN bReadFromDevice, BOOLEAN bReturnedFromHCD)
+void DumpFeatureRequest(struct _URB_CONTROL_FEATURE_REQUEST *pFeatureRequest, BOOLEAN bReadFromDevice, BOOLEAN bReturnedFromHCD, char *outbuf, int *outbufpos)
 {
 	sprintf(TempBuff,"\tFeatureSelector = %04x\n", 
 		pFeatureRequest->FeatureSelector);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	sprintf(TempBuff,"\tIndex\t\t= %04x\n",
 		pFeatureRequest->Index);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	if(pFeatureRequest->UrbLink)
 	{
 		sprintf(TempBuff,"---> Linked URB:\n");
-		FillRollingBuffer(TempBuff);
-		DumpURB(pFeatureRequest->UrbLink, bReturnedFromHCD);
+		*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
+		DumpURB(pFeatureRequest->UrbLink, bReturnedFromHCD, outbuf, outbufpos);
 		sprintf(TempBuff,"---< Linked URB\n");
-		FillRollingBuffer(TempBuff);
+		*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	}
 }
 
-void DumpDescriptorRequest(struct _URB_CONTROL_DESCRIPTOR_REQUEST *pDescriptorRequest, BOOLEAN bReadFromDevice, BOOLEAN bReturnedFromHCD)
+void DumpDescriptorRequest(struct _URB_CONTROL_DESCRIPTOR_REQUEST *pDescriptorRequest, BOOLEAN bReadFromDevice, BOOLEAN bReturnedFromHCD, char * outbuf, int * outbufpos)
 {
-	DumpTransferBuffer((PUCHAR)pDescriptorRequest->TransferBuffer, pDescriptorRequest->TransferBufferMDL, pDescriptorRequest->TransferBufferLength, TRUE);
+	DumpTransferBuffer((PUCHAR)pDescriptorRequest->TransferBuffer, pDescriptorRequest->TransferBufferMDL, pDescriptorRequest->TransferBufferLength, TRUE, outbuf, outbufpos);
 	if(((!bReadFromDevice) && (!bReturnedFromHCD)) || (bReadFromDevice && bReturnedFromHCD))
 	{
-		DumpTransferBuffer((PUCHAR)pDescriptorRequest->TransferBuffer, pDescriptorRequest->TransferBufferMDL, pDescriptorRequest->TransferBufferLength, FALSE);
+		DumpTransferBuffer((PUCHAR)pDescriptorRequest->TransferBuffer, pDescriptorRequest->TransferBufferMDL, pDescriptorRequest->TransferBufferLength, FALSE, outbuf, outbufpos);
 	}
 
 	sprintf(TempBuff,"\tIndex\t\t\t= %02x\n",
 		pDescriptorRequest->Index);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	sprintf(TempBuff,"\tDescriptorType\t\t= %02x (%s)\n",
 		pDescriptorRequest->DescriptorType,
 		pDescriptorRequest->DescriptorType == USB_DEVICE_DESCRIPTOR_TYPE ? "USB_DEVICE_DESCRIPTOR_TYPE" :
 		pDescriptorRequest->DescriptorType == USB_CONFIGURATION_DESCRIPTOR_TYPE ? "USB_CONFIGURATION_DESCRIPTOR_TYPE" :
 		pDescriptorRequest->DescriptorType == USB_STRING_DESCRIPTOR_TYPE ? "USB_STRING_DESCRIPTOR_TYPE" : "<illegal descriptor type!>");
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	sprintf(TempBuff,"\tLanguageId\t\t= %04x\n",
 		pDescriptorRequest->LanguageId);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	
 	if(pDescriptorRequest->UrbLink)
 	{
 		sprintf(TempBuff,"---> Linked URB:\n");
-		FillRollingBuffer(TempBuff);
-		DumpURB(pDescriptorRequest->UrbLink, bReturnedFromHCD);
+		*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
+		DumpURB(pDescriptorRequest->UrbLink, bReturnedFromHCD, outbuf, outbufpos);
 		sprintf(TempBuff,"---< Linked URB\n");
-		FillRollingBuffer(TempBuff);
+		*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	}
 }
 
-void DumpVendorOrClassRequest(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST *pFunctionClassInterface, BOOLEAN bReturnedFromHCD)
+void DumpVendorOrClassRequest(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST *pFunctionClassInterface, BOOLEAN bReturnedFromHCD, char *outbuf, int *outbufpos)
 {
 	BOOLEAN bReadFromDevice = (BOOLEAN)(pFunctionClassInterface->TransferFlags & USBD_TRANSFER_DIRECTION_IN);
 	sprintf(TempBuff,"\tTransferFlags\t\t\t= %08x (%s, %sUSBD_SHORT_TRANSFER_OK)\n",
 		pFunctionClassInterface->TransferFlags,
 		bReadFromDevice ? "USBD_TRANSFER_DIRECTION_IN" : "USBD_TRANSFER_DIRECTION_OUT",
 		pFunctionClassInterface->TransferFlags & USBD_SHORT_TRANSFER_OK ? "":"~");
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 
-	DumpTransferBuffer((PUCHAR)pFunctionClassInterface->TransferBuffer, pFunctionClassInterface->TransferBufferMDL, pFunctionClassInterface->TransferBufferLength, TRUE);
+	DumpTransferBuffer((PUCHAR)pFunctionClassInterface->TransferBuffer, pFunctionClassInterface->TransferBufferMDL, pFunctionClassInterface->TransferBufferLength, TRUE, outbuf, outbufpos);
 	if(((!bReadFromDevice) && (!bReturnedFromHCD)) || (bReadFromDevice && bReturnedFromHCD))
 	{
-		DumpTransferBuffer((PUCHAR)pFunctionClassInterface->TransferBuffer, pFunctionClassInterface->TransferBufferMDL, pFunctionClassInterface->TransferBufferLength, FALSE);
+		DumpTransferBuffer((PUCHAR)pFunctionClassInterface->TransferBuffer, pFunctionClassInterface->TransferBufferMDL, pFunctionClassInterface->TransferBufferLength, FALSE, outbuf, outbufpos);
 	}
 
 	sprintf(TempBuff,"\tUrbLink\t\t\t\t= %08x\n",
 		pFunctionClassInterface->UrbLink);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	sprintf(TempBuff,"\tRequestTypeReservedBits = %02x\n",
 		pFunctionClassInterface->RequestTypeReservedBits);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	sprintf(TempBuff,"\tRequest\t\t\t\t= %02x\n",
 		pFunctionClassInterface->Request);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	sprintf(TempBuff,"\tValue\t\t\t\t= %04x\n",
 		pFunctionClassInterface->Value);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	sprintf(TempBuff,"\tIndex\t\t\t\t= %04x\n",
 		pFunctionClassInterface->Index);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	if(pFunctionClassInterface->UrbLink)
 	{
 		sprintf(TempBuff,"---> Linked URB:\n");
-		FillRollingBuffer(TempBuff);
-		DumpURB(pFunctionClassInterface->UrbLink, bReturnedFromHCD);
+		*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
+		DumpURB(pFunctionClassInterface->UrbLink, bReturnedFromHCD, outbuf, outbufpos);
 		sprintf(TempBuff,"---< Linked URB\n");
-		FillRollingBuffer(TempBuff);
+		*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 	}
 
 }
 
-void DumpPipeHandle(const char *s,USBD_PIPE_HANDLE inPipeHandle)
+void DumpPipeHandle(const char *s,USBD_PIPE_HANDLE inPipeHandle, char *outbuf, int *outbufpos)
 {
 	unsigned char ep;
 
@@ -1004,17 +1028,17 @@ void DumpPipeHandle(const char *s,USBD_PIPE_HANDLE inPipeHandle)
 		sprintf(TempBuff,"%s = %p [endpoint 0x%x]\n",s,inPipeHandle,ep);
 	else
 		sprintf(TempBuff,"%s = %p\n",s,inPipeHandle);
-	FillRollingBuffer(TempBuff);
+	*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 }
 
-void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
+void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD, char *outbuf, int *outbufpos)
 {
 	//LARGE_INTEGER urbTime;
        
 	if(NULL == pUrb)
 	{
 		sprintf(TempBuff,"UsbSnoop - URB == NULL ???\n");
-		FillRollingBuffer(TempBuff);
+		*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 		return;
 	}
 	//KeQuerySystemTime(&urbTime );
@@ -1053,48 +1077,48 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 
 			struct _URB_SELECT_CONFIGURATION *pSelectConfiguration = (struct _URB_SELECT_CONFIGURATION*) pUrb;
 			sprintf(TempBuff,"-- URB_FUNCTION_SELECT_CONFIGURATION:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pSelectConfiguration->Hdr.Length < URB_SELECT_CONFIGURATION_SIZE)
 			{
 				sprintf(TempBuff,"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
 					pSelectConfiguration->Hdr.Length,URB_SELECT_CONFIGURATION_SIZE);
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
 
 			PUSB_CONFIGURATION_DESCRIPTOR pCD = pSelectConfiguration->ConfigurationDescriptor;
 			sprintf(TempBuff,"\tConfigurationDescriptor\t= 0x%x %s\n",
 				pCD,pCD ? "(configure)":"(unconfigure)");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if (pCD == NULL)
 				break;
 
 			sprintf(TempBuff,"\tConfigurationDescriptor : bLength\t\t= %d\n", 
 				pCD->bLength);
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			sprintf(TempBuff,"\tConfigurationDescriptor : bDescriptorType\t= 0x%02x\n",
 				pCD->bDescriptorType);
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			sprintf(TempBuff,"\tConfigurationDescriptor : wTotalLength\t\t= 0x%04x\n",
 				pCD->wTotalLength);
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			sprintf(TempBuff,"\tConfigurationDescriptor : bNumInterfaces\t= 0x%02x\n",
 				pCD->bNumInterfaces);
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			sprintf(TempBuff,"\tConfigurationDescriptor : bConfigurationValue\t= 0x%02x\n",
 				pCD->bConfigurationValue);
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			sprintf(TempBuff,"\tConfigurationDescriptor : iConfiguration\t\t= 0x%02x\n",
 				pCD->iConfiguration);
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			sprintf(TempBuff,"\tConfigurationDescriptor : bmAttributes\t\t= 0x%02x\n", 
 				pCD->bmAttributes);
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			sprintf(TempBuff,"\tConfigurationDescriptor : MaxPower\t\t\t= 0x%02x\n",
 				pCD->MaxPower);
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			sprintf(TempBuff,"\tConfigurationHandle\t= 0x%08x\n",
 				pSelectConfiguration->ConfigurationHandle);
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			
 			ULONG uNumInterfaces = pCD->bNumInterfaces;
 
@@ -1102,7 +1126,7 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 			{
 				sprintf(TempBuff,"*** error: uNumInterfaces is too large (%d), resetting to 1\n", 
 					uNumInterfaces);
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 				uNumInterfaces = 1;
 			}
 			
@@ -1113,38 +1137,38 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 				sprintf(TempBuff,
 					"\tInterface[%d]: Length\t\t\t\t= %d\n", i, 
 					pInterface->Length);
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 				sprintf(TempBuff,
 					"\tInterface[%d]: InterfaceNumber\t\t= %d\n", i, 
 					pInterface->InterfaceNumber);
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 				sprintf(TempBuff,
 					"\tInterface[%d]: AlternateSetting\t= %d\n", i, 
 					pInterface->AlternateSetting);
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 				if(bReturnedFromHCD)
 				{
 					ULONG uNumPipes;
 					sprintf(TempBuff,
 						"\tInterface[%d]: Class\t\t\t\t\t= 0x%02x\n",
 						i, pInterface->Class);
-					FillRollingBuffer(TempBuff);
+					*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 					sprintf(TempBuff,
 						"\tInterface[%d]: SubClass\t\t\t\t= 0x%02x\n",
 						i, pInterface->SubClass);
-					FillRollingBuffer(TempBuff);
+					*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 					sprintf(TempBuff,
 						"\tInterface[%d]: Protocol\t\t\t\t= 0x%02x\n",
 						i, pInterface->Protocol);
-					FillRollingBuffer(TempBuff);
+					*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 					sprintf(TempBuff,
 						"\tInterface[%d]: InterfaceHandle\t= 0x%08x\n",
 						i, pInterface->InterfaceHandle);
-					FillRollingBuffer(TempBuff);
+					*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 					sprintf(TempBuff,
 						"\tInterface[%d]: NumberOfPipes\t\t= %d\n", 
 						i, pInterface->NumberOfPipes);
-					FillRollingBuffer(TempBuff);
+					*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 					
 					uNumPipes = pInterface->NumberOfPipes;
 					if(uNumPipes > 0x1f)
@@ -1152,7 +1176,7 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 						sprintf(TempBuff,
 							"*** error: uNumPipes is too large (%d), resetting to 1\n", 
 							uNumPipes);
-						FillRollingBuffer(TempBuff);
+						*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 						uNumPipes = 1;
 					}
 					for(ULONG p = 0; p< uNumPipes; p++)
@@ -1160,15 +1184,15 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 						sprintf(TempBuff,
 							"\tInterface[%d]: Pipes[%lu] : MaximumPacketSize\t= 0x%04x\n",
 							i, p, pInterface->Pipes[p].MaximumPacketSize);
-						FillRollingBuffer(TempBuff);
+						*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 						sprintf(TempBuff,
 							"\tInterface[%d]: Pipes[%lu] : EndpointAddress\t= 0x%02x\n",
 							i, p, pInterface->Pipes[p].EndpointAddress);
-						FillRollingBuffer(TempBuff);
+						*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 						sprintf(TempBuff,
 							"\tInterface[%d]: Pipes[%lu] : Interval\t\t\t\t= 0x%02x\n",
 							i, p, pInterface->Pipes[p].Interval);
-						FillRollingBuffer(TempBuff);
+						*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 						sprintf(TempBuff,
 							"\tInterface[%d]: Pipes[%lu] : PipeType\t\t\t\t= 0x%02x (%s)\n",
 							i, p, pInterface->Pipes[p].PipeType,
@@ -1176,19 +1200,19 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 						pInterface->Pipes[p].PipeType == UsbdPipeTypeIsochronous ? "UsbdPipeTypeIsochronous" :
 						pInterface->Pipes[p].PipeType == UsbdPipeTypeBulk ? "UsbdPipeTypeBulk" :
 						pInterface->Pipes[p].PipeType == UsbdPipeTypeInterrupt ? "UsbdPipeTypeInterrupt" : "!!! INVALID !!!");
-						FillRollingBuffer(TempBuff);
+						*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 						sprintf(TempBuff,
 							"\tInterface[%d]: Pipes[%lu] : PipeHandle\t\t\t\t= 0x%p\n",
 							i, p, pInterface->Pipes[p].PipeHandle);
-						FillRollingBuffer(TempBuff);
+						*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 						sprintf(TempBuff,
 							"\tInterface[%d]: Pipes[%lu] : MaxTransferSize\t= 0x%08x\n",
 							i, p, pInterface->Pipes[p].MaximumTransferSize);
-						FillRollingBuffer(TempBuff);
+						*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 						sprintf(TempBuff,
 							"\tInterface[%d]: Pipes[%lu] : PipeFlags\t\t\t\t= 0x%02x\n",
 							i, p, pInterface->Pipes[p].PipeFlags);
-						FillRollingBuffer(TempBuff);
+						*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 
 						AddEndpointInfo(pInterface->Pipes[p].PipeHandle,
 							pInterface->Pipes[p].EndpointAddress);
@@ -1205,51 +1229,51 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 			struct _URB_SELECT_INTERFACE  *pSelectInterface = (struct _URB_SELECT_INTERFACE *) pUrb;
 
 			sprintf(TempBuff,"-- URB_FUNCTION_SELECT_INTERFACE:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pSelectInterface->Hdr.Length < sizeof(struct _URB_SELECT_INTERFACE))
 				sprintf(TempBuff,
 					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
 					pSelectInterface->Hdr.Length, 
 					sizeof(struct _URB_SELECT_INTERFACE));
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			sprintf(TempBuff,"\tConfigurationHandle\t\t\t= 0x%08x\n",
 				pSelectInterface->ConfigurationHandle);
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 
 			PUSBD_INTERFACE_INFORMATION pInterface = &pSelectInterface->Interface;
 			
 			sprintf(TempBuff,
 				"\tInterface: Length\t\t\t\t= %d\n", 
 				pInterface->Length);
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			sprintf(TempBuff,
 				"\tInterface: InterfaceNumber\t\t= %d\n", 
 				pInterface->InterfaceNumber);
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			sprintf(TempBuff,
 				"\tInterface: AlternateSetting\t= %d\n", 
 				pInterface->AlternateSetting);
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			sprintf(TempBuff,
 				"\tInterface: Class\t\t\t\t= 0x%02x\n", 
 				pInterface->Class);
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			sprintf(TempBuff,
 				"\tInterface: SubClass\t\t\t= 0x%02x\n",
 				pInterface->SubClass);
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			sprintf(TempBuff,
 				"\tInterface: Protocol\t\t\t= 0x%02x\n",
 				pInterface->Protocol);
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			sprintf(TempBuff,
 				"\tInterface: InterfaceHandle\t= %p\n",
 				pInterface->InterfaceHandle);
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			sprintf(TempBuff,
 				"\tInterface: NumberOfPipes\t\t= %d\n",
 				pInterface->NumberOfPipes);
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(bReturnedFromHCD)
 			{
 				ULONG uNumPipes = pInterface->NumberOfPipes;
@@ -1258,7 +1282,7 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 					sprintf(TempBuff,
 						"*** error: uNumPipes is too large (%d), resetting to 1\n",
 						uNumPipes);
-					FillRollingBuffer(TempBuff);
+					*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 					uNumPipes = 1;
 				}
 				for(ULONG p = 0; p< uNumPipes; p++)
@@ -1266,15 +1290,15 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 					sprintf(TempBuff,
 						"\tInterface: Pipes[%lu] : MaximumPacketSize = 0x%04x\n", 
 						p, pInterface->Pipes[p].MaximumPacketSize);
-					FillRollingBuffer(TempBuff);
+					*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 					sprintf(TempBuff,
 						"\tInterface: Pipes[%lu] : EndpointAddress\t= 0x%02x\n",
 						p, pInterface->Pipes[p].EndpointAddress);
-					FillRollingBuffer(TempBuff);
+					*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 					sprintf(TempBuff,
 						"\tInterface: Pipes[%lu] : Interval\t\t\t= 0x%02x\n",
 						p, pInterface->Pipes[p].Interval);
-					FillRollingBuffer(TempBuff);
+					*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 					sprintf(TempBuff,
 						"\tInterface: Pipes[%lu] : PipeType\t\t\t= 0x%02x (%s)\n",
 						p, pInterface->Pipes[p].PipeType,
@@ -1282,19 +1306,19 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 						pInterface->Pipes[p].PipeType == UsbdPipeTypeIsochronous ? "UsbdPipeTypeIsochronous" :
 						pInterface->Pipes[p].PipeType == UsbdPipeTypeBulk ? "UsbdPipeTypeBulk" :
 						pInterface->Pipes[p].PipeType == UsbdPipeTypeInterrupt ? "UsbdPipeTypeInterrupt" : "!!! INVALID !!!");
-						FillRollingBuffer(TempBuff);
+					*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 					sprintf(TempBuff,
 						"\tInterface: Pipes[%lu] : PipeHandle\t\t\t= 0x%p\n",
 						p, pInterface->Pipes[p].PipeHandle);
-					FillRollingBuffer(TempBuff);
+					*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 					sprintf(TempBuff,
 						"\tInterface: Pipes[%lu] : MaxTransferSize\t= 0x%08x\n",
 						p, pInterface->Pipes[p].MaximumTransferSize);
-					FillRollingBuffer(TempBuff);
+					*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 					sprintf(TempBuff,
 						"\tInterface: Pipes[%lu] : PipeFlags\t\t\t= 0x%02x\n",
 						p, pInterface->Pipes[p].PipeFlags);
-					FillRollingBuffer(TempBuff);
+					*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 
 					AddEndpointInfo(pInterface->Pipes[p].PipeHandle,
 						pInterface->Pipes[p].EndpointAddress);
@@ -1307,17 +1331,17 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 			struct _URB_PIPE_REQUEST   *pAbortPipe = (struct _URB_PIPE_REQUEST *) pUrb;
 
 			sprintf(TempBuff,"-- URB_FUNCTION_ABORT_PIPE:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pAbortPipe->Hdr.Length < sizeof(struct _URB_PIPE_REQUEST))
 			{
 				sprintf(TempBuff,
 					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
 					pAbortPipe->Hdr.Length, sizeof(struct _URB_PIPE_REQUEST));
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}	
 
 			if(!bReturnedFromHCD)
-				DumpPipeHandle("  PipeHandle",pAbortPipe->PipeHandle);
+				DumpPipeHandle("  PipeHandle",pAbortPipe->PipeHandle, outbuf, outbufpos);
 		}
 		break;
 	case URB_FUNCTION_TAKE_FRAME_LENGTH_CONTROL:
@@ -1326,18 +1350,18 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 
 			sprintf(TempBuff,
 				"-- URB_FUNCTION_TAKE_FRAME_LENGTH_CONTROL:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pFrameLengthControl->Hdr.Length < sizeof(struct _URB_FRAME_LENGTH_CONTROL))
 			{
 				sprintf(TempBuff,
 					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", 
 					pFrameLengthControl->Hdr.Length, 
 					sizeof(struct _URB_FRAME_LENGTH_CONTROL));
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
 
 			sprintf(TempBuff,"  (no parameters)\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 		}
 		break;
 	case URB_FUNCTION_RELEASE_FRAME_LENGTH_CONTROL:
@@ -1346,17 +1370,17 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 
 			sprintf(TempBuff,
 				"-- URB_FUNCTION_RELEASE_FRAME_LENGTH_CONTROL:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pFrameLengthControl->Hdr.Length < sizeof(struct _URB_FRAME_LENGTH_CONTROL))
 			{
 				sprintf(TempBuff,
 					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", 
 					pFrameLengthControl->Hdr.Length, sizeof(struct _URB_FRAME_LENGTH_CONTROL));
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
 
 			sprintf(TempBuff,"  (no parameters)\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 		}
 		break;
 	case URB_FUNCTION_GET_FRAME_LENGTH:
@@ -1364,14 +1388,14 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 			struct _URB_GET_FRAME_LENGTH   *pGetFrameLength = (struct _URB_GET_FRAME_LENGTH *) pUrb;
 
 			sprintf(TempBuff,"-- URB_FUNCTION_GET_FRAME_LENGTH:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pGetFrameLength->Hdr.Length < sizeof(struct _URB_GET_FRAME_LENGTH))
 			{
 				sprintf(TempBuff,
 					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
 					pGetFrameLength->Hdr.Length, 
 					sizeof(struct _URB_GET_FRAME_LENGTH));
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
 
 			if(bReturnedFromHCD)
@@ -1379,11 +1403,11 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 				sprintf(TempBuff,
 					"\tFrameLength = %08x\n", 
 					pGetFrameLength->FrameLength);
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 				sprintf(TempBuff,
 					"\tFrameNumber = %08x\n", 
 					pGetFrameLength->FrameNumber);
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
 		}
 		break;
@@ -1393,14 +1417,14 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 
 			sprintf(TempBuff,
 				"-- URB_FUNCTION_SET_FRAME_LENGTH:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pSetFrameLength->Hdr.Length < sizeof(struct _URB_SET_FRAME_LENGTH))
 			{
 				sprintf(TempBuff,
 					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
 					pSetFrameLength->Hdr.Length, 
 					sizeof(struct _URB_SET_FRAME_LENGTH));
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
 
 			if(!bReturnedFromHCD)
@@ -1408,7 +1432,7 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 				sprintf(TempBuff,
 					"  FrameLengthDelta = %08x\n", 
 					pSetFrameLength->FrameLengthDelta);
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
 		}
 		break;
@@ -1418,14 +1442,14 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 
 			sprintf(TempBuff,
 				"-- URB_FUNCTION_GET_CURRENT_FRAME_NUMBER:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pGetCurrentFrameNumber->Hdr.Length < sizeof(struct _URB_GET_CURRENT_FRAME_NUMBER))
 			{
 				sprintf(TempBuff,
 					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
 					pGetCurrentFrameNumber->Hdr.Length,
 					sizeof(struct _URB_GET_CURRENT_FRAME_NUMBER));
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
 
 			if(bReturnedFromHCD)
@@ -1433,7 +1457,7 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 				sprintf(TempBuff,
 					"  FrameNumber = %08x\n", 
 					pGetCurrentFrameNumber->FrameNumber);
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
 		}
 		break;
@@ -1442,51 +1466,51 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 			struct _URB_CONTROL_TRANSFER   *pControlTransfer = (struct _URB_CONTROL_TRANSFER *) pUrb;
 
 			sprintf(TempBuff,"-- URB_FUNCTION_CONTROL_TRANSFER:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pControlTransfer->Hdr.Length < sizeof(struct _URB_CONTROL_TRANSFER))
 			{
 				sprintf(TempBuff,
 					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
 					pControlTransfer->Hdr.Length, 
 					sizeof(struct _URB_CONTROL_TRANSFER));
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
 
 			BOOLEAN bReadFromDevice = (BOOLEAN)(pControlTransfer->TransferFlags & USBD_TRANSFER_DIRECTION_IN);
-			DumpPipeHandle("\tPipeHandle\t\t",pControlTransfer->PipeHandle);
+			DumpPipeHandle("\tPipeHandle\t\t",pControlTransfer->PipeHandle, outbuf, outbufpos);
 			sprintf(TempBuff,
 				"\tTransferFlags\t\t= %08x (%s, %sUSBD_SHORT_TRANSFER_OK)\n",
 				pControlTransfer->TransferFlags,
 				bReadFromDevice ? "USBD_TRANSFER_DIRECTION_IN" : "USBD_TRANSFER_DIRECTION_OUT",
 				pControlTransfer->TransferFlags & USBD_SHORT_TRANSFER_OK ? "":"~");
-			FillRollingBuffer(TempBuff);
-			DumpTransferBuffer((PUCHAR)pControlTransfer->TransferBuffer, pControlTransfer->TransferBufferMDL, pControlTransfer->TransferBufferLength, TRUE);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
+			DumpTransferBuffer((PUCHAR)pControlTransfer->TransferBuffer, pControlTransfer->TransferBufferMDL, pControlTransfer->TransferBufferLength, TRUE, outbuf, outbufpos);
 			if(((!bReadFromDevice) && (!bReturnedFromHCD)) || (bReadFromDevice && bReturnedFromHCD))
 			{
-				DumpTransferBuffer((PUCHAR)pControlTransfer->TransferBuffer, pControlTransfer->TransferBufferMDL, pControlTransfer->TransferBufferLength, FALSE);
+				DumpTransferBuffer((PUCHAR)pControlTransfer->TransferBuffer, pControlTransfer->TransferBufferMDL, pControlTransfer->TransferBufferLength, FALSE, outbuf, outbufpos);
 			}
 
 			sprintf(TempBuff,"\tUrbLink\t\t\t= %08x\n",
 				pControlTransfer->UrbLink);
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			sprintf(TempBuff,"\tSetupPacket\t\t:");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 
 			for(int b=0; b<sizeof(pControlTransfer->SetupPacket); b++)
 			{
 				sprintf(TempBuff," %02x", 
 					pControlTransfer->SetupPacket[b]);
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
 			sprintf(TempBuff,"\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pControlTransfer->UrbLink)
 			{
 				sprintf(TempBuff,"---> Linked URB:\n");
-				FillRollingBuffer(TempBuff);
-				DumpURB(pControlTransfer->UrbLink, bReturnedFromHCD);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
+				DumpURB(pControlTransfer->UrbLink, bReturnedFromHCD, outbuf, outbufpos);
 				sprintf(TempBuff,"---< Linked URB\n");
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
 		}
 		break;
@@ -1496,40 +1520,40 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 
 			sprintf(TempBuff,
 				"-- URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pBulkOrInterruptTransfer->Hdr.Length < sizeof(struct _URB_BULK_OR_INTERRUPT_TRANSFER ))
 			{
 				sprintf(TempBuff,
 					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
 					pBulkOrInterruptTransfer->Hdr.Length, 
 					sizeof(struct _URB_BULK_OR_INTERRUPT_TRANSFER));
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
 
 			BOOLEAN bReadFromDevice = (BOOLEAN)(pBulkOrInterruptTransfer->TransferFlags & USBD_TRANSFER_DIRECTION_IN);
-			DumpPipeHandle("  PipeHandle          ",pBulkOrInterruptTransfer->PipeHandle);
+			DumpPipeHandle("  PipeHandle          ",pBulkOrInterruptTransfer->PipeHandle, outbuf, outbufpos);
 			sprintf(TempBuff,
 				"  TransferFlags        = %08x (%s, %sUSBD_SHORT_TRANSFER_OK)\n",
 				pBulkOrInterruptTransfer->TransferFlags,
 				bReadFromDevice ? "USBD_TRANSFER_DIRECTION_IN" : "USBD_TRANSFER_DIRECTION_OUT",
 				pBulkOrInterruptTransfer->TransferFlags & USBD_SHORT_TRANSFER_OK ? "":"~");
-			FillRollingBuffer(TempBuff);
-			DumpTransferBuffer((PUCHAR)pBulkOrInterruptTransfer->TransferBuffer, pBulkOrInterruptTransfer->TransferBufferMDL, pBulkOrInterruptTransfer->TransferBufferLength, TRUE);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
+			DumpTransferBuffer((PUCHAR)pBulkOrInterruptTransfer->TransferBuffer, pBulkOrInterruptTransfer->TransferBufferMDL, pBulkOrInterruptTransfer->TransferBufferLength, TRUE, outbuf, outbufpos);
 			if(((!bReadFromDevice) && (!bReturnedFromHCD)) || (bReadFromDevice && bReturnedFromHCD))
 			{
-				DumpTransferBuffer((PUCHAR)pBulkOrInterruptTransfer->TransferBuffer, pBulkOrInterruptTransfer->TransferBufferMDL, pBulkOrInterruptTransfer->TransferBufferLength, FALSE);
+				DumpTransferBuffer((PUCHAR)pBulkOrInterruptTransfer->TransferBuffer, pBulkOrInterruptTransfer->TransferBufferMDL, pBulkOrInterruptTransfer->TransferBufferLength, FALSE, outbuf, outbufpos);
 			}
 
 			sprintf(TempBuff,"  UrbLink              = %08x\n",
 				pBulkOrInterruptTransfer->UrbLink);
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pBulkOrInterruptTransfer->UrbLink)
 			{
 				sprintf(TempBuff,"---> Linked URB:\n");
-				FillRollingBuffer(TempBuff);
-				DumpURB(pBulkOrInterruptTransfer->UrbLink, bReturnedFromHCD);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
+				DumpURB(pBulkOrInterruptTransfer->UrbLink, bReturnedFromHCD, outbuf, outbufpos);
 				sprintf(TempBuff,"---< Linked URB\n");
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
 		}
 		break;
@@ -1538,26 +1562,26 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 			struct _URB_ISOCH_TRANSFER *pIsochTransfer = (struct _URB_ISOCH_TRANSFER *) pUrb;
 
 			sprintf(TempBuff,"-- URB_FUNCTION_ISOCH_TRANSFER:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pIsochTransfer->Hdr.Length < sizeof(struct _URB_ISOCH_TRANSFER ))
 			{
 				sprintf(TempBuff,
 					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
 					pIsochTransfer->Hdr.Length, 
 					sizeof(struct _URB_ISOCH_TRANSFER));
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
 
 			BOOLEAN bReadFromDevice = (BOOLEAN)(pIsochTransfer->TransferFlags & USBD_TRANSFER_DIRECTION_IN);
-			DumpPipeHandle("  PipeHandle          ",pIsochTransfer->PipeHandle);
+			DumpPipeHandle("  PipeHandle          ",pIsochTransfer->PipeHandle, outbuf, outbufpos);
 			sprintf(TempBuff,
 				"\tTransferFlags\t\t\t= %08x (%s, %sUSBD_SHORT_TRANSFER_OK%s\n",
 				pIsochTransfer->TransferFlags,
 				bReadFromDevice ? "USBD_TRANSFER_DIRECTION_IN" : "USBD_TRANSFER_DIRECTION_OUT",
 				pIsochTransfer->TransferFlags & USBD_SHORT_TRANSFER_OK ? "":"~",
 				pIsochTransfer->TransferFlags & USBD_START_ISO_TRANSFER_ASAP ? ", USBD_START_ISO_TRANSFER_ASAP" : "");
-			FillRollingBuffer(TempBuff);
-			DumpTransferBuffer((PUCHAR)pIsochTransfer->TransferBuffer, pIsochTransfer->TransferBufferMDL, pIsochTransfer->TransferBufferLength, TRUE);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
+			DumpTransferBuffer((PUCHAR)pIsochTransfer->TransferBuffer, pIsochTransfer->TransferBufferMDL, pIsochTransfer->TransferBufferLength, TRUE, outbuf, outbufpos);
 			//if(((!bReadFromDevice) && (!bReturnedFromHCD)) || (bReadFromDevice && bReturnedFromHCD))
 			//{				
 			//	DumpTransferBuffer((PUCHAR)pIsochTransfer->TransferBuffer, pIsochTransfer->TransferBufferMDL, pIsochTransfer->TransferBufferLength, FALSE);
@@ -1572,44 +1596,44 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 
 			sprintf(TempBuff,"\tStartFrame\t\t\t= %08x\n",
 				pIsochTransfer->StartFrame);
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			sprintf(TempBuff,"\tNumberOfPackets\t\t= %08x\n", 
 				pIsochTransfer->NumberOfPackets);
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(bReturnedFromHCD)
 			{
 				sprintf(TempBuff,"\tErrorCount\t\t\t= %08x\n",
 					pIsochTransfer->ErrorCount);
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
 			for(ULONG p=0; p < pIsochTransfer->NumberOfPackets; p++)
 			{
 				sprintf(TempBuff,"\tIsoPacket[%d].Offset = %x\n", p,
 					pIsochTransfer->IsoPacket[p].Offset);
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 				sprintf(TempBuff,"\tIsoPacket[%d].Length = %x\n", p,
 					pIsochTransfer->IsoPacket[p].Length);
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 				if(bReturnedFromHCD)
 				{
 					sprintf(TempBuff,"\tIsoPacket[%d].Status = %x\n", p,
 					pIsochTransfer->IsoPacket[p].Status);
-					FillRollingBuffer(TempBuff);
+					*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 				}
 				if(((!bReadFromDevice) && (!bReturnedFromHCD)) || (bReadFromDevice && bReturnedFromHCD))
 					DumpTransferBuffer((PUCHAR)pIsochTransfer->TransferBuffer + pIsochTransfer->IsoPacket[p].Offset
-							, 0, pIsochTransfer->IsoPacket[p].Length, FALSE);
+							, 0, pIsochTransfer->IsoPacket[p].Length, FALSE, outbuf, outbufpos);
 			}
 			sprintf(TempBuff,"\tUrbLink\t\t\t= %08x\n",
 				pIsochTransfer->UrbLink);
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pIsochTransfer->UrbLink)
 			{
 				sprintf(TempBuff,"---> Linked URB:\n");
-				FillRollingBuffer(TempBuff);
-				DumpURB(pIsochTransfer->UrbLink, bReturnedFromHCD);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
+				DumpURB(pIsochTransfer->UrbLink, bReturnedFromHCD, outbuf, outbufpos);
 				sprintf(TempBuff,"---< Linked URB\n");
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
 		}
 		break;
@@ -1618,16 +1642,16 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 			struct _URB_PIPE_REQUEST   *pResetPipe = (struct _URB_PIPE_REQUEST *) pUrb;
 
 			sprintf(TempBuff,"-- URB_FUNCTION_RESET_PIPE:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pResetPipe->Hdr.Length < sizeof(struct _URB_PIPE_REQUEST))
 				sprintf(TempBuff,
 				"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
 				pResetPipe->Hdr.Length, 
 				sizeof(struct _URB_PIPE_REQUEST));
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 
 			if(!bReturnedFromHCD)
-				DumpPipeHandle("  PipeHandle",pResetPipe->PipeHandle);
+				DumpPipeHandle("  PipeHandle",pResetPipe->PipeHandle, outbuf, outbufpos);
 		}
 		break;
 	case URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE:
@@ -1636,15 +1660,15 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 
 			sprintf(TempBuff,
 				"-- URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pGetDescriptorFromDevice->Hdr.Length < sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST))
 			{
 				sprintf(TempBuff,"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
 					pGetDescriptorFromDevice->Hdr.Length, 
 					sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST));
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
-			DumpDescriptorRequest(pGetDescriptorFromDevice, TRUE, bReturnedFromHCD);
+			DumpDescriptorRequest(pGetDescriptorFromDevice, TRUE, bReturnedFromHCD, outbuf, outbufpos);
 
 		}
 		break;
@@ -1654,16 +1678,16 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 
 			sprintf(TempBuff,
 				"-- URB_FUNCTION_GET_DESCRIPTOR_FROM_ENDPOINT:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pGetDescriptorFromEndpoint->Hdr.Length < sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST))
 			{
 				sprintf(TempBuff,
 					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
 					pGetDescriptorFromEndpoint->Hdr.Length,
 					sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST));
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
-			DumpDescriptorRequest(pGetDescriptorFromEndpoint, TRUE, bReturnedFromHCD);
+			DumpDescriptorRequest(pGetDescriptorFromEndpoint, TRUE, bReturnedFromHCD, outbuf, outbufpos);
 
 		}
 		break;
@@ -1673,16 +1697,16 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 
 			sprintf(TempBuff,
 				"-- URB_FUNCTION_GET_DESCRIPTOR_FROM_INTERFACE:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pGetDescriptorFromInterface->Hdr.Length < sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST))
 			{
 				sprintf(TempBuff,
 					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
 					pGetDescriptorFromInterface->Hdr.Length,
 					sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST));
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
-			DumpDescriptorRequest(pGetDescriptorFromInterface, TRUE, bReturnedFromHCD);
+			DumpDescriptorRequest(pGetDescriptorFromInterface, TRUE, bReturnedFromHCD, outbuf, outbufpos);
 
 		}
 		break;
@@ -1692,16 +1716,16 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 
 			sprintf(TempBuff,
 				"-- URB_FUNCTION_SET_DESCRIPTOR_TO_DEVICE:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pSetDescriptorToDevice->Hdr.Length < sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST))
 			{
 				sprintf(TempBuff,
 					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
 					pSetDescriptorToDevice->Hdr.Length,
 					sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST));
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
-			DumpDescriptorRequest(pSetDescriptorToDevice, FALSE, bReturnedFromHCD);
+			DumpDescriptorRequest(pSetDescriptorToDevice, FALSE, bReturnedFromHCD, outbuf, outbufpos);
 		}
 		break;
 	case URB_FUNCTION_SET_DESCRIPTOR_TO_ENDPOINT:
@@ -1710,16 +1734,16 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 
 			sprintf(TempBuff,
 				"-- URB_FUNCTION_SET_DESCRIPTOR_TO_ENDPOINT:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pSetDescriptorToEndpoint->Hdr.Length < sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST))
 			{
 				sprintf(TempBuff,
 					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
 					pSetDescriptorToEndpoint->Hdr.Length,
 					sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST));
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
-			DumpDescriptorRequest(pSetDescriptorToEndpoint, TRUE, bReturnedFromHCD);
+			DumpDescriptorRequest(pSetDescriptorToEndpoint, TRUE, bReturnedFromHCD, outbuf, outbufpos);
 
 		}
 		break;
@@ -1729,16 +1753,16 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 
 			sprintf(TempBuff,
 				"-- URB_FUNCTION_SET_DESCRIPTOR_TO_INTERFACE:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pSetDescriptorToInterface->Hdr.Length < sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST))
 			{
 				sprintf(TempBuff,
 					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
 					pSetDescriptorToInterface->Hdr.Length, 
 					sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST));
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
-			DumpDescriptorRequest(pSetDescriptorToInterface, TRUE, bReturnedFromHCD);
+			DumpDescriptorRequest(pSetDescriptorToInterface, TRUE, bReturnedFromHCD, outbuf, outbufpos);
 
 		}
 		break;
@@ -1747,16 +1771,16 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 			struct _URB_CONTROL_FEATURE_REQUEST   *pSetFeatureToDevice = (struct _URB_CONTROL_FEATURE_REQUEST *) pUrb;
 
 			sprintf(TempBuff,"-- URB_FUNCTION_SET_FEATURE_TO_DEVICE:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pSetFeatureToDevice->Hdr.Length < sizeof(struct _URB_CONTROL_FEATURE_REQUEST))
 			{
 				sprintf(TempBuff,
 					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", 
 					pSetFeatureToDevice->Hdr.Length, 
 					sizeof(struct _URB_CONTROL_FEATURE_REQUEST));
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
-			DumpFeatureRequest(pSetFeatureToDevice, TRUE, bReturnedFromHCD);
+			DumpFeatureRequest(pSetFeatureToDevice, TRUE, bReturnedFromHCD, outbuf, outbufpos);
  
 		}
 		break;
@@ -1766,16 +1790,16 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 
 			sprintf(TempBuff,
 				"-- URB_FUNCTION_SET_FEATURE_TO_INTERFACE:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pSetFeatureToInterface->Hdr.Length < sizeof(struct _URB_CONTROL_FEATURE_REQUEST))
 			{
 				sprintf(TempBuff,
 					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
 					pSetFeatureToInterface->Hdr.Length, 
 					sizeof(struct _URB_CONTROL_FEATURE_REQUEST));
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
-			DumpFeatureRequest(pSetFeatureToInterface, TRUE, bReturnedFromHCD);
+			DumpFeatureRequest(pSetFeatureToInterface, TRUE, bReturnedFromHCD, outbuf, outbufpos);
 
 		}
 		break;
@@ -1785,16 +1809,16 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 
 			sprintf(TempBuff,
 				"-- URB_FUNCTION_SET_FEATURE_TO_ENDPOINT:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pSetFeatureToEndpoint->Hdr.Length < sizeof(struct _URB_CONTROL_FEATURE_REQUEST))
 			{
 				sprintf(TempBuff,
 					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
 					pSetFeatureToEndpoint->Hdr.Length, 
 					sizeof(struct _URB_CONTROL_FEATURE_REQUEST));
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
-			DumpFeatureRequest(pSetFeatureToEndpoint, TRUE, bReturnedFromHCD);
+			DumpFeatureRequest(pSetFeatureToEndpoint, TRUE, bReturnedFromHCD, outbuf, outbufpos);
 
 		}
 		break;
@@ -1803,16 +1827,16 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 			struct _URB_CONTROL_FEATURE_REQUEST   *pSetFeatureToOther = (struct _URB_CONTROL_FEATURE_REQUEST *) pUrb;
 
 			sprintf(TempBuff,"-- URB_FUNCTION_SET_FEATURE_TO_OTHER:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pSetFeatureToOther->Hdr.Length < sizeof(struct _URB_CONTROL_FEATURE_REQUEST))
 			{
 				sprintf(TempBuff,
 					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
 					pSetFeatureToOther->Hdr.Length,
 					sizeof(struct _URB_CONTROL_FEATURE_REQUEST));
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
-			DumpFeatureRequest(pSetFeatureToOther, TRUE, bReturnedFromHCD);
+			DumpFeatureRequest(pSetFeatureToOther, TRUE, bReturnedFromHCD, outbuf, outbufpos);
 
 		}
 		break;
@@ -1822,16 +1846,16 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 
 			sprintf(TempBuff,
 				"-- URB_FUNCTION_CLEAR_FEATURE_TO_DEVICE:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pClearFeatureToDevice->Hdr.Length < sizeof(struct _URB_CONTROL_FEATURE_REQUEST))
 			{
 				sprintf(TempBuff,
 					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
 					pClearFeatureToDevice->Hdr.Length,
 					sizeof(struct _URB_CONTROL_FEATURE_REQUEST));
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
-			DumpFeatureRequest(pClearFeatureToDevice, TRUE, bReturnedFromHCD);
+			DumpFeatureRequest(pClearFeatureToDevice, TRUE, bReturnedFromHCD, outbuf, outbufpos);
 
 		}
 		break;
@@ -1841,16 +1865,16 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 
 			sprintf(TempBuff,
 				"-- URB_FUNCTION_CLEAR_FEATURE_TO_INTERFACE:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pClearFeatureToInterface->Hdr.Length < sizeof(struct _URB_CONTROL_FEATURE_REQUEST))
 			{
 				sprintf(TempBuff,
 					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
 					pClearFeatureToInterface->Hdr.Length, 
 					sizeof(struct _URB_CONTROL_FEATURE_REQUEST));
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
-			DumpFeatureRequest(pClearFeatureToInterface, TRUE, bReturnedFromHCD);
+			DumpFeatureRequest(pClearFeatureToInterface, TRUE, bReturnedFromHCD, outbuf, outbufpos);
 
 		}
 		break;
@@ -1860,16 +1884,16 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 
 			sprintf(TempBuff,
 				"-- URB_FUNCTION_CLEAR_FEATURE_TO_ENDPOINT:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pClearFeatureToEndpoint->Hdr.Length < sizeof(struct _URB_CONTROL_FEATURE_REQUEST))
 			{
 				sprintf(TempBuff,
 					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
 					pClearFeatureToEndpoint->Hdr.Length,
 					sizeof(struct _URB_CONTROL_FEATURE_REQUEST));
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
-			DumpFeatureRequest(pClearFeatureToEndpoint, TRUE, bReturnedFromHCD);
+			DumpFeatureRequest(pClearFeatureToEndpoint, TRUE, bReturnedFromHCD, outbuf, outbufpos);
 
 		}
 		break;
@@ -1879,16 +1903,16 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 
 			sprintf(TempBuff,
 				"-- URB_FUNCTION_CLEAR_FEATURE_TO_OTHER:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pClearFeatureToOther->Hdr.Length < sizeof(struct _URB_CONTROL_FEATURE_REQUEST))
 			{
 				sprintf(TempBuff,
 					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", 
 					pClearFeatureToOther->Hdr.Length,
 					sizeof(struct _URB_CONTROL_FEATURE_REQUEST));
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
-			DumpFeatureRequest(pClearFeatureToOther, TRUE, bReturnedFromHCD);
+			DumpFeatureRequest(pClearFeatureToOther, TRUE, bReturnedFromHCD, outbuf, outbufpos);
 
 		}
 		break;
@@ -1898,16 +1922,16 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 
 			sprintf(TempBuff,
 				"-- URB_FUNCTION_GET_STATUS_FROM_DEVICE:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pGetStatusFromDevice->Hdr.Length < sizeof(struct _URB_CONTROL_GET_STATUS_REQUEST))
 			{
 				sprintf(TempBuff,
 					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
 					pGetStatusFromDevice->Hdr.Length,
 					sizeof(struct _URB_CONTROL_GET_STATUS_REQUEST));
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
-			DumpGetStatusRequest(pGetStatusFromDevice, bReturnedFromHCD);
+			DumpGetStatusRequest(pGetStatusFromDevice, bReturnedFromHCD, outbuf, outbufpos);
 
 		}
 		break;
@@ -1917,16 +1941,16 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 
 			sprintf(TempBuff,
 				"-- URB_FUNCTION_GET_STATUS_FROM_INTERFACE:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pGetStatusFromInterface->Hdr.Length < sizeof(struct _URB_CONTROL_GET_STATUS_REQUEST))
 			{
 				sprintf(TempBuff,
 					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
 					pGetStatusFromInterface->Hdr.Length, 
 					sizeof(struct _URB_CONTROL_GET_STATUS_REQUEST));
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
-			DumpGetStatusRequest(pGetStatusFromInterface, bReturnedFromHCD);
+			DumpGetStatusRequest(pGetStatusFromInterface, bReturnedFromHCD, outbuf, outbufpos);
 
 		}
 		break;
@@ -1936,16 +1960,16 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 
 			sprintf(TempBuff,
 				"-- URB_FUNCTION_GET_STATUS_FROM_ENDPOINT:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pGetStatusFromEndpoint->Hdr.Length < sizeof(struct _URB_CONTROL_GET_STATUS_REQUEST))
 			{
 				sprintf(TempBuff,
 					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", 
 					pGetStatusFromEndpoint->Hdr.Length,
 					sizeof(struct _URB_CONTROL_GET_STATUS_REQUEST));
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
-			DumpGetStatusRequest(pGetStatusFromEndpoint, bReturnedFromHCD);
+			DumpGetStatusRequest(pGetStatusFromEndpoint, bReturnedFromHCD, outbuf, outbufpos);
 
 		}
 		break;
@@ -1954,16 +1978,16 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 			struct _URB_CONTROL_GET_STATUS_REQUEST *pGetStatusFromOther = (struct _URB_CONTROL_GET_STATUS_REQUEST *) pUrb;
 
 			sprintf(TempBuff,"-- URB_FUNCTION_GET_STATUS_FROM_OTHER:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pGetStatusFromOther->Hdr.Length < sizeof(struct _URB_CONTROL_GET_STATUS_REQUEST))
 			{
 				sprintf(TempBuff,
 					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", 
 					pGetStatusFromOther->Hdr.Length, 
 					sizeof(struct _URB_CONTROL_GET_STATUS_REQUEST));
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
-			DumpGetStatusRequest(pGetStatusFromOther, bReturnedFromHCD);
+			DumpGetStatusRequest(pGetStatusFromOther, bReturnedFromHCD, outbuf, outbufpos);
 
 		}
 		break;
@@ -1972,17 +1996,17 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 			struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST *pFunctionVendorDevice = (struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST *) pUrb;
 
 			sprintf(TempBuff, "-- URB_FUNCTION_VENDOR_DEVICE:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pFunctionVendorDevice->Hdr.Length < sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST))
 			{
 				sprintf(TempBuff,
 					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", 
 					pFunctionVendorDevice->Hdr.Length, 
 					sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST));
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
 
-			DumpVendorOrClassRequest(pFunctionVendorDevice, bReturnedFromHCD);
+			DumpVendorOrClassRequest(pFunctionVendorDevice, bReturnedFromHCD, outbuf, outbufpos);
 		}
 		break;
 	case URB_FUNCTION_VENDOR_INTERFACE:
@@ -1990,17 +2014,17 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 			struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST *pFunctionVendorInterface = (struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST *) pUrb;
 
 			sprintf(TempBuff,"-- URB_FUNCTION_VENDOR_INTERFACE:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pFunctionVendorInterface->Hdr.Length < sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST))
 			{
 				sprintf(TempBuff,
 					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", 
 					pFunctionVendorInterface->Hdr.Length, 
 					sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST));
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
 
-			DumpVendorOrClassRequest(pFunctionVendorInterface, bReturnedFromHCD);
+			DumpVendorOrClassRequest(pFunctionVendorInterface, bReturnedFromHCD, outbuf, outbufpos);
 		}
 		break;
 	case URB_FUNCTION_VENDOR_ENDPOINT:
@@ -2008,17 +2032,17 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 			struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST *pFunctionVendorEndpoint = (struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST *) pUrb;
 
 			sprintf(TempBuff,"-- URB_FUNCTION_VENDOR_ENDPOINT:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pFunctionVendorEndpoint->Hdr.Length < sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST))
 			{
 				sprintf(TempBuff,
 					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", 
 					pFunctionVendorEndpoint->Hdr.Length, 
 					sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST));
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
 
-			DumpVendorOrClassRequest(pFunctionVendorEndpoint, bReturnedFromHCD);
+			DumpVendorOrClassRequest(pFunctionVendorEndpoint, bReturnedFromHCD, outbuf, outbufpos);
 		}
 		break;
 	case URB_FUNCTION_VENDOR_OTHER:
@@ -2026,17 +2050,17 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 			struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST *pFunctionVendorOther = (struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST *) pUrb;
 
 			sprintf(TempBuff,"-- URB_FUNCTION_VENDOR_OTHER:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pFunctionVendorOther->Hdr.Length < sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST))
 			{
 				sprintf(TempBuff,
 					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", 
 					pFunctionVendorOther->Hdr.Length, 
 					sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST));
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
 
-			DumpVendorOrClassRequest(pFunctionVendorOther, bReturnedFromHCD);
+			DumpVendorOrClassRequest(pFunctionVendorOther, bReturnedFromHCD, outbuf, outbufpos);
 		}
 		break;
 	case URB_FUNCTION_CLASS_DEVICE:
@@ -2044,17 +2068,17 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 			struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST *pFunctionClassDevice = (struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST *) pUrb;
 
 			sprintf(TempBuff,"-- URB_FUNCTION_CLASS_DEVICE:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pFunctionClassDevice->Hdr.Length < sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST))
 			{
 				sprintf(TempBuff,
 					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", 
 					pFunctionClassDevice->Hdr.Length, 
 					sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST));
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
 
-			DumpVendorOrClassRequest(pFunctionClassDevice, bReturnedFromHCD);
+			DumpVendorOrClassRequest(pFunctionClassDevice, bReturnedFromHCD, outbuf, outbufpos);
 		}
 		break;
 	case URB_FUNCTION_CLASS_INTERFACE:
@@ -2062,17 +2086,17 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 			struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST *pFunctionClassInterface = (struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST *) pUrb;
 
 			sprintf(TempBuff,"-- URB_FUNCTION_CLASS_INTERFACE:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pFunctionClassInterface->Hdr.Length < sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST))
 			{
 				sprintf(TempBuff,
 					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", 
 					pFunctionClassInterface->Hdr.Length, 
 					sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST));
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
 
-			DumpVendorOrClassRequest(pFunctionClassInterface, bReturnedFromHCD);
+			DumpVendorOrClassRequest(pFunctionClassInterface, bReturnedFromHCD, outbuf, outbufpos);
 		}
 		break;
 	case URB_FUNCTION_CLASS_ENDPOINT:
@@ -2080,17 +2104,17 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 			struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST *pFunctionClassEndpoint = (struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST *) pUrb;
 
 			sprintf(TempBuff,"-- URB_FUNCTION_CLASS_ENDPOINT:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pFunctionClassEndpoint->Hdr.Length < sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST))
 			{
 				sprintf(TempBuff,
 					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", 
 					pFunctionClassEndpoint->Hdr.Length, 
 					sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST));
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
 
-			DumpVendorOrClassRequest(pFunctionClassEndpoint, bReturnedFromHCD);
+			DumpVendorOrClassRequest(pFunctionClassEndpoint, bReturnedFromHCD, outbuf, outbufpos);
 		}
 		break;
 	case URB_FUNCTION_CLASS_OTHER:
@@ -2098,17 +2122,17 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 			struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST *pFunctionClassOther = (struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST *) pUrb;
 
 			sprintf(TempBuff,"-- URB_FUNCTION_CLASS_OTHER:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pFunctionClassOther->Hdr.Length < sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST))
 			{
 				sprintf(TempBuff,
 					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", 
 					pFunctionClassOther->Hdr.Length, 
 					sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST));
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
 
-			DumpVendorOrClassRequest(pFunctionClassOther, bReturnedFromHCD);
+			DumpVendorOrClassRequest(pFunctionClassOther, bReturnedFromHCD, outbuf, outbufpos);
 		}
 		break;
 	case URB_FUNCTION_GET_CONFIGURATION:
@@ -2116,40 +2140,40 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 			struct _URB_CONTROL_GET_CONFIGURATION_REQUEST *pGetConfiguration = (struct _URB_CONTROL_GET_CONFIGURATION_REQUEST *) pUrb;
 
 			sprintf(TempBuff,"-- URB_FUNCTION_GET_CONFIGURATION:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pGetConfiguration->Hdr.Length < sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST))
 			{
 				sprintf(TempBuff,
 					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", 
 					pGetConfiguration->Hdr.Length, 
 					sizeof(struct _URB_CONTROL_GET_CONFIGURATION_REQUEST));
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
 
-			DumpTransferBuffer((PUCHAR)pGetConfiguration->TransferBuffer, pGetConfiguration->TransferBufferMDL, pGetConfiguration->TransferBufferLength, TRUE);
+			DumpTransferBuffer((PUCHAR)pGetConfiguration->TransferBuffer, pGetConfiguration->TransferBufferMDL, pGetConfiguration->TransferBufferLength, TRUE, outbuf, outbufpos);
 			if(pGetConfiguration->TransferBufferLength != 1)
 			{
 				sprintf(TempBuff,
 					"  *** error - TransferBufferLength should be 1!\n");
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
 
 			if(bReturnedFromHCD)
 			{
-				DumpTransferBuffer((PUCHAR)pGetConfiguration->TransferBuffer, pGetConfiguration->TransferBufferMDL, pGetConfiguration->TransferBufferLength, FALSE);
+				DumpTransferBuffer((PUCHAR)pGetConfiguration->TransferBuffer, pGetConfiguration->TransferBufferMDL, pGetConfiguration->TransferBufferLength, FALSE, outbuf, outbufpos);
 			}
 
 			sprintf(TempBuff,
 				"  UrbLink              = %08x\n",
 				pGetConfiguration->UrbLink);
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pGetConfiguration->UrbLink)
 			{
 				sprintf(TempBuff,"---> Linked URB:\n");
-				FillRollingBuffer(TempBuff);
-				DumpURB(pGetConfiguration->UrbLink, bReturnedFromHCD);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
+				DumpURB(pGetConfiguration->UrbLink, bReturnedFromHCD, outbuf, outbufpos);
 				sprintf(TempBuff,"---< Linked URB\n");
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
 		}
 		break;
@@ -2158,42 +2182,42 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 			struct _URB_CONTROL_GET_INTERFACE_REQUEST *pGetInterface = (struct _URB_CONTROL_GET_INTERFACE_REQUEST *) pUrb;
 
 			sprintf(TempBuff,"-- URB_FUNCTION_GET_INTERFACE:\n");
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pGetInterface->Hdr.Length < sizeof(struct _URB_CONTROL_GET_INTERFACE_REQUEST))
 			{
 				sprintf(TempBuff,
 					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", 
 					pGetInterface->Hdr.Length, 
 					sizeof(struct _URB_CONTROL_GET_CONFIGURATION_REQUEST));
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
 
-			DumpTransferBuffer((PUCHAR)pGetInterface->TransferBuffer, pGetInterface->TransferBufferMDL, pGetInterface->TransferBufferLength, TRUE);
+			DumpTransferBuffer((PUCHAR)pGetInterface->TransferBuffer, pGetInterface->TransferBufferMDL, pGetInterface->TransferBufferLength, TRUE, outbuf, outbufpos);
 			if(pGetInterface->TransferBufferLength != 1)
 			{
 				sprintf(TempBuff,
 					"  *** error - TransferBufferLength should be 1!\n");
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
 
 			if(bReturnedFromHCD)
 			{
-				DumpTransferBuffer((PUCHAR)pGetInterface->TransferBuffer, pGetInterface->TransferBufferMDL, pGetInterface->TransferBufferLength, FALSE);
+				DumpTransferBuffer((PUCHAR)pGetInterface->TransferBuffer, pGetInterface->TransferBufferMDL, pGetInterface->TransferBufferLength, FALSE, outbuf, outbufpos);
 			}
 
 			sprintf(TempBuff,"\tInterface\t\t\t= %02x\n",
 				pGetInterface->UrbLink);
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			sprintf(TempBuff,"\tUrbLink\t\t\t= %08x\n",
 				pGetInterface->UrbLink);
-			FillRollingBuffer(TempBuff);
+			*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			if(pGetInterface->UrbLink)
 			{
 				sprintf(TempBuff,"---> Linked URB:\n");
-				FillRollingBuffer(TempBuff);
-				DumpURB(pGetInterface->UrbLink, bReturnedFromHCD);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
+				DumpURB(pGetInterface->UrbLink, bReturnedFromHCD, outbuf, outbufpos);
 				sprintf(TempBuff,"---< Linked URB\n");
-				FillRollingBuffer(TempBuff);
+				*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 			}
 		}
 		break;
@@ -2202,25 +2226,28 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 		sprintf(TempBuff,
 			"******* non printable URB with function code 0x%04x ********\n", 
 			wFunction);
-		FillRollingBuffer(TempBuff);
+		*outbufpos += my_strncpy(outbuf + *outbufpos, TempBuff, LOG_URBSIZE - *outbufpos);
 		break;
 	}	// end of mega switch
-	KeReleaseSemaphore(&DataToBeRead,0,1,FALSE);
 }
 
 NTSTATUS InternalIOCTLCompletion(IN PDEVICE_OBJECT fido, IN PIRP Irp, IN PVOID Context)
 {
+	char *outbuf;
+
+	ReceiveBufSize = 0;
+	outbuf = ReceiveBuf;
 	sprintf(TempBuff,
 		"UsbSnoop - InternalIOCTLCompletion(%p) : fido=%p, Irp=%p, Context=%p\n",
 		InternalIOCTLCompletion,fido,Irp,Context);
-	FillRollingBuffer(TempBuff);
+	ReceiveBufSize += my_strncpy(outbuf + ReceiveBufSize, TempBuff, LOG_URBSIZE - ReceiveBufSize);
 //	DumpIrp(Irp);
 
 	PIO_STACK_LOCATION stack = IoGetCurrentIrpStackLocation(Irp);
 
     if (Irp->PendingReturned) {
 		sprintf(TempBuff,"\tIoMarkIrpPending\n");
-		FillRollingBuffer(TempBuff);
+		ReceiveBufSize += my_strncpy(outbuf + ReceiveBufSize, TempBuff, LOG_URBSIZE - ReceiveBufSize);
         IoMarkIrpPending( Irp );
     }
 
@@ -2230,20 +2257,27 @@ NTSTATUS InternalIOCTLCompletion(IN PDEVICE_OBJECT fido, IN PIRP Irp, IN PVOID C
 	{
 		sprintf(TempBuff,"~<<<~ URB %d coming back ~<<<~\n",
 			uSequenceNumber);
-		FillRollingBuffer(TempBuff);
+		ReceiveBufSize += my_strncpy(outbuf + ReceiveBufSize, TempBuff, LOG_URBSIZE - ReceiveBufSize);
 		PURB pUrb = (PURB)stack->Parameters.Others.Argument1;
-		DumpURB(pUrb, TRUE);
+		DumpURB(pUrb, TRUE, outbuf, &ReceiveBufSize);
 	}
 // TODO: check this line with the one in the downward irp handler! //	IoReleaseRemoveLock(&pdx->RemoveLock, Irp);
+	FillRollingBuffer(outbuf);
+	KeReleaseSemaphore(&DataToBeRead,0,1,FALSE);
 	return STATUS_SUCCESS;
 }
 
 NTSTATUS MyInternalIOCTLCompletion(IN PDEVICE_OBJECT fido, IN PIRP Irp, IN PVOID inContext)
 {
+	char *outbuf;
+
+	ReceiveBufSize = 0;
+	outbuf = ReceiveBuf;
+
 	sprintf(TempBuff,
 		"UsbSnoop - MyInternalIOCTLCompletion(%p) : fido=%p, Irp=%p, Context=%p\n",
 		MyInternalIOCTLCompletion,fido,Irp,inContext);
-	FillRollingBuffer(TempBuff);
+	ReceiveBufSize += my_strncpy(outbuf + ReceiveBufSize, TempBuff, LOG_URBSIZE - ReceiveBufSize);
 
 //	DumpIrp(Irp);
 
@@ -2259,8 +2293,8 @@ NTSTATUS MyInternalIOCTLCompletion(IN PDEVICE_OBJECT fido, IN PIRP Irp, IN PVOID
 	// dumping URB 
 	sprintf(TempBuff,
 		" <<<  URB %d coming back  <<< \n",Context->uSequenceNumber);
-	FillRollingBuffer(TempBuff);
-	DumpURB(Context->pUrb, TRUE);
+	ReceiveBufSize += my_strncpy(outbuf + ReceiveBufSize, TempBuff, LOG_URBSIZE - ReceiveBufSize);
+	DumpURB(Context->pUrb, TRUE, outbuf, &ReceiveBufSize);
 
 
 	// saving some field before freeing the structure
@@ -2272,18 +2306,26 @@ NTSTATUS MyInternalIOCTLCompletion(IN PDEVICE_OBJECT fido, IN PIRP Irp, IN PVOID
 
 	// calling the old CompletionRoutine, if there was one
 
+		FillRollingBuffer(outbuf);
+	KeReleaseSemaphore(&DataToBeRead,0,1,FALSE);
+	
 	if (OldCompletionRoutine != NULL)
 		return OldCompletionRoutine(fido,Irp,OldContext);
-
-	return STATUS_SUCCESS;
+	else
+		return STATUS_SUCCESS;
 }
 
 NTSTATUS MyDispatchInternalIOCTL(IN PDEVICE_OBJECT fdo, IN PIRP Irp)
 {
+	char * pbuf;
+
+	pbuf = SendBuf;
+	*pbuf = 0;
+	SendBufSize = 0;
 	sprintf(TempBuff,
 		"UsbSnoop - MyDispatchInternalIOCTL(%p) : fdo=%p, Irp=%p\n",
 		MyDispatchInternalIOCTL,fdo,Irp);
-	FillRollingBuffer(TempBuff);
+	SendBufSize += my_strncpy(pbuf + SendBufSize, TempBuff,LOG_URBSIZE -  SendBufSize);
 //	DumpDeviceObject(fdo);
 //	DumpIrp(Irp);
 
@@ -2307,10 +2349,10 @@ NTSTATUS MyDispatchInternalIOCTL(IN PDEVICE_OBJECT fdo, IN PIRP Irp)
 		// KdPrint((" >>>  URB %d going down  >>> \n", uSequenceNumber));
 		sprintf(TempBuff," >>>  URB %d going down  >>>\n",
 			uSequenceNumber);
-		FillRollingBuffer(TempBuff);
+		SendBufSize += my_strncpy(pbuf + SendBufSize, TempBuff,LOG_URBSIZE -  SendBufSize);
 
 		PURB pUrb = (PURB) stack->Parameters.Others.Argument1;
-		DumpURB(pUrb,FALSE);
+		DumpURB(pUrb,FALSE, SendBuf, &SendBufSize);
 
 		// inspired from the macro code of IoSetCompletionRoutine
 		// it just makes a big BSOD
@@ -2345,22 +2387,29 @@ NTSTATUS MyDispatchInternalIOCTL(IN PDEVICE_OBJECT fdo, IN PIRP Irp)
 		{
 			sprintf(TempBuff,
 			"  ExAllocatePool failed! Can't redirect CompletionRoutine\n");
-			FillRollingBuffer(TempBuff);
+			SendBufSize += my_strncpy(pbuf + SendBufSize, TempBuff,LOG_URBSIZE -  SendBufSize);
+			
 		}
 	}
-
+	FillRollingBuffer(pbuf);
+	KeReleaseSemaphore(&DataToBeRead,0,1,FALSE);
 	return pdx->OriginalDriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL](fdo,Irp);
 }
 
 NTSTATUS DispatchInternalIOCTL(IN PDEVICE_OBJECT fido, IN PIRP Irp)
 {
+	char * pbuf; 
+
 	PDEVICE_EXTENSION pdx = (PDEVICE_EXTENSION) fido->DeviceExtension;
 	PIO_STACK_LOCATION stack = IoGetCurrentIrpStackLocation(Irp);
+
+	SendBufSize = 0;
+	pbuf = SendBuf;
 
 	sprintf(TempBuff,
 		"UsbSnoop - DispatchInternalIOCTL(%p) : fido=%p, Irp=%p\n",
 		DispatchInternalIOCTL,fido,Irp);
-	FillRollingBuffer(TempBuff);
+	SendBufSize += my_strncpy(pbuf + SendBufSize, TempBuff,LOG_URBSIZE -  SendBufSize);
 //	DumpDeviceObject(fido);
 //	DumpIrp(Irp);
 	
@@ -2424,7 +2473,7 @@ NTSTATUS DispatchInternalIOCTL(IN PDEVICE_OBJECT fido, IN PIRP Irp)
 		sprintf(TempBuff,
 			"UsbSnoop - IRP_MJ_INTERNAL_DEVICE_CONTROL, unknown minor 0x%x\n",
 			dwControlCode);
-	FillRollingBuffer(TempBuff);
+	SendBufSize += my_strncpy(pbuf + SendBufSize, TempBuff,LOG_URBSIZE -  SendBufSize);
 
 	NTSTATUS status;
 	status = IoAcquireRemoveLock(&pdx->RemoveLock, Irp);
@@ -2436,9 +2485,9 @@ NTSTATUS DispatchInternalIOCTL(IN PDEVICE_OBJECT fido, IN PIRP Irp)
 		ULONG uSequenceNumber = InterlockedIncrement((PLONG)&pdx->uSequenceNumber);
 		sprintf(TempBuff,
 			"~>>>~ URB %d going down ~>>>~\n", uSequenceNumber);
-		FillRollingBuffer("~>>>~ URB %d going down ~>>>\n");
+		SendBufSize += my_strncpy(pbuf + SendBufSize, TempBuff,LOG_URBSIZE -  SendBufSize);
 		PURB pUrb = (PURB)stack->Parameters.Others.Argument1;
-		DumpURB(pUrb, FALSE);
+		DumpURB(pUrb, FALSE, pbuf, &SendBufSize);
 		IoCopyCurrentIrpStackLocationToNext(Irp);
 		IoSetCompletionRoutine(Irp, InternalIOCTLCompletion, (PVOID)uSequenceNumber, TRUE, TRUE, TRUE);
 
@@ -2457,7 +2506,9 @@ NTSTATUS DispatchInternalIOCTL(IN PDEVICE_OBJECT fido, IN PIRP Irp)
 		status = IoCallDriver(pdx->LowerDeviceObject, Irp);
 		IoReleaseRemoveLock(&pdx->RemoveLock, Irp);
 	}
-	
+
+	FillRollingBuffer(pbuf);
+	KeReleaseSemaphore(&DataToBeRead,0,1,FALSE);
 	return status;
 }
 
@@ -2510,6 +2561,7 @@ NTSTATUS DispatchPower(IN PDEVICE_OBJECT fido, IN PIRP Irp)
 			"UsbSnoop - IRP_MJ_POWER (%s), SystemContext %X",
 			fcnname[fcn], context);
 		FillRollingBuffer(TempBuff);
+		KeReleaseSemaphore(&DataToBeRead,0,1,FALSE);
 		if (type == SystemPowerState)
 			sprintf(TempBuff,
 				", SystemPowerState = %s\n",
@@ -2518,10 +2570,12 @@ NTSTATUS DispatchPower(IN PDEVICE_OBJECT fido, IN PIRP Irp)
 			sprintf(TempBuff,", DevicePowerState = %s\n",
 				devstate[stack->Parameters.Power.State.DeviceState]);
 		FillRollingBuffer(TempBuff);
+		KeReleaseSemaphore(&DataToBeRead,0,1,FALSE);
 	}
 	else
 		sprintf(TempBuff,"UsbSnoop - IRP_MJ_POWER (%s)\n", fcnname[fcn]);
 	FillRollingBuffer(TempBuff);
+	KeReleaseSemaphore(&DataToBeRead,0,1,FALSE);
 		
 	PDEVICE_EXTENSION pdx = (PDEVICE_EXTENSION) fido->DeviceExtension;
 	PoStartNextPowerIrp(Irp);	// must be done while we own the IRP
@@ -2552,6 +2606,7 @@ NTSTATUS DispatchPnp(IN PDEVICE_OBJECT fido, IN PIRP Irp)
 		"UsbSnoop - DispatchPNP(%p) : IRP_MJ_PNP (0x%x)\n",
 			DispatchPnp,fcn);
 	FillRollingBuffer(TempBuff);
+	KeReleaseSemaphore(&DataToBeRead,0,1,FALSE);
 	
 	NTSTATUS status;
 	PDEVICE_EXTENSION pdx = (PDEVICE_EXTENSION) fido->DeviceExtension;
@@ -2596,6 +2651,7 @@ NTSTATUS DispatchWmi(IN PDEVICE_OBJECT fido, IN PIRP Irp)
 	sprintf(TempBuff,
 		"UsbSnoop - IRP_MJ_SYSTEM_CONTROL (%s)\n", fcnname[fcn]);
 	FillRollingBuffer(TempBuff);
+	KeReleaseSemaphore(&DataToBeRead,0,1,FALSE);
 #endif // DBG
 	
 	NTSTATUS status;
@@ -2621,6 +2677,7 @@ VOID RemoveDevice(IN PDEVICE_OBJECT fido)
 	sprintf(TempBuff,
 		"UsbSnoop - RemoveDevice(%p) : fido = %p\n",RemoveDevice,fido);
 	FillRollingBuffer(TempBuff);
+	KeReleaseSemaphore(&DataToBeRead,0,1,FALSE);
 	
 	if (pdx->LowerDeviceObject)
 	{
