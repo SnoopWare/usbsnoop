@@ -1,0 +1,45 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: UsbSnoop - Win32 Debug win98--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\WINDOWS\TEMP\RSP5252.TMP" with contents
+[
+/nologo /Gz /MLd /W3 /Z7 /Oi /Gy /I "c:\98ddk\inc\win98" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D _X86_=1 /D i386=1 /D "STD_CALL" /D CONDITION_HANDLING=1 /D NT_UP=1 /D NT_INST=0 /D WIN32=100 /D _NT1X_=100 /D WINNT=1 /D _WIN32_WINNT=0x0500 /D _WIN32_IE=0x0400 /D WIN32_LEAN_AND_MEAN=1 /D DBG=1 /D DEVL=1 /D FPO=0 /D "NDEBUG" /D _DLL=1 /D "DRIVER" /D "_IDWBUILD" /D "RDRDBG" /D "SRVDBG" /D "WIN98" /FR"Debug98/" /Fo"Debug98/" /Fd"Debug98/" /FD /GZ /Zel -cbstring /QIfdiv- /QI0f /GF /QIf /c 
+"C:\usb\sniffusb\sniff-src-1.3\filter\DriverEntry.cpp"
+]
+Creating command line "cl.exe @C:\WINDOWS\TEMP\RSP5252.TMP" 
+Creating temporary file "C:\WINDOWS\TEMP\RSP5253.TMP" with contents
+[
+wdm.lib /nologo /base:"0x10000" /version:4.0 /entry:"DriverEntry@8" /subsystem:windows /pdb:none /debug /debugtype:both /machine:I386 /nodefaultlib /out:"debug98\UsbSnoop.sys" /libpath:"c:\98ddk\lib\i386\checked" -MERGE:_PAGE=PAGE -MERGE:_TEXT=.text -MERGE:.rdata=.text -SECTION:INIT,d -OPT:REF -FORCE:MULTIPLE -RELEASE -FULLBUILD -IGNORE:4001,4037,4039,4065,4070,4078,4087,4089,4096 -osversion:4.00 -optidata -driver -align:0x20 -subsystem:native,4.00 -debug:notmapped,FULL 
+".\Debug98\DriverEntry.obj"
+".\Debug98\RemoveLock.obj"
+".\Debug98\stddcls.obj"
+]
+Creating command line "link.exe @C:\WINDOWS\TEMP\RSP5253.TMP"
+<h3>Output Window</h3>
+Compiling...
+DriverEntry.cpp
+c:\98ddk\inc\win98\usbioctl.h(295) : warning C4200: nonstandard extension used : zero-sized array in struct/union
+c:\98ddk\inc\win98\usbioctl.h(334) : warning C4200: nonstandard extension used : zero-sized array in struct/union
+C:\usb\sniffusb\sniff-src-1.3\filter\DriverEntry.cpp(47) : warning C4101: 'ioStatusBlock' : unreferenced local variable
+Linking...
+Creating temporary file "C:\WINDOWS\TEMP\RSP5320.BAT" with contents
+[
+@echo off
+copy .\debug98\UsbSnoop.sys C:\WINDOWS\system32\drivers
+]
+Creating command line "C:\WINDOWS\TEMP\RSP5320.BAT"
+
+        1 fichier(s) copi‚(s)
+
+
+
+<h3>Results</h3>
+UsbSnoop.sys - 0 error(s), 3 warning(s)
+</pre>
+</body>
+</html>
