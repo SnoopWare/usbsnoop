@@ -9,7 +9,7 @@
 //	CONSTANT DECLARATION
 //	ADDED By Valette Jean-Sébastien
 
-#define BUFFER_SIZE 4096
+#define BUFFER_SIZE 1048576
 
 
 ///////////////////////////////////////////////////////////////////////////////
