@@ -1,0 +1,55 @@
+
+;/****************************************************************************
+;
+; Module:
+; LXLCore.def
+;
+; Description:
+; linker definition file
+;
+; Copyright (c) 1999,2000 Logitech, Inc.  All Rights Reserved
+;
+; This program is a trade secret of LOGITECH, and it is not to be reproduced,
+; published, disclosed to others, copied, adapted, distributed or displayed
+; without the prior authorization of LOGITECH.
+;
+; Licensee agrees to attach or embed this notice on all copies of the program,
+; including partial copies or modified versions thereof.
+;
+;****************************************************************************/
+
+VXD USBSNPYV DYNAMIC
+
+DESCRIPTION 'USB Snoopies Bridge Driver'
+
+EXETYPE     DEV386
+
+SEGMENTS
+	_LPTEXT		CLASS 'LCODE'   PRELOAD NONDISCARDABLE
+	_LTEXT		CLASS 'LCODE'   PRELOAD NONDISCARDABLE
+	_LDATA		CLASS 'LCODE'   PRELOAD NONDISCARDABLE
+	_TEXT		CLASS 'LCODE'   PRELOAD NONDISCARDABLE
+	_DATA		CLASS 'LCODE'   PRELOAD NONDISCARDABLE
+	CONST		CLASS 'LCODE'   PRELOAD NONDISCARDABLE
+	_TLS		CLASS 'LCODE'   PRELOAD NONDISCARDABLE
+	_BSS		CLASS 'LCODE'   PRELOAD NONDISCARDABLE
+;	_LMSGTABLE	CLASS 'MCODE'	PRELOAD NONDISCARDABLE IOPL
+;	_LMSGDATA	CLASS 'MCODE'	PRELOAD NONDISCARDABLE IOPL
+;   _IMSGTABLE	CLASS 'MCODE'	PRELOAD DISCARDABLE IOPL
+;   _IMSGDATA	CLASS 'MCODE'	PRELOAD DISCARDABLE IOPL
+   _ITEXT		CLASS 'ICODE'   DISCARDABLE
+	_IDATA		CLASS 'ICODE'   DISCARDABLE
+	_PTEXT		CLASS 'PCODE'   NONDISCARDABLE
+;	_PMSGTABLE	CLASS 'MCODE'	NONDISCARDABLE IOPL
+;	_PMSGDATA	CLASS 'MCODE'	NONDISCARDABLE IOPL
+	_PDATA		CLASS 'PDATA'   NONDISCARDABLE SHARED
+	_STEXT		CLASS 'SCODE'   RESIDENT
+	_SDATA		CLASS 'SCODE'   RESIDENT
+;	_DBOSTART	CLASS 'DBOCODE' PRELOAD NONDISCARDABLE CONFORMING
+;	_DBOCODE	CLASS 'DBOCODE' PRELOAD NONDISCARDABLE CONFORMING
+;	_DBODATA	CLASS 'DBOCODE' PRELOAD NONDISCARDABLE CONFORMING
+	_16ICODE	CLASS '16ICODE' PRELOAD DISCARDABLE
+	_RCODE		CLASS 'RCODE'
+
+EXPORTS     
+        _USBSNPYV_DDB     @1
