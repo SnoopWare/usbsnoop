@@ -841,7 +841,7 @@ void DumpTransferBuffer(PUCHAR pBuffer, PMDL pMdl, ULONG uBufferSize, BOOLEAN bP
 	{
 		sprintf(TempBuff,"\tTransferBufferLength\t= %08x\n", uBufferSize);
 		FillRollingBuffer(TempBuff);
-		sprintf(TempBuff,"\tTransferBuffer\t= %08x\n", pBuffer);
+		sprintf(TempBuff,"\tTransferBuffer\t\t= %08x\n", pBuffer);
 		FillRollingBuffer(TempBuff);
 		sprintf(TempBuff,"\tTransferBufferMDL\t= %08x\n", pMdl);
 		FillRollingBuffer(TempBuff);
@@ -930,16 +930,16 @@ void DumpDescriptorRequest(struct _URB_CONTROL_DESCRIPTOR_REQUEST *pDescriptorRe
 		DumpTransferBuffer((PUCHAR)pDescriptorRequest->TransferBuffer, pDescriptorRequest->TransferBufferMDL, pDescriptorRequest->TransferBufferLength, FALSE);
 	}
 
-	sprintf(TempBuff,"\tIndex\t\t= %02x\n",
+	sprintf(TempBuff,"\tIndex\t\t\t= %02x\n",
 		pDescriptorRequest->Index);
 	FillRollingBuffer(TempBuff);
-	sprintf(TempBuff,"\tDescriptorType\t= %02x (%s)\n",
+	sprintf(TempBuff,"\tDescriptorType\t\t= %02x (%s)\n",
 		pDescriptorRequest->DescriptorType,
 		pDescriptorRequest->DescriptorType == USB_DEVICE_DESCRIPTOR_TYPE ? "USB_DEVICE_DESCRIPTOR_TYPE" :
 		pDescriptorRequest->DescriptorType == USB_CONFIGURATION_DESCRIPTOR_TYPE ? "USB_CONFIGURATION_DESCRIPTOR_TYPE" :
 		pDescriptorRequest->DescriptorType == USB_STRING_DESCRIPTOR_TYPE ? "USB_STRING_DESCRIPTOR_TYPE" : "<illegal descriptor type!>");
 	FillRollingBuffer(TempBuff);
-	sprintf(TempBuff,"\tLanguageId\t= %04x\n",
+	sprintf(TempBuff,"\tLanguageId\t\t= %04x\n",
 		pDescriptorRequest->LanguageId);
 	FillRollingBuffer(TempBuff);
 	
@@ -1009,12 +1009,15 @@ void DumpPipeHandle(const char *s,USBD_PIPE_HANDLE inPipeHandle)
 
 void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 {
+	//LARGE_INTEGER urbTime;
+       
 	if(NULL == pUrb)
 	{
 		sprintf(TempBuff,"UsbSnoop - URB == NULL ???\n");
 		FillRollingBuffer(TempBuff);
 		return;
 	}
+	//KeQuerySystemTime(&urbTime );
 
 	USHORT wFunction = pUrb->UrbHeader.Function;
 	USHORT wLength = pUrb->UrbHeader.Length;
@@ -1065,31 +1068,31 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 			if (pCD == NULL)
 				break;
 
-			sprintf(TempBuff,"\tConfigurationDescriptor : bLength\t\t\t\t= %d\n", 
+			sprintf(TempBuff,"\tConfigurationDescriptor : bLength\t\t= %d\n", 
 				pCD->bLength);
 			FillRollingBuffer(TempBuff);
-			sprintf(TempBuff,"\tConfigurationDescriptor : bDescriptorType\t\t= 0x%02x\n",
+			sprintf(TempBuff,"\tConfigurationDescriptor : bDescriptorType\t= 0x%02x\n",
 				pCD->bDescriptorType);
 			FillRollingBuffer(TempBuff);
-			sprintf(TempBuff,"\tConfigurationDescriptor : wTotalLength\t\t\t= 0x%04x\n",
+			sprintf(TempBuff,"\tConfigurationDescriptor : wTotalLength\t\t= 0x%04x\n",
 				pCD->wTotalLength);
 			FillRollingBuffer(TempBuff);
-			sprintf(TempBuff,"\tConfigurationDescriptor : bNumInterfaces\t\t= 0x%02x\n",
+			sprintf(TempBuff,"\tConfigurationDescriptor : bNumInterfaces\t= 0x%02x\n",
 				pCD->bNumInterfaces);
 			FillRollingBuffer(TempBuff);
-			sprintf(TempBuff,"\tConfigurationDescriptor : bConfigurationValue = 0x%02x\n",
+			sprintf(TempBuff,"\tConfigurationDescriptor : bConfigurationValue\t= 0x%02x\n",
 				pCD->bConfigurationValue);
 			FillRollingBuffer(TempBuff);
-			sprintf(TempBuff,"\tConfigurationDescriptor : iConfiguration\t\t\t= 0x%02x\n",
+			sprintf(TempBuff,"\tConfigurationDescriptor : iConfiguration\t\t= 0x%02x\n",
 				pCD->iConfiguration);
 			FillRollingBuffer(TempBuff);
-			sprintf(TempBuff,"\tConfigurationDescriptor : bmAttributes\t\t\t\t= 0x%02x\n", 
+			sprintf(TempBuff,"\tConfigurationDescriptor : bmAttributes\t\t= 0x%02x\n", 
 				pCD->bmAttributes);
 			FillRollingBuffer(TempBuff);
-			sprintf(TempBuff,"\tConfigurationDescriptor : MaxPower\t\t\t\t\t= 0x%02x\n",
+			sprintf(TempBuff,"\tConfigurationDescriptor : MaxPower\t\t\t= 0x%02x\n",
 				pCD->MaxPower);
 			FillRollingBuffer(TempBuff);
-			sprintf(TempBuff,"\tConfigurationHandle\t\t= 0x%08x\n",
+			sprintf(TempBuff,"\tConfigurationHandle\t= 0x%08x\n",
 				pSelectConfiguration->ConfigurationHandle);
 			FillRollingBuffer(TempBuff);
 			
@@ -1466,7 +1469,7 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 			sprintf(TempBuff,"\tUrbLink\t\t\t= %08x\n",
 				pControlTransfer->UrbLink);
 			FillRollingBuffer(TempBuff);
-			sprintf(TempBuff,"\tSetupPacket\t\t\t:");
+			sprintf(TempBuff,"\tSetupPacket\t\t:");
 			FillRollingBuffer(TempBuff);
 
 			for(int b=0; b<sizeof(pControlTransfer->SetupPacket); b++)
@@ -1555,17 +1558,16 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 				pIsochTransfer->TransferFlags & USBD_START_ISO_TRANSFER_ASAP ? ", USBD_START_ISO_TRANSFER_ASAP" : "");
 			FillRollingBuffer(TempBuff);
 			DumpTransferBuffer((PUCHAR)pIsochTransfer->TransferBuffer, pIsochTransfer->TransferBufferMDL, pIsochTransfer->TransferBufferLength, TRUE);
-			if(((!bReadFromDevice) && (!bReturnedFromHCD)) || (bReadFromDevice && bReturnedFromHCD))
-			{
-				DumpTransferBuffer((PUCHAR)pIsochTransfer->TransferBuffer, pIsochTransfer->TransferBufferMDL, pIsochTransfer->TransferBufferLength, FALSE);
-			}
-			else
-			{
-				sprintf(TempBuff,"bReadFromDevice = %x\nbReturnedFromHCD=%x",
-					bReadFromDevice, bReturnedFromHCD);
-			FillRollingBuffer(TempBuff);
-			
-			}
+			//if(((!bReadFromDevice) && (!bReturnedFromHCD)) || (bReadFromDevice && bReturnedFromHCD))
+			//{				
+			//	DumpTransferBuffer((PUCHAR)pIsochTransfer->TransferBuffer, pIsochTransfer->TransferBufferMDL, pIsochTransfer->TransferBufferLength, FALSE);
+			//}
+			//else
+			//{
+			//	sprintf(TempBuff,"bReadFromDevice = %x\nbReturnedFromHCD=%x\n",
+			//		bReadFromDevice, bReturnedFromHCD);
+			//	FillRollingBuffer(TempBuff);
+			//}
 
 
 			sprintf(TempBuff,"\tStartFrame\t\t\t= %08x\n",
@@ -1582,18 +1584,21 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 			}
 			for(ULONG p=0; p < pIsochTransfer->NumberOfPackets; p++)
 			{
-				sprintf(TempBuff,"\tIsoPacket[%d].Offset = %u\n",
+				sprintf(TempBuff,"\tIsoPacket[%d].Offset = %x\n", p,
 					pIsochTransfer->IsoPacket[p].Offset);
 				FillRollingBuffer(TempBuff);
-				sprintf(TempBuff,"\tIsoPacket[%d].Length = %u\n",
+				sprintf(TempBuff,"\tIsoPacket[%d].Length = %x\n", p,
 					pIsochTransfer->IsoPacket[p].Length);
 				FillRollingBuffer(TempBuff);
 				if(bReturnedFromHCD)
 				{
-					sprintf(TempBuff,"\tIsoPacket[%d].Status = %u\n",
+					sprintf(TempBuff,"\tIsoPacket[%d].Status = %x\n", p,
 					pIsochTransfer->IsoPacket[p].Status);
 					FillRollingBuffer(TempBuff);
 				}
+				if(((!bReadFromDevice) && (!bReturnedFromHCD)) || (bReadFromDevice && bReturnedFromHCD))
+					DumpTransferBuffer((PUCHAR)pIsochTransfer->TransferBuffer + pIsochTransfer->IsoPacket[p].Offset
+							, 0, pIsochTransfer->IsoPacket[p].Length, FALSE);
 			}
 			sprintf(TempBuff,"\tUrbLink\t\t\t= %08x\n",
 				pIsochTransfer->UrbLink);
