@@ -18,7 +18,11 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD);
 BOOLEAN win98 = FALSE;
 UNICODE_STRING servkey;
 HANDLE fileHandle = (HANDLE)NULL;
-PWORK_QUEUE_ITEM BottomHalf;
+KSEMAPHORE DataToBeRead;
+//PWORK_QUEUE_ITEM BottomHalf;
+HANDLE ThreadHandle;
+
+
 
 // functions to handle conversion from PipeHandle to endpint number
 
@@ -54,17 +58,61 @@ bool GetEndpointInfo(USBD_PIPE_HANDLE inPipeHandle, unsigned char * outEndpoint)
 //		Write To LogFile
 //
 //		26 08 2001
+//
+//		09 09 2001 change to be a thread
+//
+
 VOID LogToFile(PVOID Parameter)
 {
 	char *test = "Test\n";
 	NTSTATUS status;
 	IO_STATUS_BLOCK ioStatusBlock;
+	OBJECT_ATTRIBUTES objectAttributes;
+	UNICODE_STRING unicodeObjectName;
+	ANSI_STRING ansiObjectName;
+	char *version="UsbSnoop compiled on " __DATE__ " " __TIME__ "\n";
 
-	status = ZwWriteFile(fileHandle,NULL,NULL,NULL,&ioStatusBlock,
+	status = ZwWriteFile(&fileHandle,NULL,NULL,NULL,&ioStatusBlock,
 			(PVOID) test,strlen(test),0,0);
 	if(status != STATUS_SUCCESS )
+	{
 		KdPrint(("LogToFile can't write into Logfile, status = %x\n",status));
-	KdPrint(("\n\nLogToFile\n\n"));
+		KdPrint(("fileHandle : %x\n",fileHandle));
+	}
+	
+	//	Jean-Sébastien Valette 08 09 2001
+	//
+	//	try to open a log File
+
+	RtlInitAnsiString(&ansiObjectName,"\\SystemRoot\\snoopy.log");
+ 	status = RtlAnsiStringToUnicodeString(&unicodeObjectName,&ansiObjectName,TRUE);
+	if (status != STATUS_SUCCESS)
+ 		KdPrint(("RtlAnsiStringToUnicodeString failed, status = 0x%xx\n",status));
+	InitializeObjectAttributes(&objectAttributes,&unicodeObjectName,0,NULL,NULL);
+
+
+ 
+ 	status = ZwCreateFile(&fileHandle,FILE_WRITE_DATA|SYNCHRONIZE ,
+	 	&objectAttributes,&ioStatusBlock,NULL,FILE_ATTRIBUTE_NORMAL,FILE_SHARE_READ,
+	FILE_OPEN_IF,FILE_SYNCHRONOUS_IO_NONALERT,NULL,0);
+ 	if (status != STATUS_SUCCESS)
+ 		KdPrint(("ZwCreateFile failed, status = 0x%x\n",status));
+	else
+		KdPrint(("\n\nusbsnoop: File Opened\nusbsnoop: fileHandle = %x\n",
+			fileHandle));
+
+	status = ZwWriteFile(fileHandle,NULL,NULL,NULL,&ioStatusBlock,version,
+				(unsigned long)strlen(version),NULL,NULL);
+	if(status != STATUS_SUCCESS )
+	{
+		KdPrint(("Can't write into Logfile, status = %x\n",status));
+		ZwClose(fileHandle);
+	}
+
+
+	ZwClose(fileHandle);
+	
+	
 	return;	
 };
 
@@ -194,67 +242,31 @@ extern "C" NTSTATUS DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRI
 
 	//	Jean-Sebastien Vallette 25 08 2001
 	//	Decaration for log file
-	OBJECT_ATTRIBUTES objectAttributes;
- 	UNICODE_STRING unicodeObjectName;
- 	ANSI_STRING ansiObjectName;
 	NTSTATUS status;
-	IO_STATUS_BLOCK ioStatusBlock;
 	LARGE_INTEGER ByteOffset;
-	char *version="UsbSnoop compiled on " __DATE__ " " __TIME__ "\n";
-
-
-	KdPrint(("UsbSnoop compiled on " __DATE__ " " __TIME__ "\n"));
-	//	Jean-Sébastien Valette	25 08 2001
-	//
-	//	try to open a log File
-	RtlInitAnsiString(&ansiObjectName,"\\SystemRoot\\snoopy.log");
- 	status = RtlAnsiStringToUnicodeString(&unicodeObjectName,&ansiObjectName,TRUE);
-	if (status != STATUS_SUCCESS)
- 		KdPrint(("RtlAnsiStringToUnicodeString failed, status = 0x%xx\n",status));
- 	InitializeObjectAttributes(&objectAttributes,&unicodeObjectName,0,NULL,NULL);
-
-
- 	const char str1[] = "super\n";
-	//const char str2[] = "yes baby?\n";
-
- 	status = ZwCreateFile(&fileHandle,FILE_WRITE_DATA|SYNCHRONIZE ,
-	 	&objectAttributes,&ioStatusBlock,NULL,FILE_ATTRIBUTE_NORMAL,FILE_SHARE_READ,
-		FILE_OPEN_IF,FILE_SYNCHRONOUS_IO_NONALERT,NULL,0);
- 	if (status != STATUS_SUCCESS)
- 		KdPrint(("ZwCreateFile failed, status = 0x%x\n",status));
-
-	KdPrint(("UsbSnoop compiled on " __DATE__ " " __TIME__ "\n"));
 	
-//
-//	Valette Jean-Sébastien 31 08 2001
-//
-//	Write into logfile and exit if impossible
-//
-	status = ZwWriteFile(fileHandle,NULL,NULL,NULL,&ioStatusBlock,version,
-				(unsigned long)strlen(version),NULL,NULL);
-	if(status != STATUS_SUCCESS )
-	{
-		KdPrint(("Can't write into Logfile, status = %x\n",status));
-		ZwClose(fileHandle);
-		return STATUS_UNSUCCESSFUL;
-	}
 
 
-	//		Jean-Sébastien Valette 26 08 2001
+	KdPrint(("UsbSnoop compiled on " __DATE__ " " __TIME__ "\n"));
+	// Valette Jean-Sébastien
 	//
-	//		Adding bottom halfed loggin to file
+	//	LogThread initialisation
 	//
-	//		Initialisation of the WorkItem
+	//	Added 09 09 2001
+	status = PsCreateSystemThread( &ThreadHandle,THREAD_ALL_ACCESS ,0,
+					0,0, LogToFile,0);
 
-	//	VOID 
-	if(!(BottomHalf = (PWORK_QUEUE_ITEM)(ExAllocatePool(NonPagedPool,
-											sizeof(WORK_QUEUE_ITEM)))))
-	{
-		return STATUS_INSUFFICIENT_RESOURCES;
-	}
+	//	Valette Jean-Sébastien 
+	//
+	//	Initialize Semaphore
+	//
+	//	Added 09 09 2001
+	KeInitializeSemaphore(&DataToBeRead,0,1);
+
+
+
 	ByteOffset.QuadPart = FILE_USE_FILE_POINTER_POSITION;
-	ExInitializeWorkItem(BottomHalf,&LogToFile,0);
-
+	
 	// Insist that OS support at least the WDM 1.0 (Win98 DDK)
 	
 	if (!IoIsWdmVersionAvailable(1, 0))
@@ -335,6 +347,7 @@ extern "C" NTSTATUS DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRI
 
 VOID DriverUnload(IN PDRIVER_OBJECT DriverObject)
 {
+	NTSTATUS status;
 	PAGED_CODE();
 	KdPrint(("UsbSnoop - DriverUnload(%p) : DriverObject %p\n",
 		DriverUnload,DriverObject));
@@ -344,10 +357,11 @@ VOID DriverUnload(IN PDRIVER_OBJECT DriverObject)
 //
 //	Added freein of ressource need by log to file
 
-	ExFreePool(BottomHalf);
+//	ExFreePool(BottomHalf);
        
-	ZwClose(fileHandle);
-	KdPrint(("Closed File \n"));
+	status = ZwClose(fileHandle);
+	KdPrint(("usbsnoop : Closed File \n"));
+	KdPrint(("usbsnoop: status %x\n",status));
 
 }
 
@@ -1430,7 +1444,7 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 		KdPrint(("******* non printable URB with function code 0x%04x ********\n", wFunction));
 		break;
 	}	// end of mega switch
-	ExQueueWorkItem(BottomHalf,CriticalWorkQueue);
+//	ExQueueWorkItem(BottomHalf,CriticalWorkQueue);
 }
 
 NTSTATUS InternalIOCTLCompletion(IN PDEVICE_OBJECT fido, IN PIRP Irp, IN PVOID Context)
