@@ -15,11 +15,10 @@ NTSTATUS DispatchInternalIOCTL(IN PDEVICE_OBJECT fido, IN PIRP Irp);
 NTSTATUS MyDispatchInternalIOCTL(IN PDEVICE_OBJECT fido, IN PIRP Irp);
 void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD);
 
-BOOLEAN win98 = TRUE;
+BOOLEAN win98 = FALSE;
 UNICODE_STRING servkey;
 HANDLE fileHandle = (HANDLE)NULL;
 PWORK_QUEUE_ITEM BottomHalf;
-       
 
 // functions to handle conversion from PipeHandle to endpint number
 
@@ -33,25 +32,6 @@ struct ENDPOINT_INFO TabEndpointInfo[10] =
 {
 	{ NULL, 0 },
 };
-
-
-
-//		Jean-Sébastien Valette
-//
-//		Write To LogFile
-//
-//		26 08 2001
-VOID LogToFile(PVOID Parameter)
-{
-	char *test = "Test\n";
-	IO_STATUS_BLOCK ioStatusBlock;
-
-//	ZwWriteFile(fileHandle,0,0,0,&ioStatusBlock,
-       //(PVOID *) test,strlen(test),0,0);
-	KdPrint(("LogToFile \n"));
-	return;	
-};
-
 
 bool GetEndpointInfo(USBD_PIPE_HANDLE inPipeHandle, unsigned char * outEndpoint)
 {
@@ -67,6 +47,29 @@ bool GetEndpointInfo(USBD_PIPE_HANDLE inPipeHandle, unsigned char * outEndpoint)
 
 	return false;
 }
+
+
+//		Jean-Sébastien Valette
+//
+//		Write To LogFile
+//
+//		26 08 2001
+VOID LogToFile(PVOID Parameter)
+{
+	char *test = "Test\n";
+	NTSTATUS status;
+	IO_STATUS_BLOCK ioStatusBlock;
+
+	status = ZwWriteFile(fileHandle,NULL,NULL,NULL,&ioStatusBlock,
+			(PVOID) test,strlen(test),0,0);
+	if(status != STATUS_SUCCESS )
+		KdPrint(("LogToFile can't write into Logfile, status = %x\n",status));
+	KdPrint(("\n\nLogToFile\n\n"));
+	return;	
+};
+
+
+
 
 void AddEndpointInfo(USBD_PIPE_HANDLE inPipeHandle, unsigned char inEndpoint)
 {
@@ -100,189 +103,81 @@ void AddEndpointInfo(USBD_PIPE_HANDLE inPipeHandle, unsigned char inEndpoint)
 
 void DumpStackLocation(PIO_STACK_LOCATION stack)
 {
-	//		Valette Jean-Sébastien 
-	//		19 08 2001
-	//		CHANGE : Sprintf  for Single kdprint
-
-	char BigBuffer[BIG_BUFFER_SIZE];
-	int  BigBufferPos=0;
-
 	if (stack == NULL)
 		return ;
 
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"\tMajorFunction=%d, MinorFunction=%d\n",
-		stack->MajorFunction,stack->MinorFunction);
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"\tDeviceObject=%p\n",stack->DeviceObject);
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"\tCompletionRoutine=%p Context=%p\n",
-		stack->CompletionRoutine,stack->Context);
-	KdPrint((BigBuffer));
+	KdPrint(("    MajorFunction=%d, MinorFunction=%d\n",
+		stack->MajorFunction,stack->MinorFunction));
+	KdPrint(("    DeviceObject=%p\n",stack->DeviceObject));
+	KdPrint(("    CompletionRoutine=%p Context=%p\n",stack->CompletionRoutine,stack->Context));
 
 }
 
 void DumpIrp(PIRP Irp)
 {
-	//		Valette Jean-Sébastien 
-	//		19 08 2001
-	//		CHANGE : Sprintf  for Single kdprint
-
-	char BigBuffer[BIG_BUFFER_SIZE];
-	int  BigBufferPos=0;
-
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"Dumping IRP %p\n",Irp);
+	KdPrint(("Dumping IRP %p\n",Irp));
 	if (Irp==NULL)
-	{
-		KdPrint((BigBuffer));
 		return ;
-	}
 
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"\tType=%d, Size=%d\n",Irp->Type,Irp->Size);
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"\tStackCount=%d, CurrentLocation=%d\n",
-		Irp->StackCount,Irp->CurrentLocation);
-	KdPrint((BigBuffer));
-	BigBufferPos = 0;
+	KdPrint(("  Type=%d, Size=%d\n",Irp->Type,Irp->Size));
+	KdPrint(("  StackCount=%d, CurrentLocation=%d\n",Irp->StackCount,Irp->CurrentLocation));
 	for (CHAR i=0;i<Irp->StackCount;i++)
 	{
 		PIO_STACK_LOCATION stack = (PIO_STACK_LOCATION) (Irp+1) + i;
-		BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-			"\t[%d] MajorFunction=%d, MinorFunction=%d, DeviceObject=%p\n",
-			i,stack->MajorFunction,stack->MinorFunction,
-			stack->DeviceObject);
-		BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-			"\t\tArg1=%p, Arg2=%p, Arg3=%p, Arg4=%p\n",
-			stack->Parameters.Others.Argument1,
-			stack->Parameters.Others.Argument2,
-			stack->Parameters.Others.Argument3,
-			stack->Parameters.Others.Argument4);
-		BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-			"\t\tCompletionRoutine=%p Context=%p\n",
-			stack->CompletionRoutine,stack->Context);
-		KdPrint((BigBuffer));
-		BigBufferPos = 0;
+		KdPrint(("  [%d] MajorFunction=%d, MinorFunction=%d, DeviceObject=%p\n",
+			i,stack->MajorFunction,stack->MinorFunction,stack->DeviceObject));
+		KdPrint(("      Arg1=%p, Arg2=%p, Arg3=%p, Arg4=%p\n",
+			stack->Parameters.Others.Argument1,stack->Parameters.Others.Argument2,
+			stack->Parameters.Others.Argument3,stack->Parameters.Others.Argument4));
+		KdPrint(("      CompletionRoutine=%p Context=%p\n",
+			stack->CompletionRoutine,stack->Context));
 	}
 }
 
 void DumpDriverObject(PDRIVER_OBJECT p)
 {
-	//		Valette Jean-Sébastien 
-	//		19 08 2001
-	//		CHANGE : Sprintf  for Single kdprint
-	//		22 08 2001
-	//		Try to limit the KdPrint to 512 bytes du to windows limitation
-
-	char BigBuffer[BIG_BUFFER_SIZE];
-	int  BigBufferPos=0;
-
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"UsbSnoop - DumpDriverObject : p = %p\n",p);
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"\tType = %d\n",p->Type);
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"\tSize = %d\n",p->Size);
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"\tDeviceObject = %p\n",p->DeviceObject);
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"\tFlags = 0x%x\n",p->Flags);
-	KdPrint((BigBuffer));
-	BigBufferPos = 0;
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"\tDriverStart = %p\n",p->DriverStart);
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"\tDriverSize = %d\n",p->DriverSize);
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"\tDriverSection = %p\n",p->DriverSection);
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"\tDriverExtension = %p\n",p->DriverExtension);
-	KdPrint((BigBuffer));
-	BigBufferPos = 0;
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"\tDriverExtension->AddDevice = %p\n",
-		p->DriverExtension->AddDevice);
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"\tFastIoDispatch = %p\n",p->FastIoDispatch);
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"\tDriverInit = %p\n",p->DriverInit);
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"\tDriverStartIo = %p\n",p->DriverStartIo);
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"\tDriverUnload = %p\n",p->DriverUnload);
-	KdPrint((BigBuffer));
-	BigBufferPos = 0;
+	KdPrint(("UsbSnoop - DumpDriverObject : p = %p\n",p));
+	KdPrint(("  Type = %d\n",p->Type));
+	KdPrint(("  Size = %d\n",p->Size));
+	KdPrint(("  DeviceObject = %p\n",p->DeviceObject));
+	KdPrint(("  Flags = 0x%x\n",p->Flags));
+	KdPrint(("  DriverStart = %p\n",p->DriverStart));
+	KdPrint(("  DriverSize = %d\n",p->DriverSize));
+	KdPrint(("  DriverSection = %p\n",p->DriverSection));
+	KdPrint(("  DriverExtension = %p\n",p->DriverExtension));
+	KdPrint(("  DriverExtension->AddDevice = %p\n",p->DriverExtension->AddDevice));
+	KdPrint(("  FastIoDispatch = %p\n",p->FastIoDispatch));
+	KdPrint(("  DriverInit = %p\n",p->DriverInit));
+	KdPrint(("  DriverStartIo = %p\n",p->DriverStartIo));
+	KdPrint(("  DriverUnload = %p\n",p->DriverUnload));
 	for (int i=0;i<IRP_MJ_MAXIMUM_FUNCTION + 1;i++)
-	{
-		BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-			"\tMajorFunction[%d] = %p\n",i,p->MajorFunction[i]);
-		if(!(i & 3))
-		{
-			KdPrint((BigBuffer));
-			BigBufferPos = 0;
-		}
-	}
+		KdPrint(("  MajorFunction[%d] = %p\n",i,p->MajorFunction[i]));
 }
 
 void DumpDeviceObject(PDEVICE_OBJECT p)
 {
-	//		Valette Jean-Sébastien 
-	//		19 08 2001
-	//		CHANGE : Sprintf  for Single kdprint
-	//		20 08 2001
-	//		512 byte limitation
-
-	char BigBuffer[BIG_BUFFER_SIZE];
-	int  BigBufferPos=0;
-
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"UsbSnoop - DumpDeviceObject : p = %p\n",p);
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"\tDriverObject = %p\n",p->DriverObject);
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"\tNextDevice = %p\n",p->NextDevice);
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"\tAttachedDevice = %p\n",p->AttachedDevice);
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"\tStackSize=%d\n",p->StackSize);
-	KdPrint((BigBuffer));
-	BigBufferPos = 0;
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"\tCurrentIrp = %p\n",p->CurrentIrp);
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"\tDeviceObjectExtension = %p\n",p->DeviceObjectExtension);
+	KdPrint(("UsbSnoop - DumpDeviceObject : p = %p\n",p));
+	KdPrint(("  DriverObject = %p\n",p->DriverObject));
+	KdPrint(("  NextDevice = %p\n",p->NextDevice));
+	KdPrint(("  AttachedDevice = %p\n",p->AttachedDevice));
+	KdPrint(("  StackSize=%d\n",p->StackSize));
+	KdPrint(("  CurrentIrp = %p\n",p->CurrentIrp));
+	KdPrint(("  DeviceObjectExtension = %p\n",p->DeviceObjectExtension));
 
 	PDEVICE_EXTENSION pdx = (PDEVICE_EXTENSION)p->DeviceObjectExtension;
 
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"\t->DeviceObject=%p\n",pdx->DeviceObject);
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"\t->LowerDeviceObject=%p\n",pdx->LowerDeviceObject);
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"\t->Pdo=%p\n",pdx->Pdo);
-	
-	KdPrint((BigBuffer));
+	KdPrint(("   ->DeviceObject=%p\n",pdx->DeviceObject));
+	KdPrint(("   ->LowerDeviceObject=%p\n",pdx->LowerDeviceObject));
+	KdPrint(("   ->Pdo=%p\n",pdx->Pdo));
 }
 
 void DumpContext(PCONTEXT Context)
 {
-	//		Valette Jean-Sébastien 
-	//		19 08 2001
-	//		CHANGE : Sprintf  for Single kdprint
-
-	char BigBuffer[BIG_BUFFER_SIZE];
-	int  BigBufferPos=0;
-
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-			"DumpContext : Context=%p\n",Context);
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-			"\tCompletionRoutine=%p, Context=%p, Control=%x\n",
-		Context->CompletionRoutine,Context->Context,Context->Control);
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-			"\tpUrb=%p, uSequenceNumber=%d, Stack=%p\n",
-		Context->pUrb,Context->uSequenceNumber,Context->Stack);
-	KdPrint((BigBuffer));
+	KdPrint(("DumpContext : Context=%p\n",Context));
+	KdPrint(("  CompletionRoutine=%p, Context=%p, Control=%x\n",
+		Context->CompletionRoutine,Context->Context,Context->Control));
+	KdPrint(("  pUrb=%p, uSequenceNumber=%d, Stack=%p\n",
+		Context->pUrb,Context->uSequenceNumber,Context->Stack));
 }
 
 #pragma INITCODE
@@ -304,11 +199,11 @@ extern "C" NTSTATUS DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRI
  	ANSI_STRING ansiObjectName;
 	NTSTATUS status;
 	IO_STATUS_BLOCK ioStatusBlock;
-	char BigBuffer[BIG_BUFFER_SIZE];
-	int  BigBufferPos=0;
+	LARGE_INTEGER ByteOffset;
+	char *version="UsbSnoop compiled on " __DATE__ " " __TIME__ "\n";
 
 
-
+	KdPrint(("UsbSnoop compiled on " __DATE__ " " __TIME__ "\n"));
 	//	Jean-Sébastien Valette	25 08 2001
 	//
 	//	try to open a log File
@@ -319,19 +214,31 @@ extern "C" NTSTATUS DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRI
  	InitializeObjectAttributes(&objectAttributes,&unicodeObjectName,0,NULL,NULL);
 
 
- 	//const char str1[] = "super\n";
+ 	const char str1[] = "super\n";
 	//const char str2[] = "yes baby?\n";
 
- 	status = ZwCreateFile(&fileHandle,FILE_APPEND_DATA|SYNCHRONIZE ,
- 		&objectAttributes,&ioStatusBlock,NULL,FILE_ATTRIBUTE_NORMAL,FILE_SHARE_READ,
- 		FILE_OPEN_IF,FILE_SYNCHRONOUS_IO_NONALERT,NULL,0);
+ 	status = ZwCreateFile(&fileHandle,FILE_WRITE_DATA|SYNCHRONIZE ,
+	 	&objectAttributes,&ioStatusBlock,NULL,FILE_ATTRIBUTE_NORMAL,FILE_SHARE_READ,
+		FILE_OPEN_IF,FILE_SYNCHRONOUS_IO_NONALERT,NULL,0);
  	if (status != STATUS_SUCCESS)
  		KdPrint(("ZwCreateFile failed, status = 0x%x\n",status));
 
 	KdPrint(("UsbSnoop compiled on " __DATE__ " " __TIME__ "\n"));
-	BigBufferPos+=sprintf(BigBuffer + BigBufferPos,
-		"UsbSnoop compiled on " __DATE__ " " __TIME__ "\n");
-	ZwWriteFile(fileHandle,0,0,0,&ioStatusBlock,BigBuffer,BigBufferPos,0,0);
+	
+//
+//	Valette Jean-Sébastien 31 08 2001
+//
+//	Write into logfile and exit if impossible
+//
+	status = ZwWriteFile(fileHandle,NULL,NULL,NULL,&ioStatusBlock,version,
+				(unsigned long)strlen(version),NULL,NULL);
+	if(status != STATUS_SUCCESS )
+	{
+		KdPrint(("Can't write into Logfile, status = %x\n",status));
+		ZwClose(fileHandle);
+		return STATUS_UNSUCCESSFUL;
+	}
+
 
 	//		Jean-Sébastien Valette 26 08 2001
 	//
@@ -345,10 +252,8 @@ extern "C" NTSTATUS DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRI
 	{
 		return STATUS_INSUFFICIENT_RESOURCES;
 	}
+	ByteOffset.QuadPart = FILE_USE_FILE_POINTER_POSITION;
 	ExInitializeWorkItem(BottomHalf,&LogToFile,0);
-//       IN PVOID Context
-
-
 
 	// Insist that OS support at least the WDM 1.0 (Win98 DDK)
 	
@@ -407,16 +312,16 @@ extern "C" NTSTATUS DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRI
 
 	// we need a special callback to call RemoveDevice().
 	// this is now done in MyDispatchPnp
-	DriverObject->MajorFunction[IRP_MJ_PNP] = DispatchPnp;
+//	DriverObject->MajorFunction[IRP_MJ_PNP] = DispatchPnp;
 
 	// not needed
-	DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = DispatchWmi;
+//	DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = DispatchWmi;
 
 	// not needed
-	DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = DispatchInternalIOCTL;
+//	DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = DispatchInternalIOCTL;
 
-	//DumpDriverObject(DriverObject);
-	
+//	DumpDriverObject(DriverObject);
+
 	return STATUS_SUCCESS;
 }
 
@@ -435,14 +340,15 @@ VOID DriverUnload(IN PDRIVER_OBJECT DriverObject)
 		DriverUnload,DriverObject));
 //	DumpDriverObject(DriverObject);
 	RtlFreeUnicodeString(&servkey);
-
-//	Jean-Seabstien Valette
+	//	Jean-Seabstien Valette
 //
 //	Added freein of ressource need by log to file
 
 	ExFreePool(BottomHalf);
        
 	ZwClose(fileHandle);
+	KdPrint(("Closed File \n"));
+
 }
 
 const char * GetIrpPnpMinorFunctionName(ULONG fcn)
@@ -516,9 +422,6 @@ NTSTATUS MyDispatchPnp(IN PDEVICE_OBJECT fdo, IN PIRP Irp)
 
 NTSTATUS AddDevice(IN PDRIVER_OBJECT DriverObject, IN PDEVICE_OBJECT pdo)
 {
-
-	
-
 	PAGED_CODE();
 	KdPrint(("UsbSnoop - AddDevice(%p) : DriverObject %p, pdo %p\n",
 		AddDevice,DriverObject, pdo));
@@ -550,7 +453,7 @@ NTSTATUS AddDevice(IN PDRIVER_OBJECT DriverObject, IN PDEVICE_OBJECT pdo)
 	// From this point forward, any error will have side effects that need to
 	// be cleaned up. Using a try-finally block allows us to modify the program
 	// easily without losing track of the side effects.
-
+	
 	__try
 	{						// finish initialization
 		IoInitializeRemoveLock(&pdx->RemoveLock, 0, 0, 255);
@@ -707,24 +610,11 @@ void DumpBuffer(unsigned char * buf, int len)
 
 void DumpTransferBuffer(PUCHAR pBuffer, PMDL pMdl, ULONG uBufferSize, BOOLEAN bPrintHeader)
 {
-	//		Valette Jean-Sébastien 
-	//		18 08 2001
-	//		CHANGE : Sprintf  for Single kdprint
-
-	char BigBuffer[BIG_BUFFER_SIZE];
-	int  BigBufferPos=0;
-
-
 	if(bPrintHeader)
 	{
-		BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-			"\tTransferBufferLength\t= %08x\n", uBufferSize);
-		BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"\tTransferBuffer\t= %08x\n", pBuffer);
-		BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"\tTransferBufferMDL\t= %08x\n",pMdl);
-		KdPrint((BigBuffer));
-		BigBufferPos = 0;
+		KdPrint(("  TransferBufferLength = %08x\n", uBufferSize));
+		KdPrint(("  TransferBuffer       = %08x\n", pBuffer));
+		KdPrint(("  TransferBufferMDL    = %08x\n", pMdl));
 	}
 	else
 	{
@@ -755,7 +645,6 @@ void DumpTransferBuffer(PUCHAR pBuffer, PMDL pMdl, ULONG uBufferSize, BOOLEAN bP
 
 void DumpGetStatusRequest(struct _URB_CONTROL_GET_STATUS_REQUEST *pGetStatusRequest, BOOLEAN bReturnedFromHCD)
 {
-
 	DumpTransferBuffer((PUCHAR)pGetStatusRequest->TransferBuffer, pGetStatusRequest->TransferBufferMDL, pGetStatusRequest->TransferBufferLength, TRUE);
 	if(pGetStatusRequest->TransferBufferLength != 1)
 		KdPrint(("  *** error - TransferBufferLength should be 1!\n"));
@@ -776,18 +665,8 @@ void DumpGetStatusRequest(struct _URB_CONTROL_GET_STATUS_REQUEST *pGetStatusRequ
 
 void DumpFeatureRequest(struct _URB_CONTROL_FEATURE_REQUEST *pFeatureRequest, BOOLEAN bReadFromDevice, BOOLEAN bReturnedFromHCD)
 {
-	//		Valette Jean-Sébastien 
-	//		19 08 2001
-	//		CHANGE : Sprintf  for Single kdprint
-
-	char BigBuffer[BIG_BUFFER_SIZE];
-	int  BigBufferPos=0;
-
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"\tFeatureSelector = %04x\n", pFeatureRequest->FeatureSelector);
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"\tIndex`\t\t\t\t= %04x\n", pFeatureRequest->Index);
-	KdPrint((BigBuffer));
+	KdPrint(("  FeatureSelector = %04x\n", pFeatureRequest->FeatureSelector));
+	KdPrint(("  Index           = %04x\n", pFeatureRequest->Index));
 	if(pFeatureRequest->UrbLink)
 	{
 		KdPrint(("---> Linked URB:\n"));
@@ -798,31 +677,18 @@ void DumpFeatureRequest(struct _URB_CONTROL_FEATURE_REQUEST *pFeatureRequest, BO
 
 void DumpDescriptorRequest(struct _URB_CONTROL_DESCRIPTOR_REQUEST *pDescriptorRequest, BOOLEAN bReadFromDevice, BOOLEAN bReturnedFromHCD)
 {
-	//		Valette Jean-Sébastien 
-	//		19 08 2001
-	//		CHANGE : Sprintf  for Single kdprint
-
-	char BigBuffer[BIG_BUFFER_SIZE];
-	int  BigBufferPos=0;
-
 	DumpTransferBuffer((PUCHAR)pDescriptorRequest->TransferBuffer, pDescriptorRequest->TransferBufferMDL, pDescriptorRequest->TransferBufferLength, TRUE);
 	if(((!bReadFromDevice) && (!bReturnedFromHCD)) || (bReadFromDevice && bReturnedFromHCD))
 	{
 		DumpTransferBuffer((PUCHAR)pDescriptorRequest->TransferBuffer, pDescriptorRequest->TransferBufferMDL, pDescriptorRequest->TransferBufferLength, FALSE);
 	}
 
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"\tIndex\t\t\t\t\t= %02x\n", pDescriptorRequest->Index);
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"\tDescriptorType\t\t= %02x (%s)\n", pDescriptorRequest->DescriptorType);
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,"%s",
-		pDescriptorRequest->DescriptorType == USB_DEVICE_DESCRIPTOR_TYPE ? "USB_DEVICE_DESCRIPTOR_TYPE":
+	KdPrint(("  Index                = %02x\n", pDescriptorRequest->Index));
+	KdPrint(("  DescriptorType       = %02x (%s)\n", pDescriptorRequest->DescriptorType,
+		pDescriptorRequest->DescriptorType == USB_DEVICE_DESCRIPTOR_TYPE ? "USB_DEVICE_DESCRIPTOR_TYPE" :
 		pDescriptorRequest->DescriptorType == USB_CONFIGURATION_DESCRIPTOR_TYPE ? "USB_CONFIGURATION_DESCRIPTOR_TYPE" :
-		pDescriptorRequest->DescriptorType == USB_STRING_DESCRIPTOR_TYPE ? "USB_STRING_DESCRIPTOR_TYPE" : "<illegal descriptor type!>");
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"\tLanguageId\t\t\t= %04x\n", pDescriptorRequest->LanguageId);
-	KdPrint((BigBuffer));
-	BigBufferPos = 0;
+		pDescriptorRequest->DescriptorType == USB_STRING_DESCRIPTOR_TYPE ? "USB_STRING_DESCRIPTOR_TYPE" : "<illegal descriptor type!>"));
+	KdPrint(("  LanguageId           = %04x\n", pDescriptorRequest->LanguageId));
 	
 	if(pDescriptorRequest->UrbLink)
 	{
@@ -834,15 +700,6 @@ void DumpDescriptorRequest(struct _URB_CONTROL_DESCRIPTOR_REQUEST *pDescriptorRe
 
 void DumpVendorOrClassRequest(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST *pFunctionClassInterface, BOOLEAN bReturnedFromHCD)
 {
-	//		Valette Jean-Sébastien 
-	//		20 08 2001
-	//		CHANGE : Sprintf  for Single kdprint
-	//		22 08 2001
-	//		512 byte limitation
-
-	char BigBuffer[BIG_BUFFER_SIZE];
-	int  BigBufferPos=0;
-
 	BOOLEAN bReadFromDevice = (BOOLEAN)(pFunctionClassInterface->TransferFlags & USBD_TRANSFER_DIRECTION_IN);
 	KdPrint(("  TransferFlags          = %08x (%s, %sUSBD_SHORT_TRANSFER_OK)\n", pFunctionClassInterface->TransferFlags,
 		bReadFromDevice ? "USBD_TRANSFER_DIRECTION_IN" : "USBD_TRANSFER_DIRECTION_OUT",
@@ -854,21 +711,11 @@ void DumpVendorOrClassRequest(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST *pFunc
 		DumpTransferBuffer((PUCHAR)pFunctionClassInterface->TransferBuffer, pFunctionClassInterface->TransferBufferMDL, pFunctionClassInterface->TransferBufferLength, FALSE);
 	}
 
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"\tUrbLink\t\t\t\t= %08x\n", pFunctionClassInterface->UrbLink);
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"\tRequestTypeReservedBits = %02x\n",
-		pFunctionClassInterface->RequestTypeReservedBits);
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"\tRequest\t\t\t\t= %02x\n", pFunctionClassInterface->Request);
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"\tValue\t\t\t\t= %04x\n", pFunctionClassInterface->Value);
-	BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-		"\tIndex\t\t\t\t= %04x\n", pFunctionClassInterface->Index);
-
-	KdPrint((BigBuffer));
-	BigBufferPos = 0;
-
+	KdPrint(("  UrbLink                 = %08x\n", pFunctionClassInterface->UrbLink));
+	KdPrint(("  RequestTypeReservedBits = %02x\n", pFunctionClassInterface->RequestTypeReservedBits));
+	KdPrint(("  Request                 = %02x\n", pFunctionClassInterface->Request));
+	KdPrint(("  Value                   = %04x\n", pFunctionClassInterface->Value));
+	KdPrint(("  Index                   = %04x\n", pFunctionClassInterface->Index));
 	if(pFunctionClassInterface->UrbLink)
 	{
 		KdPrint(("---> Linked URB:\n"));
@@ -892,14 +739,6 @@ void DumpPipeHandle(const char *s,USBD_PIPE_HANDLE inPipeHandle)
 
 void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 {
-	//		Valette Jean-Sébastien 
-	//		19 08 2001
-	//		CHANGE : Sprintf  for Single kdprint
-	//		22 08 2001 
-	//		512 byte limitation
-
-	char BigBuffer[BIG_BUFFER_SIZE];
-	int  BigBufferPos=0;
 	if(NULL == pUrb)
 	{
 		KdPrint(("UsbSnoop - URB == NULL ???\n"));
@@ -939,146 +778,74 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 #define URB_SELECT_CONFIGURATION_SIZE 24
 
 			struct _URB_SELECT_CONFIGURATION *pSelectConfiguration = (struct _URB_SELECT_CONFIGURATION*) pUrb;
-			BigBufferPos+=sprintf(BigBuffer + BigBufferPos,
-				"-- URB_FUNCTION_SELECT_CONFIGURATION:\n");
+			KdPrint(("-- URB_FUNCTION_SELECT_CONFIGURATION:\n"));
 			if(pSelectConfiguration->Hdr.Length < URB_SELECT_CONFIGURATION_SIZE)
-				BigBufferPos+=sprintf(BigBuffer + BigBufferPos,
-				"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
-					pSelectConfiguration->Hdr.Length,URB_SELECT_CONFIGURATION_SIZE);
+				KdPrint(("!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
+					pSelectConfiguration->Hdr.Length,URB_SELECT_CONFIGURATION_SIZE));
 
 			PUSB_CONFIGURATION_DESCRIPTOR pCD = pSelectConfiguration->ConfigurationDescriptor;
-			BigBufferPos+=sprintf(BigBuffer + BigBufferPos,
-				"\tConfigurationDescriptor = 0x%x %s\n",
-				pCD,pCD ? "(configure)":"(unconfigure)");
-			if (pCD == NULL)	//		May need a KdPrint ?
+			KdPrint(("  ConfigurationDescriptor = 0x%x %s\n",pCD,pCD ? "(configure)":"(unconfigure)"));
+			if (pCD == NULL)
 				break;
 
-			BigBufferPos+=sprintf(BigBuffer + BigBufferPos,
-				"\tConfigurationDescriptor : bLength\t\t= %d\n",
-				pCD->bLength);
-			BigBufferPos+=sprintf(BigBuffer + BigBufferPos,
-				"\tConfigurationDescriptor : bDescriptorType\t= 0x%02x\n"
-				, pCD->bDescriptorType);
-			BigBufferPos+=sprintf(BigBuffer + BigBufferPos,
-				"\tConfigurationDescriptor : wTotalLength\t= 0x%04x\n",
-				pCD->wTotalLength);
-			BigBufferPos+=sprintf(BigBuffer + BigBufferPos,
-				"\tConfigurationDescriptor : bNumInterfaces\t= 0x%02x\n",
-				pCD->bNumInterfaces);
-			KdPrint((BigBuffer));
-			BigBufferPos = 0;
-			BigBufferPos+=sprintf(BigBuffer + BigBufferPos,
-				"\tConfigurationDescriptor : bConfigurationValue\t= 0x%02x\n",
-				pCD->bConfigurationValue);
-			BigBufferPos+=sprintf(BigBuffer + BigBufferPos,
-				"\tConfigurationDescriptor : iConfiguration\t= 0x%02x\n",
-				pCD->iConfiguration);
-			BigBufferPos+=sprintf(BigBuffer + BigBufferPos,
-				"\tConfigurationDescriptor : bmAttributes\t= 0x%02x\n",
-				pCD->bmAttributes);
-			BigBufferPos+=sprintf(BigBuffer + BigBufferPos,
-				"\tConfigurationDescriptor : MaxPower\t= 0x%02x\n",
-				pCD->MaxPower);
-			KdPrint((BigBuffer));
-			BigBufferPos = 0;
-			BigBufferPos+=sprintf(BigBuffer + BigBufferPos,
-				"\tConfigurationHandle     = 0x%08x\n",
-				pSelectConfiguration->ConfigurationHandle);
+			KdPrint(("  ConfigurationDescriptor : bLength             = %d\n", pCD->bLength));
+			KdPrint(("  ConfigurationDescriptor : bDescriptorType     = 0x%02x\n", pCD->bDescriptorType));
+			KdPrint(("  ConfigurationDescriptor : wTotalLength        = 0x%04x\n", pCD->wTotalLength));
+			KdPrint(("  ConfigurationDescriptor : bNumInterfaces      = 0x%02x\n", pCD->bNumInterfaces));
+			KdPrint(("  ConfigurationDescriptor : bConfigurationValue = 0x%02x\n", pCD->bConfigurationValue));
+			KdPrint(("  ConfigurationDescriptor : iConfiguration      = 0x%02x\n", pCD->iConfiguration));
+			KdPrint(("  ConfigurationDescriptor : bmAttributes        = 0x%02x\n", pCD->bmAttributes));
+			KdPrint(("  ConfigurationDescriptor : MaxPower            = 0x%02x\n", pCD->MaxPower));
+			KdPrint(("  ConfigurationHandle     = 0x%08x\n", pSelectConfiguration->ConfigurationHandle));
 			
 			ULONG uNumInterfaces = pCD->bNumInterfaces;
 
 			if(uNumInterfaces > 0xff)
 			{
-				BigBufferPos+=sprintf(BigBuffer + BigBufferPos,
-					"XXXXXX ERROR: uNumInterfaces is too large (%d), resetting to 1\n",
-					uNumInterfaces);
+				KdPrint(("XXXXXX ERROR: uNumInterfaces is too large (%d), resetting to 1\n", uNumInterfaces));
 				uNumInterfaces = 1;
 			}
 			
-			KdPrint((BigBuffer));
-			BigBufferPos = 0;
 			
 			PUSBD_INTERFACE_INFORMATION pInterface = &pSelectConfiguration->Interface;
 			for(ULONG i = 0; i < uNumInterfaces; i++)
 			{
-				BigBufferPos+=sprintf(BigBuffer + BigBufferPos,
-					"\tInterface[%d]: Length\t\t\t= %d\n",
-					i, pInterface->Length);
-				BigBufferPos+=sprintf(BigBuffer + BigBufferPos,
-					"\tInterface[%d]: InterfaceNumber\t= %d\n",
-					i, pInterface->InterfaceNumber);
-				BigBufferPos+=sprintf(BigBuffer + BigBufferPos,
-					"\tInterface[%d]: AlternateSetting\t= %d\n",
-					i, pInterface->AlternateSetting);
-				KdPrint((BigBuffer));
-				BigBufferPos = 0;
+				KdPrint(("  Interface[%d]: Length            = %d\n", i, pInterface->Length));
+				KdPrint(("  Interface[%d]: InterfaceNumber   = %d\n", i, pInterface->InterfaceNumber));
+				KdPrint(("  Interface[%d]: AlternateSetting  = %d\n", i, pInterface->AlternateSetting));
 				if(bReturnedFromHCD)
 				{
 					ULONG uNumPipes;
-					BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-						"\tInterface[%d]: Class\t\t\t\t= 0x%02x\n",
-						i, pInterface->Class);
-					BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-						"\tInterface[%d]: SubClass\t\t\t= 0x%02x\n",
-						i, pInterface->SubClass);
-					BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-						"\tInterface[%d]: Protocol\t\t\t= 0x%02x\n",
-						i, pInterface->Protocol);
-					BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-						"\tInterface[%d]: InterfaceHandle\t= 0x%08x\n",
-						i, pInterface->InterfaceHandle);
-					BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-						"\tInterface[%d]: NumberOfPipes\t\t= %d\n",
-						i, pInterface->NumberOfPipes);
-					KdPrint((BigBuffer));
-					BigBufferPos = 0;
+					KdPrint(("  Interface[%d]: Class             = 0x%02x\n", i, pInterface->Class));
+					KdPrint(("  Interface[%d]: SubClass          = 0x%02x\n", i, pInterface->SubClass));
+					KdPrint(("  Interface[%d]: Protocol          = 0x%02x\n", i, pInterface->Protocol));
+					KdPrint(("  Interface[%d]: InterfaceHandle   = 0x%08x\n", i, pInterface->InterfaceHandle));
+					KdPrint(("  Interface[%d]: NumberOfPipes     = %d\n", i, pInterface->NumberOfPipes));
+					
 					uNumPipes = pInterface->NumberOfPipes;
 					if(uNumPipes > 0x1f)
 					{
-						BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-							"XXXXXX ERROR: uNumPipes is too large (%d), resetting to 1\n",
-							uNumPipes);
+						KdPrint(("XXXXXX ERROR: uNumPipes is too large (%d), resetting to 1\n", uNumPipes));
 						uNumPipes = 1;
 					}
-					KdPrint((BigBuffer));
-					BigBufferPos = 0;
 					for(ULONG p = 0; p< uNumPipes; p++)
 					{
-						BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-							"\tInterface[%d]: Pipes[%lu] : MaximumPacketSize\t= 0x%04x\n",
-							i, p, pInterface->Pipes[p].MaximumPacketSize);
-						BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-							"\tInterface[%d]: Pipes[%lu] : EndpointAddress\t= 0x%02x\n"
-							, i, p, pInterface->Pipes[p].EndpointAddress);
-						BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-							"\tInterface[%d]: Pipes[%lu] : Interval\t\t\t= 0x%02x\n",
-							i, p, pInterface->Pipes[p].Interval);
-						BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-							"\tInterface[%d]: Pipes[%lu] : PipeType_t\t\t= 0x%02x (%s)\n",
-							i, p, pInterface->Pipes[p].PipeType,
+						KdPrint(("  Interface[%d]: Pipes[%lu] : MaximumPacketSize = 0x%04x\n", i, p, pInterface->Pipes[p].MaximumPacketSize));
+						KdPrint(("  Interface[%d]: Pipes[%lu] : EndpointAddress   = 0x%02x\n", i, p, pInterface->Pipes[p].EndpointAddress));
+						KdPrint(("  Interface[%d]: Pipes[%lu] : Interval          = 0x%02x\n", i, p, pInterface->Pipes[p].Interval));
+						KdPrint(("  Interface[%d]: Pipes[%lu] : PipeType          = 0x%02x (%s)\n", i, p, pInterface->Pipes[p].PipeType,
 							pInterface->Pipes[p].PipeType == UsbdPipeTypeControl ? "UsbdPipeTypeControl" :
 						pInterface->Pipes[p].PipeType == UsbdPipeTypeIsochronous ? "UsbdPipeTypeIsochronous" :
 						pInterface->Pipes[p].PipeType == UsbdPipeTypeBulk ? "UsbdPipeTypeBulk" :
-						pInterface->Pipes[p].PipeType == UsbdPipeTypeInterrupt ? "UsbdPipeTypeInterrupt" : "!!! INVALID !!!");
-						KdPrint((BigBuffer));
-						BigBufferPos = 0;
-						BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-							"\tInterface[%d]: Pipes[%lu] : PipeHandle\t\t\t= 0x%p\n",
-							i, p, pInterface->Pipes[p].PipeHandle);
-						BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-							"\tInterface[%d]: Pipes[%lu] : MaxTransferSize   = 0x%08x\n", 
-							i, p, pInterface->Pipes[p].MaximumTransferSize);
-						BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-							"\tInterface[%d]: Pipes[%lu] : PipeFlags         = 0x%02x\n",
-							i, p, pInterface->Pipes[p].PipeFlags);
+						pInterface->Pipes[p].PipeType == UsbdPipeTypeInterrupt ? "UsbdPipeTypeInterrupt" : "!!! INVALID !!!"
+							));
+						KdPrint(("  Interface[%d]: Pipes[%lu] : PipeHandle        = 0x%p\n", i, p, pInterface->Pipes[p].PipeHandle));
+						KdPrint(("  Interface[%d]: Pipes[%lu] : MaxTransferSize   = 0x%08x\n", i, p, pInterface->Pipes[p].MaximumTransferSize));
+						KdPrint(("  Interface[%d]: Pipes[%lu] : PipeFlags         = 0x%02x\n", i, p, pInterface->Pipes[p].PipeFlags));
 
 						AddEndpointInfo(pInterface->Pipes[p].PipeHandle,
 							pInterface->Pipes[p].EndpointAddress);
-						KdPrint((BigBuffer));
-						BigBufferPos = 0;
 					}
-					
-			
 				}
 
 				pInterface = (PUSBD_INTERFACE_INFORMATION) (((UCHAR*)pInterface) + pInterface->Length);
@@ -1090,92 +857,46 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 		{
 			struct _URB_SELECT_INTERFACE  *pSelectInterface = (struct _URB_SELECT_INTERFACE *) pUrb;
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"-- URB_FUNCTION_SELECT_INTERFACE:\n");
+			KdPrint(("-- URB_FUNCTION_SELECT_INTERFACE:\n"));
 			if(pSelectInterface->Hdr.Length < sizeof(struct _URB_SELECT_INTERFACE))
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
-					pSelectInterface->Hdr.Length, 
-					sizeof(struct _URB_SELECT_INTERFACE));
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"\tConfigurationHandle\t= 0x%08x\n", 
-				pSelectInterface->ConfigurationHandle);
+				KdPrint(("!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", pSelectInterface->Hdr.Length, sizeof(struct _URB_SELECT_INTERFACE)));
+			KdPrint(("  ConfigurationHandle     = 0x%08x\n", pSelectInterface->ConfigurationHandle));
 
 			PUSBD_INTERFACE_INFORMATION pInterface = &pSelectInterface->Interface;
 			
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"\tInterface: Length\t\t\t= %d\n", pInterface->Length);
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"\tInterface: InterfaceNumber\t= %d\n",
-				pInterface->InterfaceNumber);
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"\tInterface: AlternateSetting  = %d\n", 
-				pInterface->AlternateSetting);
-			KdPrint((BigBuffer));
-			BigBufferPos = 0;
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"\tInterface: Class\t\t\t\t= 0x%02x\n", 
-				pInterface->Class);
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"\tInterface: SubClass\t\t\t\t= 0x%02x\n",
-				pInterface->SubClass);
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"\tInterface: Protocol\t\t\t\t= 0x%02x\n", 
-				pInterface->Protocol);
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"\tInterface: InterfaceHandle\t= %p\n", 
-				pInterface->InterfaceHandle);
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"\tInterface: NumberOfPipes\t= %d\n", 
-				pInterface->NumberOfPipes);
-
-			KdPrint((BigBuffer));
-			BigBufferPos = 0;
-			
+			KdPrint(("  Interface: Length            = %d\n", pInterface->Length));
+			KdPrint(("  Interface: InterfaceNumber   = %d\n", pInterface->InterfaceNumber));
+			KdPrint(("  Interface: AlternateSetting  = %d\n", pInterface->AlternateSetting));
+			KdPrint(("  Interface: Class             = 0x%02x\n", pInterface->Class));
+			KdPrint(("  Interface: SubClass          = 0x%02x\n", pInterface->SubClass));
+			KdPrint(("  Interface: Protocol          = 0x%02x\n", pInterface->Protocol));
+			KdPrint(("  Interface: InterfaceHandle   = %p\n", pInterface->InterfaceHandle));
+			KdPrint(("  Interface: NumberOfPipes     = %d\n", pInterface->NumberOfPipes));
 			if(bReturnedFromHCD)
 			{
 				ULONG uNumPipes = pInterface->NumberOfPipes;
 				if(uNumPipes > 0x1f)
 				{
-					BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-						"XXXXXX ERROR: uNumPipes is too large (%d), resetting to 1\n", 
-						uNumPipes);
+					KdPrint(("XXXXXX ERROR: uNumPipes is too large (%d), resetting to 1\n", uNumPipes));
 					uNumPipes = 1;
 				}
 				for(ULONG p = 0; p< uNumPipes; p++)
 				{
-					BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-						"\tInterface: Pipes[%lu] : MaximumPacketSize = 0x%04x\n", 
-						p, pInterface->Pipes[p].MaximumPacketSize);
-					BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-						"\tInterface: Pipes[%lu] : EndpointAddress\t= 0x%02x\n",
-						p, pInterface->Pipes[p].EndpointAddress);
-					BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-						"\tInterface: Pipes[%lu] : Interval\t\t\t\t= 0x%02x\n", 
-						p, pInterface->Pipes[p].Interval);
-					BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-						"\tInterface: Pipes[%lu] : PipeType\t\t\t\t= 0x%02x (%s)\n",
-						p, pInterface->Pipes[p].PipeType,
+					KdPrint(("  Interface: Pipes[%lu] : MaximumPacketSize = 0x%04x\n", p, pInterface->Pipes[p].MaximumPacketSize));
+					KdPrint(("  Interface: Pipes[%lu] : EndpointAddress   = 0x%02x\n", p, pInterface->Pipes[p].EndpointAddress));
+					KdPrint(("  Interface: Pipes[%lu] : Interval          = 0x%02x\n", p, pInterface->Pipes[p].Interval));
+					KdPrint(("  Interface: Pipes[%lu] : PipeType          = 0x%02x (%s)\n", p, pInterface->Pipes[p].PipeType,
 						pInterface->Pipes[p].PipeType == UsbdPipeTypeControl ? "UsbdPipeTypeControl" :
-						pInterface->Pipes[p].PipeType == UsbdPipeTypeIsochronous ? "UsbdPipeTypeIsochronous" :
-						pInterface->Pipes[p].PipeType == UsbdPipeTypeBulk ? "UsbdPipeTypeBulk" :
-						pInterface->Pipes[p].PipeType == UsbdPipeTypeInterrupt ? "UsbdPipeTypeInterrupt" : "!!! INVALID !!!");
-					KdPrint((BigBuffer));
-					BigBufferPos = 0;
-					BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-						"\tInterface: Pipes[%lu] : PipeHandle\t\t\t\t= 0x%p\n", 
-						p, pInterface->Pipes[p].PipeHandle);
-					BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-						"\tInterface: Pipes[%lu] : MaxTransferSize\t= 0x%08x\n", 
-						p, pInterface->Pipes[p].MaximumTransferSize);
-					BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-						"\tInterface: Pipes[%lu] : PipeFlags\t\t\t\t= 0x%02x\n",
-						p, pInterface->Pipes[p].PipeFlags);
+					pInterface->Pipes[p].PipeType == UsbdPipeTypeIsochronous ? "UsbdPipeTypeIsochronous" :
+					pInterface->Pipes[p].PipeType == UsbdPipeTypeBulk ? "UsbdPipeTypeBulk" :
+					pInterface->Pipes[p].PipeType == UsbdPipeTypeInterrupt ? "UsbdPipeTypeInterrupt" : "!!! INVALID !!!"
+						));
+					KdPrint(("  Interface: Pipes[%lu] : PipeHandle        = 0x%p\n", p, pInterface->Pipes[p].PipeHandle));
+					KdPrint(("  Interface: Pipes[%lu] : MaxTransferSize   = 0x%08x\n", p, pInterface->Pipes[p].MaximumTransferSize));
+					KdPrint(("  Interface: Pipes[%lu] : PipeFlags         = 0x%02x\n", p, pInterface->Pipes[p].PipeFlags));
 
 					AddEndpointInfo(pInterface->Pipes[p].PipeHandle,
 						pInterface->Pipes[p].EndpointAddress);
-					KdPrint((BigBuffer));
-					BigBufferPos = 0;
 				}
 			}
 		}
@@ -1184,138 +905,84 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 		{
 			struct _URB_PIPE_REQUEST   *pAbortPipe = (struct _URB_PIPE_REQUEST *) pUrb;
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"-- URB_FUNCTION_ABORT_PIPE:\n");
+			KdPrint(("-- URB_FUNCTION_ABORT_PIPE:\n"));
 			if(pAbortPipe->Hdr.Length < sizeof(struct _URB_PIPE_REQUEST))
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
-					pAbortPipe->Hdr.Length,
-					sizeof(struct _URB_PIPE_REQUEST));
+				KdPrint(("!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", pAbortPipe->Hdr.Length, sizeof(struct _URB_PIPE_REQUEST)));
 
 			if(!bReturnedFromHCD)
 				DumpPipeHandle("  PipeHandle",pAbortPipe->PipeHandle);
 		}
-		KdPrint((BigBuffer));
-		BigBufferPos = 0;
-		break;	
+		break;
 	case URB_FUNCTION_TAKE_FRAME_LENGTH_CONTROL:
 		{
 			struct _URB_FRAME_LENGTH_CONTROL *pFrameLengthControl = (struct _URB_FRAME_LENGTH_CONTROL *) pUrb;
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"-- URB_FUNCTION_TAKE_FRAME_LENGTH_CONTROL:\n");
+			KdPrint(("-- URB_FUNCTION_TAKE_FRAME_LENGTH_CONTROL:\n"));
 			if(pFrameLengthControl->Hdr.Length < sizeof(struct _URB_FRAME_LENGTH_CONTROL))
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
-					pFrameLengthControl->Hdr.Length, 
-					sizeof(struct _URB_FRAME_LENGTH_CONTROL));
+				KdPrint(("!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", pFrameLengthControl->Hdr.Length, sizeof(struct _URB_FRAME_LENGTH_CONTROL)));
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"\t(no parameters)\n");
+			KdPrint(("  (no parameters)\n"));
 		}
-		KdPrint((BigBuffer));
-		BigBufferPos = 0;
 		break;
 	case URB_FUNCTION_RELEASE_FRAME_LENGTH_CONTROL:
 		{
 			struct _URB_FRAME_LENGTH_CONTROL *pFrameLengthControl = (struct _URB_FRAME_LENGTH_CONTROL *) pUrb;
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"-- URB_FUNCTION_RELEASE_FRAME_LENGTH_CONTROL:\n");
+			KdPrint(("-- URB_FUNCTION_RELEASE_FRAME_LENGTH_CONTROL:\n"));
 			if(pFrameLengthControl->Hdr.Length < sizeof(struct _URB_FRAME_LENGTH_CONTROL))
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
-					pFrameLengthControl->Hdr.Length,
-					sizeof(struct _URB_FRAME_LENGTH_CONTROL));
+				KdPrint(("!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", pFrameLengthControl->Hdr.Length, sizeof(struct _URB_FRAME_LENGTH_CONTROL)));
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"\t(no parameters)\n");
+			KdPrint(("  (no parameters)\n"));
 		}
-		KdPrint((BigBuffer));
-		BigBufferPos = 0;
-		break;	
+		break;
 	case URB_FUNCTION_GET_FRAME_LENGTH:
 		{
 			struct _URB_GET_FRAME_LENGTH   *pGetFrameLength = (struct _URB_GET_FRAME_LENGTH *) pUrb;
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"-- URB_FUNCTION_GET_FRAME_LENGTH:\n");
+			KdPrint(("-- URB_FUNCTION_GET_FRAME_LENGTH:\n"));
 			if(pGetFrameLength->Hdr.Length < sizeof(struct _URB_GET_FRAME_LENGTH))
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
-					pGetFrameLength->Hdr.Length,
-					sizeof(struct _URB_GET_FRAME_LENGTH));
+				KdPrint(("!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", pGetFrameLength->Hdr.Length, sizeof(struct _URB_GET_FRAME_LENGTH)));
 
 			if(bReturnedFromHCD)
 			{
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"\tFrameLength = %08x\n",
-					pGetFrameLength->FrameLength);
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"\tFrameNumber = %08x\n",
-					pGetFrameLength->FrameNumber);
+				KdPrint(("  FrameLength = %08x\n", pGetFrameLength->FrameLength));
+				KdPrint(("  FrameNumber = %08x\n", pGetFrameLength->FrameNumber));
 			}
 		}
-		KdPrint((BigBuffer));
-		BigBufferPos = 0;
 		break;
 	case URB_FUNCTION_SET_FRAME_LENGTH:
 		{
 			struct _URB_SET_FRAME_LENGTH   *pSetFrameLength = (struct _URB_SET_FRAME_LENGTH *) pUrb;
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"-- URB_FUNCTION_SET_FRAME_LENGTH:\n");
+			KdPrint(("-- URB_FUNCTION_SET_FRAME_LENGTH:\n"));
 			if(pSetFrameLength->Hdr.Length < sizeof(struct _URB_SET_FRAME_LENGTH))
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", 
-					pSetFrameLength->Hdr.Length, 
-					sizeof(struct _URB_SET_FRAME_LENGTH));
+				KdPrint(("!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", pSetFrameLength->Hdr.Length, sizeof(struct _URB_SET_FRAME_LENGTH)));
 
 			if(!bReturnedFromHCD)
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"\tFrameLengthDelta = %08x\n", 
-					pSetFrameLength->FrameLengthDelta);
+				KdPrint(("  FrameLengthDelta = %08x\n", pSetFrameLength->FrameLengthDelta));
 		}
-		KdPrint((BigBuffer));
-		BigBufferPos = 0;
 		break;
 	case URB_FUNCTION_GET_CURRENT_FRAME_NUMBER:
 		{
 			struct _URB_GET_CURRENT_FRAME_NUMBER   *pGetCurrentFrameNumber = (struct _URB_GET_CURRENT_FRAME_NUMBER *) pUrb;
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"-- URB_FUNCTION_GET_CURRENT_FRAME_NUMBER:\n");
+			KdPrint(("-- URB_FUNCTION_GET_CURRENT_FRAME_NUMBER:\n"));
 			if(pGetCurrentFrameNumber->Hdr.Length < sizeof(struct _URB_GET_CURRENT_FRAME_NUMBER))
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
-					pGetCurrentFrameNumber->Hdr.Length,
-					sizeof(struct _URB_GET_CURRENT_FRAME_NUMBER));
+				KdPrint(("!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", pGetCurrentFrameNumber->Hdr.Length, sizeof(struct _URB_GET_CURRENT_FRAME_NUMBER)));
 
 			if(bReturnedFromHCD)
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"\tFrameNumber = %08x\n",
-					pGetCurrentFrameNumber->FrameNumber);
+				KdPrint(("  FrameNumber = %08x\n", pGetCurrentFrameNumber->FrameNumber));
 		}
-		KdPrint((BigBuffer));
-		BigBufferPos = 0;
 		break;
 	case URB_FUNCTION_CONTROL_TRANSFER:
 		{
 			struct _URB_CONTROL_TRANSFER   *pControlTransfer = (struct _URB_CONTROL_TRANSFER *) pUrb;
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"-- URB_FUNCTION_CONTROL_TRANSFER:\n");
+			KdPrint(("-- URB_FUNCTION_CONTROL_TRANSFER:\n"));
 			if(pControlTransfer->Hdr.Length < sizeof(struct _URB_CONTROL_TRANSFER))
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
-					pControlTransfer->Hdr.Length,
-					sizeof(struct _URB_CONTROL_TRANSFER));
+				KdPrint(("!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", pControlTransfer->Hdr.Length, sizeof(struct _URB_CONTROL_TRANSFER)));
 
 			BOOLEAN bReadFromDevice = (BOOLEAN)(pControlTransfer->TransferFlags & USBD_TRANSFER_DIRECTION_IN);
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"bReadFromDevice = %x\n",bReadFromDevice);
-			KdPrint((BigBuffer));
-			BigBufferPos = 0;
 			DumpPipeHandle("  PipeHandle          ",pControlTransfer->PipeHandle);
 			KdPrint(("  TransferFlags        = %08x (%s, %sUSBD_SHORT_TRANSFER_OK)\n", pControlTransfer->TransferFlags,
 				bReadFromDevice ? "USBD_TRANSFER_DIRECTION_IN" : "USBD_TRANSFER_DIRECTION_OUT",
@@ -1326,19 +993,12 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 				DumpTransferBuffer((PUCHAR)pControlTransfer->TransferBuffer, pControlTransfer->TransferBufferMDL, pControlTransfer->TransferBufferLength, FALSE);
 			}
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"\tUrbLink\t\t\t\t= %08x\n", pControlTransfer->UrbLink);
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"\tSetupPacket\t\t\t:");
-			KdPrint((BigBuffer));
-			BigBufferPos = 0;
+			KdPrint(("  UrbLink              = %08x\n", pControlTransfer->UrbLink));
+			KdPrint(("  SetupPacket          :"));
 
 			for(int b=0; b<sizeof(pControlTransfer->SetupPacket); b++)
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					" %02x", pControlTransfer->SetupPacket[b]);
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,"\n");
-			KdPrint((BigBuffer));
-			BigBufferPos = 0;
+				KdPrint((" %02x", pControlTransfer->SetupPacket[b]));
+			KdPrint(("\n"));
 			if(pControlTransfer->UrbLink)
 			{
 				KdPrint(("---> Linked URB:\n"));
@@ -1351,17 +1011,11 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 		{
 			struct _URB_BULK_OR_INTERRUPT_TRANSFER *pBulkOrInterruptTransfer = (struct _URB_BULK_OR_INTERRUPT_TRANSFER *) pUrb;
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"-- URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER:\n");
+			KdPrint(("-- URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER:\n"));
 			if(pBulkOrInterruptTransfer->Hdr.Length < sizeof(struct _URB_BULK_OR_INTERRUPT_TRANSFER ))
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
-					pBulkOrInterruptTransfer->Hdr.Length,
-					sizeof(struct _URB_BULK_OR_INTERRUPT_TRANSFER));
+				KdPrint(("!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", pBulkOrInterruptTransfer->Hdr.Length, sizeof(struct _URB_BULK_OR_INTERRUPT_TRANSFER)));
 
 			BOOLEAN bReadFromDevice = (BOOLEAN)(pBulkOrInterruptTransfer->TransferFlags & USBD_TRANSFER_DIRECTION_IN);
-			KdPrint((BigBuffer));
-			BigBufferPos = 0;
 			DumpPipeHandle("  PipeHandle          ",pBulkOrInterruptTransfer->PipeHandle);
 			KdPrint(("  TransferFlags        = %08x (%s, %sUSBD_SHORT_TRANSFER_OK)\n", pBulkOrInterruptTransfer->TransferFlags,
 				bReadFromDevice ? "USBD_TRANSFER_DIRECTION_IN" : "USBD_TRANSFER_DIRECTION_OUT",
@@ -1385,60 +1039,34 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 		{
 			struct _URB_ISOCH_TRANSFER *pIsochTransfer = (struct _URB_ISOCH_TRANSFER *) pUrb;
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"-- URB_FUNCTION_ISOCH_TRANSFER:\n");
+			KdPrint(("-- URB_FUNCTION_ISOCH_TRANSFER:\n"));
 			if(pIsochTransfer->Hdr.Length < sizeof(struct _URB_ISOCH_TRANSFER ))
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
-					pIsochTransfer->Hdr.Length,
-					sizeof(struct _URB_ISOCH_TRANSFER));
+				KdPrint(("!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", pIsochTransfer->Hdr.Length, sizeof(struct _URB_ISOCH_TRANSFER)));
 
 			BOOLEAN bReadFromDevice = (BOOLEAN)(pIsochTransfer->TransferFlags & USBD_TRANSFER_DIRECTION_IN);
-			KdPrint((BigBuffer));
-			BigBufferPos = 0;
 			DumpPipeHandle("  PipeHandle          ",pIsochTransfer->PipeHandle);
 			KdPrint(("  TransferFlags        = %08x (%s, %sUSBD_SHORT_TRANSFER_OK%sn", pIsochTransfer->TransferFlags,
 				bReadFromDevice ? "USBD_TRANSFER_DIRECTION_IN" : "USBD_TRANSFER_DIRECTION_OUT",
 				pIsochTransfer->TransferFlags & USBD_SHORT_TRANSFER_OK ? "":"~",
 				pIsochTransfer->TransferFlags & USBD_START_ISO_TRANSFER_ASAP ? ", USBD_START_ISO_TRANSFER_ASAP" : ""));
 			DumpTransferBuffer((PUCHAR)pIsochTransfer->TransferBuffer, pIsochTransfer->TransferBufferMDL, pIsochTransfer->TransferBufferLength, TRUE);
-			if(((!bReadFromDevice) && (!bReturnedFromHCD)) || ((bReadFromDevice) && (bReturnedFromHCD)))
+			if(((!bReadFromDevice) && (!bReturnedFromHCD)) || (bReadFromDevice && bReturnedFromHCD))
 			{
 				DumpTransferBuffer((PUCHAR)pIsochTransfer->TransferBuffer, pIsochTransfer->TransferBufferMDL, pIsochTransfer->TransferBufferLength, FALSE);
 			}
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"\tStartFrame\t\t\t\t= %08x\n",
-				pIsochTransfer->StartFrame);
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"\tNumberOfPackets\t\t\t= %08x\n",
-				pIsochTransfer->NumberOfPackets);
+			KdPrint(("  StartFrame           = %08x\n", pIsochTransfer->StartFrame));
+			KdPrint(("  NumberOfPackets      = %08x\n", pIsochTransfer->NumberOfPackets));
 			if(bReturnedFromHCD)
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"\tErrorCount\t\t\t= %08x\n", 
-					pIsochTransfer->ErrorCount);
-			KdPrint((BigBuffer));
-			BigBufferPos = 0;
+				KdPrint(("  ErrorCount           = %08x\n", pIsochTransfer->ErrorCount));
 			for(ULONG p=0; p < pIsochTransfer->NumberOfPackets; p++)
 			{
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"\tIsoPacket[%d].Offset = %08x\n",
-					pIsochTransfer->IsoPacket[p].Offset);
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"\tIsoPacket[%d].Length = %08x\n",
-					pIsochTransfer->IsoPacket[p].Length);
+				KdPrint(("  IsoPacket[%d].Offset = %08x\n", pIsochTransfer->IsoPacket[p].Offset));
+				KdPrint(("  IsoPacket[%d].Length = %08x\n", pIsochTransfer->IsoPacket[p].Length));
 				if(bReturnedFromHCD)
-					BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-						"\tIsoPacket[%d].Status = %08x\n",
-						pIsochTransfer->IsoPacket[p].Status);
-				KdPrint((BigBuffer));
-				BigBufferPos = 0;
+					KdPrint(("  IsoPacket[%d].Status = %08x\n", pIsochTransfer->IsoPacket[p].Status));
 			}
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"\tUrbLink\t\t\t\t= %08x\n",
-				pIsochTransfer->UrbLink);
-			KdPrint((BigBuffer));
-			BigBufferPos = 0;
+			KdPrint(("  UrbLink              = %08x\n", pIsochTransfer->UrbLink));
 			if(pIsochTransfer->UrbLink)
 			{
 				KdPrint(("---> Linked URB:\n"));
@@ -1446,20 +1074,15 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 				KdPrint(("---< Linked URB\n"));
 			}
 		}
-		break;	
+		break;
 	case URB_FUNCTION_RESET_PIPE:
 		{
 			struct _URB_PIPE_REQUEST   *pResetPipe = (struct _URB_PIPE_REQUEST *) pUrb;
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"-- URB_FUNCTION_RESET_PIPE:\n");
+			KdPrint(("-- URB_FUNCTION_RESET_PIPE:\n"));
 			if(pResetPipe->Hdr.Length < sizeof(struct _URB_PIPE_REQUEST))
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
-					pResetPipe->Hdr.Length,
-					sizeof(struct _URB_PIPE_REQUEST));
-			KdPrint((BigBuffer));
-			BigBufferPos = 0;
+				KdPrint(("!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", pResetPipe->Hdr.Length, sizeof(struct _URB_PIPE_REQUEST)));
+
 			if(!bReturnedFromHCD)
 				DumpPipeHandle("  PipeHandle",pResetPipe->PipeHandle);
 		}
@@ -1468,15 +1091,9 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 		{
 			struct _URB_CONTROL_DESCRIPTOR_REQUEST   *pGetDescriptorFromDevice = (struct _URB_CONTROL_DESCRIPTOR_REQUEST *) pUrb;
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"-- URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE:\n");
+			KdPrint(("-- URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE:\n"));
 			if(pGetDescriptorFromDevice->Hdr.Length < sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST))
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
-					pGetDescriptorFromDevice->Hdr.Length,
-					sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST));
-			KdPrint((BigBuffer));
-			BigBufferPos = 0;
+				KdPrint(("!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", pGetDescriptorFromDevice->Hdr.Length, sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST)));
 			DumpDescriptorRequest(pGetDescriptorFromDevice, TRUE, bReturnedFromHCD);
 
 		}
@@ -1485,15 +1102,9 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 		{
 			struct _URB_CONTROL_DESCRIPTOR_REQUEST   *pGetDescriptorFromEndpoint = (struct _URB_CONTROL_DESCRIPTOR_REQUEST *) pUrb;
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"-- URB_FUNCTION_GET_DESCRIPTOR_FROM_ENDPOINT:\n");
+			KdPrint(("-- URB_FUNCTION_GET_DESCRIPTOR_FROM_ENDPOINT:\n"));
 			if(pGetDescriptorFromEndpoint->Hdr.Length < sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST))
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
-					pGetDescriptorFromEndpoint->Hdr.Length,
-					sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST));
-			KdPrint((BigBuffer));
-			BigBufferPos = 0;
+				KdPrint(("!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", pGetDescriptorFromEndpoint->Hdr.Length, sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST)));
 			DumpDescriptorRequest(pGetDescriptorFromEndpoint, TRUE, bReturnedFromHCD);
 
 		}
@@ -1502,15 +1113,9 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 		{
 			struct _URB_CONTROL_DESCRIPTOR_REQUEST   *pGetDescriptorFromInterface = (struct _URB_CONTROL_DESCRIPTOR_REQUEST *) pUrb;
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"-- URB_FUNCTION_GET_DESCRIPTOR_FROM_INTERFACE:\n");
+			KdPrint(("-- URB_FUNCTION_GET_DESCRIPTOR_FROM_INTERFACE:\n"));
 			if(pGetDescriptorFromInterface->Hdr.Length < sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST))
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
-					pGetDescriptorFromInterface->Hdr.Length,
-					sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST));
-			KdPrint((BigBuffer));
-			BigBufferPos = 0;
+				KdPrint(("!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", pGetDescriptorFromInterface->Hdr.Length, sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST)));
 			DumpDescriptorRequest(pGetDescriptorFromInterface, TRUE, bReturnedFromHCD);
 
 		}
@@ -1540,15 +1145,9 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 		{
 			struct _URB_CONTROL_DESCRIPTOR_REQUEST   *pSetDescriptorToInterface = (struct _URB_CONTROL_DESCRIPTOR_REQUEST *) pUrb;
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"-- URB_FUNCTION_SET_DESCRIPTOR_TO_INTERFACE:\n");
+			KdPrint(("-- URB_FUNCTION_SET_DESCRIPTOR_TO_INTERFACE:\n"));
 			if(pSetDescriptorToInterface->Hdr.Length < sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST))
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
-					pSetDescriptorToInterface->Hdr.Length,
-					sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST));
-			KdPrint((BigBuffer));
-			BigBufferPos = 0;
+				KdPrint(("!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", pSetDescriptorToInterface->Hdr.Length, sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST)));
 			DumpDescriptorRequest(pSetDescriptorToInterface, TRUE, bReturnedFromHCD);
 
 		}
@@ -1557,32 +1156,20 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 		{
 			struct _URB_CONTROL_FEATURE_REQUEST   *pSetFeatureToDevice = (struct _URB_CONTROL_FEATURE_REQUEST *) pUrb;
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"-- URB_FUNCTION_SET_FEATURE_TO_DEVICE:\n");
+			KdPrint(("-- URB_FUNCTION_SET_FEATURE_TO_DEVICE:\n"));
 			if(pSetFeatureToDevice->Hdr.Length < sizeof(struct _URB_CONTROL_FEATURE_REQUEST))
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
-					pSetFeatureToDevice->Hdr.Length,
-					sizeof(struct _URB_CONTROL_FEATURE_REQUEST));
-			KdPrint((BigBuffer));
-			BigBufferPos = 0;
+				KdPrint(("!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", pSetFeatureToDevice->Hdr.Length, sizeof(struct _URB_CONTROL_FEATURE_REQUEST)));
 			DumpFeatureRequest(pSetFeatureToDevice, TRUE, bReturnedFromHCD);
-
+ 
 		}
 		break;
 	case URB_FUNCTION_SET_FEATURE_TO_INTERFACE:
 		{
 			struct _URB_CONTROL_FEATURE_REQUEST   *pSetFeatureToInterface = (struct _URB_CONTROL_FEATURE_REQUEST *) pUrb;
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"-- URB_FUNCTION_SET_FEATURE_TO_INTERFACE:\n");
+			KdPrint(("-- URB_FUNCTION_SET_FEATURE_TO_INTERFACE:\n"));
 			if(pSetFeatureToInterface->Hdr.Length < sizeof(struct _URB_CONTROL_FEATURE_REQUEST))
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
-					pSetFeatureToInterface->Hdr.Length,
-					sizeof(struct _URB_CONTROL_FEATURE_REQUEST));
-			KdPrint((BigBuffer));
-			BigBufferPos = 0;
+				KdPrint(("!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", pSetFeatureToInterface->Hdr.Length, sizeof(struct _URB_CONTROL_FEATURE_REQUEST)));
 			DumpFeatureRequest(pSetFeatureToInterface, TRUE, bReturnedFromHCD);
 
 		}
@@ -1602,15 +1189,9 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 		{
 			struct _URB_CONTROL_FEATURE_REQUEST   *pSetFeatureToOther = (struct _URB_CONTROL_FEATURE_REQUEST *) pUrb;
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"-- URB_FUNCTION_SET_FEATURE_TO_OTHER:\n");
+			KdPrint(("-- URB_FUNCTION_SET_FEATURE_TO_OTHER:\n"));
 			if(pSetFeatureToOther->Hdr.Length < sizeof(struct _URB_CONTROL_FEATURE_REQUEST))
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
-					pSetFeatureToOther->Hdr.Length,
-					sizeof(struct _URB_CONTROL_FEATURE_REQUEST));
-			KdPrint((BigBuffer));
-			BigBufferPos = 0;
+				KdPrint(("!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", pSetFeatureToOther->Hdr.Length, sizeof(struct _URB_CONTROL_FEATURE_REQUEST)));
 			DumpFeatureRequest(pSetFeatureToOther, TRUE, bReturnedFromHCD);
 
 		}
@@ -1619,15 +1200,9 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 		{
 			struct _URB_CONTROL_FEATURE_REQUEST   *pClearFeatureToDevice = (struct _URB_CONTROL_FEATURE_REQUEST *) pUrb;
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"-- URB_FUNCTION_CLEAR_FEATURE_TO_DEVICE:\n");
+			KdPrint(("-- URB_FUNCTION_CLEAR_FEATURE_TO_DEVICE:\n"));
 			if(pClearFeatureToDevice->Hdr.Length < sizeof(struct _URB_CONTROL_FEATURE_REQUEST))
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
-					pClearFeatureToDevice->Hdr.Length,
-					sizeof(struct _URB_CONTROL_FEATURE_REQUEST));
-			KdPrint((BigBuffer));
-			BigBufferPos = 0;
+				KdPrint(("!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", pClearFeatureToDevice->Hdr.Length, sizeof(struct _URB_CONTROL_FEATURE_REQUEST)));
 			DumpFeatureRequest(pClearFeatureToDevice, TRUE, bReturnedFromHCD);
 
 		}
@@ -1636,15 +1211,9 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 		{
 			struct _URB_CONTROL_FEATURE_REQUEST   *pClearFeatureToInterface = (struct _URB_CONTROL_FEATURE_REQUEST *) pUrb;
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"-- URB_FUNCTION_CLEAR_FEATURE_TO_INTERFACE:\n");
+			KdPrint(("-- URB_FUNCTION_CLEAR_FEATURE_TO_INTERFACE:\n"));
 			if(pClearFeatureToInterface->Hdr.Length < sizeof(struct _URB_CONTROL_FEATURE_REQUEST))
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
-				pClearFeatureToInterface->Hdr.Length,
-				sizeof(struct _URB_CONTROL_FEATURE_REQUEST));
-			KdPrint((BigBuffer));
-			BigBufferPos = 0;
+				KdPrint(("!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", pClearFeatureToInterface->Hdr.Length, sizeof(struct _URB_CONTROL_FEATURE_REQUEST)));
 			DumpFeatureRequest(pClearFeatureToInterface, TRUE, bReturnedFromHCD);
 
 		}
@@ -1653,15 +1222,9 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 		{
 			struct _URB_CONTROL_FEATURE_REQUEST   *pClearFeatureToEndpoint = (struct _URB_CONTROL_FEATURE_REQUEST *) pUrb;
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"-- URB_FUNCTION_CLEAR_FEATURE_TO_ENDPOINT:\n");
+			KdPrint(("-- URB_FUNCTION_CLEAR_FEATURE_TO_ENDPOINT:\n"));
 			if(pClearFeatureToEndpoint->Hdr.Length < sizeof(struct _URB_CONTROL_FEATURE_REQUEST))
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
-					pClearFeatureToEndpoint->Hdr.Length,
-					sizeof(struct _URB_CONTROL_FEATURE_REQUEST));
-			KdPrint((BigBuffer));
-			BigBufferPos = 0;
+				KdPrint(("!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", pClearFeatureToEndpoint->Hdr.Length, sizeof(struct _URB_CONTROL_FEATURE_REQUEST)));
 			DumpFeatureRequest(pClearFeatureToEndpoint, TRUE, bReturnedFromHCD);
 
 		}
@@ -1670,15 +1233,9 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 		{
 			struct _URB_CONTROL_FEATURE_REQUEST   *pClearFeatureToOther = (struct _URB_CONTROL_FEATURE_REQUEST *) pUrb;
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"-- URB_FUNCTION_CLEAR_FEATURE_TO_OTHER:\n");
+			KdPrint(("-- URB_FUNCTION_CLEAR_FEATURE_TO_OTHER:\n"));
 			if(pClearFeatureToOther->Hdr.Length < sizeof(struct _URB_CONTROL_FEATURE_REQUEST))
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
-					pClearFeatureToOther->Hdr.Length,
-					sizeof(struct _URB_CONTROL_FEATURE_REQUEST));
-			KdPrint((BigBuffer));
-			BigBufferPos = 0;
+				KdPrint(("!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", pClearFeatureToOther->Hdr.Length, sizeof(struct _URB_CONTROL_FEATURE_REQUEST)));
 			DumpFeatureRequest(pClearFeatureToOther, TRUE, bReturnedFromHCD);
 
 		}
@@ -1687,15 +1244,9 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 		{
 			struct _URB_CONTROL_GET_STATUS_REQUEST *pGetStatusFromDevice = (struct _URB_CONTROL_GET_STATUS_REQUEST *) pUrb;
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"-- URB_FUNCTION_GET_STATUS_FROM_DEVICE:\n");
+			KdPrint(("-- URB_FUNCTION_GET_STATUS_FROM_DEVICE:\n"));
 			if(pGetStatusFromDevice->Hdr.Length < sizeof(struct _URB_CONTROL_GET_STATUS_REQUEST))
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
-					pGetStatusFromDevice->Hdr.Length,
-					sizeof(struct _URB_CONTROL_GET_STATUS_REQUEST));
-			KdPrint((BigBuffer));
-			BigBufferPos = 0;
+				KdPrint(("!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", pGetStatusFromDevice->Hdr.Length, sizeof(struct _URB_CONTROL_GET_STATUS_REQUEST)));
 			DumpGetStatusRequest(pGetStatusFromDevice, bReturnedFromHCD);
 
 		}
@@ -1704,15 +1255,9 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 		{
 			struct _URB_CONTROL_GET_STATUS_REQUEST *pGetStatusFromInterface = (struct _URB_CONTROL_GET_STATUS_REQUEST *) pUrb;
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"-- URB_FUNCTION_GET_STATUS_FROM_INTERFACE:\n");
+			KdPrint(("-- URB_FUNCTION_GET_STATUS_FROM_INTERFACE:\n"));
 			if(pGetStatusFromInterface->Hdr.Length < sizeof(struct _URB_CONTROL_GET_STATUS_REQUEST))
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
-					pGetStatusFromInterface->Hdr.Length,
-					sizeof(struct _URB_CONTROL_GET_STATUS_REQUEST));
-			KdPrint((BigBuffer));
-			BigBufferPos = 0;
+				KdPrint(("!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", pGetStatusFromInterface->Hdr.Length, sizeof(struct _URB_CONTROL_GET_STATUS_REQUEST)));
 			DumpGetStatusRequest(pGetStatusFromInterface, bReturnedFromHCD);
 
 		}
@@ -1721,15 +1266,9 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 		{
 			struct _URB_CONTROL_GET_STATUS_REQUEST *pGetStatusFromEndpoint = (struct _URB_CONTROL_GET_STATUS_REQUEST *) pUrb;
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"-- URB_FUNCTION_GET_STATUS_FROM_ENDPOINT:\n");
+			KdPrint(("-- URB_FUNCTION_GET_STATUS_FROM_ENDPOINT:\n"));
 			if(pGetStatusFromEndpoint->Hdr.Length < sizeof(struct _URB_CONTROL_GET_STATUS_REQUEST))
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
-					pGetStatusFromEndpoint->Hdr.Length,
-					sizeof(struct _URB_CONTROL_GET_STATUS_REQUEST));
-			KdPrint((BigBuffer));
-			BigBufferPos = 0;
+				KdPrint(("!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", pGetStatusFromEndpoint->Hdr.Length, sizeof(struct _URB_CONTROL_GET_STATUS_REQUEST)));
 			DumpGetStatusRequest(pGetStatusFromEndpoint, bReturnedFromHCD);
 
 		}
@@ -1738,15 +1277,9 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 		{
 			struct _URB_CONTROL_GET_STATUS_REQUEST *pGetStatusFromOther = (struct _URB_CONTROL_GET_STATUS_REQUEST *) pUrb;
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"-- URB_FUNCTION_GET_STATUS_FROM_OTHER:\n");
+			KdPrint(("-- URB_FUNCTION_GET_STATUS_FROM_OTHER:\n"));
 			if(pGetStatusFromOther->Hdr.Length < sizeof(struct _URB_CONTROL_GET_STATUS_REQUEST))
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
-					pGetStatusFromOther->Hdr.Length,
-					sizeof(struct _URB_CONTROL_GET_STATUS_REQUEST));
-			KdPrint((BigBuffer));
-			BigBufferPos = 0;
+				KdPrint(("!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", pGetStatusFromOther->Hdr.Length, sizeof(struct _URB_CONTROL_GET_STATUS_REQUEST)));
 			DumpGetStatusRequest(pGetStatusFromOther, bReturnedFromHCD);
 
 		}
@@ -1755,15 +1288,9 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 		{
 			struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST *pFunctionVendorDevice = (struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST *) pUrb;
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"-- URB_FUNCTION_VENDOR_DEVICE:\n");
+			KdPrint(("-- URB_FUNCTION_VENDOR_DEVICE:\n"));
 			if(pFunctionVendorDevice->Hdr.Length < sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST))
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
-					pFunctionVendorDevice->Hdr.Length,
-					sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST));
-			KdPrint((BigBuffer));
-			BigBufferPos = 0;
+				KdPrint(("!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", pFunctionVendorDevice->Hdr.Length, sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST)));
 
 			DumpVendorOrClassRequest(pFunctionVendorDevice, bReturnedFromHCD);
 		}
@@ -1772,15 +1299,9 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 		{
 			struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST *pFunctionVendorInterface = (struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST *) pUrb;
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"-- URB_FUNCTION_VENDOR_INTERFACE:\n");
+			KdPrint(("-- URB_FUNCTION_VENDOR_INTERFACE:\n"));
 			if(pFunctionVendorInterface->Hdr.Length < sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST))
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
-					pFunctionVendorInterface->Hdr.Length,
-					sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST));
-			KdPrint((BigBuffer));
-			BigBufferPos = 0;
+				KdPrint(("!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", pFunctionVendorInterface->Hdr.Length, sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST)));
 
 			DumpVendorOrClassRequest(pFunctionVendorInterface, bReturnedFromHCD);
 		}
@@ -1789,15 +1310,9 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 		{
 			struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST *pFunctionVendorEndpoint = (struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST *) pUrb;
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"-- URB_FUNCTION_VENDOR_ENDPOINT:\n");
+			KdPrint(("-- URB_FUNCTION_VENDOR_ENDPOINT:\n"));
 			if(pFunctionVendorEndpoint->Hdr.Length < sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST))
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
-					pFunctionVendorEndpoint->Hdr.Length, 
-					sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST));
-			KdPrint((BigBuffer));
-			BigBufferPos = 0;
+				KdPrint(("!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", pFunctionVendorEndpoint->Hdr.Length, sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST)));
 
 			DumpVendorOrClassRequest(pFunctionVendorEndpoint, bReturnedFromHCD);
 		}
@@ -1806,15 +1321,9 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 		{
 			struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST *pFunctionVendorOther = (struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST *) pUrb;
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"-- URB_FUNCTION_VENDOR_OTHER:\n");
+			KdPrint(("-- URB_FUNCTION_VENDOR_OTHER:\n"));
 			if(pFunctionVendorOther->Hdr.Length < sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST))
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
-					pFunctionVendorOther->Hdr.Length,
-					sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST));
-			KdPrint((BigBuffer));
-			BigBufferPos = 0;
+				KdPrint(("!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", pFunctionVendorOther->Hdr.Length, sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST)));
 
 			DumpVendorOrClassRequest(pFunctionVendorOther, bReturnedFromHCD);
 		}
@@ -1823,16 +1332,10 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 		{
 			struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST *pFunctionClassDevice = (struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST *) pUrb;
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"-- URB_FUNCTION_CLASS_DEVICE:\n");
+			KdPrint(("-- URB_FUNCTION_CLASS_DEVICE:\n"));
 			if(pFunctionClassDevice->Hdr.Length < sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST))
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
-					pFunctionClassDevice->Hdr.Length,
-					sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST));
-			KdPrint((BigBuffer));
-			BigBufferPos = 0;
-			
+				KdPrint(("!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", pFunctionClassDevice->Hdr.Length, sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST)));
+
 			DumpVendorOrClassRequest(pFunctionClassDevice, bReturnedFromHCD);
 		}
 		break;
@@ -1840,15 +1343,9 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 		{
 			struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST *pFunctionClassInterface = (struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST *) pUrb;
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"-- URB_FUNCTION_CLASS_INTERFACE:\n");
+			KdPrint(("-- URB_FUNCTION_CLASS_INTERFACE:\n"));
 			if(pFunctionClassInterface->Hdr.Length < sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST))
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
-					pFunctionClassInterface->Hdr.Length,
-					sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST));
-			KdPrint((BigBuffer));
-			BigBufferPos = 0;
+				KdPrint(("!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", pFunctionClassInterface->Hdr.Length, sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST)));
 
 			DumpVendorOrClassRequest(pFunctionClassInterface, bReturnedFromHCD);
 		}
@@ -1857,15 +1354,9 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 		{
 			struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST *pFunctionClassEndpoint = (struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST *) pUrb;
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"-- URB_FUNCTION_CLASS_ENDPOINT:\n");
+			KdPrint(("-- URB_FUNCTION_CLASS_ENDPOINT:\n"));
 			if(pFunctionClassEndpoint->Hdr.Length < sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST))
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
-					pFunctionClassEndpoint->Hdr.Length,
-					sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST));
-			KdPrint((BigBuffer));
-			BigBufferPos = 0;
+				KdPrint(("!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", pFunctionClassEndpoint->Hdr.Length, sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST)));
 
 			DumpVendorOrClassRequest(pFunctionClassEndpoint, bReturnedFromHCD);
 		}
@@ -1874,15 +1365,9 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 		{
 			struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST *pFunctionClassOther = (struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST *) pUrb;
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"-- URB_FUNCTION_CLASS_OTHER:\n");
+			KdPrint(("-- URB_FUNCTION_CLASS_OTHER:\n"));
 			if(pFunctionClassOther->Hdr.Length < sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST))
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
-					pFunctionClassOther->Hdr.Length,
-					sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST));
-			KdPrint((BigBuffer));
-			BigBufferPos = 0;
+				KdPrint(("!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", pFunctionClassOther->Hdr.Length, sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST)));
 
 			DumpVendorOrClassRequest(pFunctionClassOther, bReturnedFromHCD);
 		}
@@ -1891,16 +1376,9 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 		{
 			struct _URB_CONTROL_GET_CONFIGURATION_REQUEST *pGetConfiguration = (struct _URB_CONTROL_GET_CONFIGURATION_REQUEST *) pUrb;
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"-- URB_FUNCTION_GET_CONFIGURATION:\n");
+			KdPrint(("-- URB_FUNCTION_GET_CONFIGURATION:\n"));
 			if(pGetConfiguration->Hdr.Length < sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST))
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
-					pGetConfiguration->Hdr.Length,
-					sizeof(struct _URB_CONTROL_GET_CONFIGURATION_REQUEST));
-
-			KdPrint((BigBuffer));
-			BigBufferPos = 0;
+				KdPrint(("!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", pGetConfiguration->Hdr.Length, sizeof(struct _URB_CONTROL_GET_CONFIGURATION_REQUEST)));
 
 			DumpTransferBuffer((PUCHAR)pGetConfiguration->TransferBuffer, pGetConfiguration->TransferBufferMDL, pGetConfiguration->TransferBufferLength, TRUE);
 			if(pGetConfiguration->TransferBufferLength != 1)
@@ -1924,16 +1402,9 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 		{
 			struct _URB_CONTROL_GET_INTERFACE_REQUEST *pGetInterface = (struct _URB_CONTROL_GET_INTERFACE_REQUEST *) pUrb;
 
-			BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-				"-- URB_FUNCTION_GET_INTERFACE:\n");
+			KdPrint(("-- URB_FUNCTION_GET_INTERFACE:\n"));
 			if(pGetInterface->Hdr.Length < sizeof(struct _URB_CONTROL_GET_INTERFACE_REQUEST))
-				BigBufferPos += sprintf(BigBuffer + BigBufferPos,
-					"!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n",
-					pGetInterface->Hdr.Length,
-					sizeof(struct _URB_CONTROL_GET_CONFIGURATION_REQUEST));
-
-			KdPrint((BigBuffer));
-			BigBufferPos = 0;
+				KdPrint(("!!! Hdr.Length is wrong! (is: %d, should be at least: %d)\n", pGetInterface->Hdr.Length, sizeof(struct _URB_CONTROL_GET_CONFIGURATION_REQUEST)));
 
 			DumpTransferBuffer((PUCHAR)pGetInterface->TransferBuffer, pGetInterface->TransferBufferMDL, pGetInterface->TransferBufferLength, TRUE);
 			if(pGetInterface->TransferBufferLength != 1)
@@ -1959,10 +1430,7 @@ void DumpURB(PURB pUrb, BOOLEAN bReturnedFromHCD)
 		KdPrint(("******* non printable URB with function code 0x%04x ********\n", wFunction));
 		break;
 	}	// end of mega switch
-	if(BigBufferPos)
-		KdPrint((BigBuffer));
-	//ExQueueWorkItem(&BottomHalf,CriticalWorkQueue);
-
+	ExQueueWorkItem(BottomHalf,CriticalWorkQueue);
 }
 
 NTSTATUS InternalIOCTLCompletion(IN PDEVICE_OBJECT fido, IN PIRP Irp, IN PVOID Context)
@@ -2365,5 +1833,3 @@ extern "C" void __declspec(naked) __cdecl _chkesp()
 okay:
 	_asm ret
 }
-
-
