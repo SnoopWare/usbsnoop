@@ -18,6 +18,7 @@
 #define IDI_USB_LOGO                    136
 #define IDB_PLAY                        140
 #define IDB_PAUSE                       141
+#define IDD_EXPORT_LOG                  141
 #define IDB_STOP                        142
 #define IDS_APPINFO                     200
 #define IDS_COPYRIGHT                   201
@@ -46,6 +47,17 @@
 #define IDS_NOTINSTALLED                1012
 #define IDC_PLAY_PAUSE                  1012
 #define IDC_STOP                        1013
+#define IDC_BROWSE                      1013
+#define IDC_FILENAME                    1014
+#define IDC_FORMAT                      1015
+#define IDC_CHECK1                      1016
+#define IDC_EXPORT_SELECTION            1016
+#define IDC_CHECK2                      1017
+#define IDC_EXPORT_RANGE                1017
+#define IDC_EDIT1                       1018
+#define IDC_RANGE                       1018
+#define IDC_CHECK3                      1019
+#define IDC_EXPORT_ALL                  1019
 #define IDS_FILTERFILENAME              1020
 #define IDS_BRIDGEFILENAME_2K           1021
 #define IDS_BRIDGEFILENAME_9X           1022
@@ -54,6 +66,12 @@
 #define IDS_FILTERSERVICEDESCRIPTION    1032
 #define IDS_BRIDGESERVICEDESCRIPTION    1033
 #define IDS_BRIDGESERVICENAME           1034
+#define IDS_EXPTYPE_XML                 1280
+#define IDS_EXPTYPE_TEXT_SHORT          1281
+#define IDS_EXPTYPE_TEXT_FULL           1282
+#define IDS_EXPTYPE_CUSTOM              1283
+#define IDS_PLEASE_SELECT_DEVICE        2048
+#define IDS_PLEASE_SELECT_ONE_DEVICE    2049
 #define ID_VIEW_DEVICES                 32771
 #define ID_VIEW_REFRESH                 32774
 #define ID_INSTALL_SNIFFER              32775
@@ -76,15 +94,16 @@
 #define ID_INSTALL_RESTART              32792
 #define ID_UNINSTALL_RESTART            32793
 #define ID_TOOLS_ANALYZE_LOG            32794
+#define ID_FILE_EXPORT                  32795
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        141
-#define _APS_NEXT_COMMAND_VALUE         32795
-#define _APS_NEXT_CONTROL_VALUE         1013
+#define _APS_NEXT_RESOURCE_VALUE        142
+#define _APS_NEXT_COMMAND_VALUE         32796
+#define _APS_NEXT_CONTROL_VALUE         1020
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

@@ -55,6 +55,7 @@ protected:
     PBYTE m_pUsbSnoop;
     CString m_szWinDir;
     
+    BOOL HasValidSelection(void);
     BOOL GetSelectedHardwareID(CString& sHardwareID);
 
         

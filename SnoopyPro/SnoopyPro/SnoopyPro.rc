@@ -151,6 +151,8 @@ BEGIN
         MENUITEM "&Save\tCtrl+S",               ID_FILE_SAVE
         MENUITEM "Save &As...",                 ID_FILE_SAVE_AS
         MENUITEM SEPARATOR
+        MENUITEM "&Export...",                  ID_FILE_EXPORT
+        MENUITEM SEPARATOR
         MENUITEM "&Print...\tCtrl+P",           ID_FILE_PRINT
         MENUITEM "Print Pre&view",              ID_FILE_PRINT_PREVIEW
         MENUITEM "P&rint Setup...",             ID_FILE_PRINT_SETUP
@@ -225,6 +227,10 @@ BEGIN
     POPUP "&View"
     BEGIN
         MENUITEM "&Refresh\tF5",                ID_VIEW_REFRESH
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "Display &Readme.txt...",      ID_HELP_README
     END
 END
 
@@ -313,11 +319,12 @@ BEGIN
     PUSHBUTTON      "S",IDC_STOP,79,5,14,14,BS_BITMAP
 END
 
-IDD_DEVICELIST DIALOG DISCARDABLE  0, 0, 335, 183
-STYLE DS_ABSALIGN | WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+IDD_DEVICELIST DIALOGEX 0, 0, 336, 183
+STYLE DS_ABSALIGN | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_TOOLWINDOW
 CAPTION "USB Devices"
 MENU IDR_DEVICELIST
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     CONTROL         "List1",IDC_DEVICES,"SysListView32",WS_BORDER | 
                     WS_TABSTOP,5,40,299,118
@@ -333,6 +340,30 @@ BEGIN
                     ES_AUTOHSCROLL | ES_READONLY | ES_WANTRETURN | 
                     WS_VSCROLL | WS_HSCROLL
     DEFPUSHBUTTON   "&Close",IDCANCEL,380,200,50,14
+END
+
+IDD_EXPORT_LOG DIALOG DISCARDABLE  0, 0, 317, 121
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Export Log"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "&Export",IDOK,205,100,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,260,100,50,14
+    LTEXT           "Write output to:",IDC_STATIC,15,21,50,8
+    LTEXT           "Static",IDC_FILENAME,70,20,220,10,SS_SUNKEN
+    PUSHBUTTON      "...",IDC_BROWSE,295,19,12,12
+    LTEXT           "Export format:",IDC_STATIC,15,37,44,8
+    COMBOBOX        IDC_FORMAT,70,35,235,80,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Export options",IDC_STATIC,5,5,305,50
+    CONTROL         "Everything",IDC_EXPORT_ALL,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,20,75,49,10
+    CONTROL         "Range:",IDC_EXPORT_RANGE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,95,75,39,10
+    EDITTEXT        IDC_RANGE,135,74,80,12,ES_AUTOHSCROLL
+    CONTROL         "Selection only",IDC_EXPORT_SELECTION,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,235,75,60,10
+    GROUPBOX        "Which URB's to export:",IDC_STATIC,5,60,305,35
 END
 
 
@@ -363,7 +394,7 @@ BEGIN
     IDD_DEVICELIST, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 328
+        RIGHTMARGIN, 329
         TOPMARGIN, 7
         BOTTOMMARGIN, 176
     END
@@ -374,6 +405,14 @@ BEGIN
         RIGHTMARGIN, 430
         TOPMARGIN, 7
         BOTTOMMARGIN, 214
+    END
+
+    IDD_EXPORT_LOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 310
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 114
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -562,6 +601,20 @@ BEGIN
     IDS_FILTERSERVICEDESCRIPTION "USB Snoopy Filter Driver Service"
     IDS_BRIDGESERVICEDESCRIPTION "USB Snoopy Driver Exposer Service"
     IDS_BRIDGESERVICENAME   "USBSNPYS"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PLEASE_SELECT_DEVICE "Please select a device from the list first..."
+    IDS_PLEASE_SELECT_ONE_DEVICE "Please select only one device at a time..."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_EXPTYPE_XML         "XML"
+    IDS_EXPTYPE_TEXT_SHORT  "Plain Text (short) (not implemented)"
+    IDS_EXPTYPE_TEXT_FULL   "Plain Text (full) (not implemented)"
+    IDS_EXPTYPE_CUSTOM      "Custom format (not implemented)"
 END
 
 #endif    // English (U.S.) resources

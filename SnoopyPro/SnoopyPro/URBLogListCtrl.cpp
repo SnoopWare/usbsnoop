@@ -306,11 +306,11 @@ BOOL CURBLogListCtrl::GetURBText(CURB *pURB, int nLine, int nCol, LPTSTR sBuffer
         break;
 
     case LOGCOL_DIRECTION:
-        pURB->GetDirection(sBuffer);
+        pURB->GetDirectionStr(sBuffer);
         break;
 
     case LOGCOL_ENDPOINT:
-        pURB->GetEndpoint(sBuffer);
+        pURB->GetEndpointStr(sBuffer);
         break;
 
     case LOGCOL_TIME:
@@ -322,7 +322,7 @@ BOOL CURBLogListCtrl::GetURBText(CURB *pURB, int nLine, int nCol, LPTSTR sBuffer
         break;
 
     case LOGCOL_DATA:
-        pURB->GetDataDump(sBuffer);
+        pURB->GetDataDumpStr(sBuffer);
         break;
 
     case LOGCOL_RESULT:

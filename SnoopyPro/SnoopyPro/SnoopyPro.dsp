@@ -1,5 +1,5 @@
 # Microsoft Developer Studio Project File - Name="SnoopyPro" - Package Owner=<4>
-# Microsoft Developer Studio Generated Build File, Format Version 60000
+# Microsoft Developer Studio Generated Build File, Format Version 6.00
 # ** DO NOT EDIT **
 
 # TARGTYPE "Win32 (x86) Application" 0x0101
@@ -100,6 +100,14 @@ SOURCE=.\DevicesDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\Exporter.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\ExportLogDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\MainFrm.cpp
 # End Source File
 # Begin Source File
@@ -158,6 +166,14 @@ SOURCE=.\ChildFrm.h
 # Begin Source File
 
 SOURCE=.\DevicesDlg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Exporter.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ExportLogDlg.h
 # End Source File
 # Begin Source File
 

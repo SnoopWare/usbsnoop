@@ -1,5 +1,5 @@
 ==========================================================================
-SnoopyPro 0.20 Readme.txt
+SnoopyPro 0.21 Readme.txt
 ==========================================================================
 
 
@@ -47,6 +47,14 @@ A: Yes.
 ==========================================================================
 RECENT CHANGES:
 ==========================================================================
+
+0.21:
+[X] Added export functionality. The only export format is XML for now, and
+    only a very limited amount of information is exported for each URB.
+    The selection of URB's is not implemented either, so trim down the log
+    before invoking 'File', 'Export' to limit the amount of data exported.
+
+0.20:
 
 [X] Added endpoint number as a column in the log.
 

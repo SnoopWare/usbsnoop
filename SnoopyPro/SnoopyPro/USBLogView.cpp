@@ -8,7 +8,8 @@
 #include "BuildNum.h"
 #include "MainFrm.h"
 #include "Resource.h"
-
+#include "ExportLogDlg.h"
+#include "Exporter.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -43,6 +44,7 @@ BEGIN_MESSAGE_MAP(CUSBLogView, CFormView)
 	ON_BN_CLICKED(IDC_PLAY_PAUSE, OnPlayPause)
 	ON_BN_CLICKED(IDC_STOP, OnStop)
 	ON_COMMAND(ID_TOOLS_ANALYZE_LOG, OnToolsAnalyzeLog)
+	ON_COMMAND(ID_FILE_EXPORT, OnFileExport)
 	//}}AFX_MSG_MAP
     // Standard printing commands
     ON_COMMAND(ID_FILE_PRINT, CFormView::OnFilePrint)
@@ -933,6 +935,22 @@ void CUSBLogView::OnToolsAnalyzeLog(void)
     pDoc->AnalyzeLog();
 }
 
+void CUSBLogView::OnFileExport() 
+{
+    CUSBLogDoc *pDoc = GetDocument();
+    CExportLogDlg dlg;
+    if(IDOK == dlg.DoModal())
+    {
+        CExporter *pExporter = CExporter::Factory(dlg.m_ExporterType);
+        if(NULL != pExporter)
+        {
+            pExporter->SetOutputFilename(dlg.m_sFilename);
+            pExporter->SetArrayURB(&pDoc->m_arURB);
+            pExporter->Export();
+            delete pExporter;
+        }
+    }
+}
 
 //** end of USBLogView.cpp ***********************************************
 /*************************************************************************

@@ -155,13 +155,15 @@ BOOL CDevicesDlg::OnInitDialog()
     
     RECT rc;
     GetWindowRect(&rc);
-    rc.top = GetApp().GetProfileInt("DevicesWindow", "PositionTop", rc.top);
-    rc.bottom = GetApp().GetProfileInt("DevicesWindow", "PositionBottom", rc.bottom);
-    rc.right = GetApp().GetProfileInt("DevicesWindow", "PositionRight", rc.right);
-    rc.left = GetApp().GetProfileInt("DevicesWindow", "PositionLeft", rc.left);
+    rc.top = GetApp().GetProfileInt(REGSTR_DEVICESWINDOW, REGSTR_POSITIONTOP, rc.top);
+    rc.bottom = GetApp().GetProfileInt(REGSTR_DEVICESWINDOW, REGSTR_POSITIONBOTTOM, rc.bottom);
+    rc.right = GetApp().GetProfileInt(REGSTR_DEVICESWINDOW, REGSTR_POSITIONRIGHT, rc.right);
+    rc.left = GetApp().GetProfileInt(REGSTR_DEVICESWINDOW, REGSTR_POSITIONLEFT, rc.left);
+    rc.bottom = max(rc.bottom, rc.top + 20);
+    rc.right = max(rc.right, rc.left + 20);
     MoveWindow(&rc);
 
-    BOOL bIsVisible = GetApp().GetProfileInt("DevicesWindow", "Visible", TRUE);
+    BOOL bIsVisible = GetApp().GetProfileInt(REGSTR_DEVICESWINDOW, REGSTR_VISIBLE, TRUE);
     ShowWindow(bIsVisible ? SW_NORMAL : SW_HIDE);
 
     SetTimer(1971, 1000, NULL);
@@ -174,10 +176,10 @@ void CDevicesDlg::OnDestroy()
 {
     RECT rc;
     GetWindowRect(&rc);
-    GetApp().WriteProfileInt("DevicesWindow", "PositionTop", rc.top);
-    GetApp().WriteProfileInt("DevicesWindow", "PositionBottom", rc.bottom);
-    GetApp().WriteProfileInt("DevicesWindow", "PositionRight", rc.right);
-    GetApp().WriteProfileInt("DevicesWindow", "PositionLeft", rc.left);
+    GetApp().WriteProfileInt(REGSTR_DEVICESWINDOW, REGSTR_POSITIONTOP, rc.top);
+    GetApp().WriteProfileInt(REGSTR_DEVICESWINDOW, REGSTR_POSITIONBOTTOM, rc.bottom);
+    GetApp().WriteProfileInt(REGSTR_DEVICESWINDOW, REGSTR_POSITIONRIGHT, rc.right);
+    GetApp().WriteProfileInt(REGSTR_DEVICESWINDOW, REGSTR_POSITIONLEFT, rc.left);
 
     CDialog::OnDestroy();
 }
@@ -247,10 +249,26 @@ void CDevicesDlg::OnRefreshSnpysStatus(void)
     m_cDriverStatus.SetWindowText(sStatus);
 }
 
-BOOL CDevicesDlg::GetSelectedHardwareID(CString& sHardwareID)
+BOOL CDevicesDlg::HasValidSelection(void)
 {
     UINT nSelected = m_cDevs.GetSelectedCount();
     if(0 == nSelected)
+    {
+        AfxMessageBox(IDS_PLEASE_SELECT_DEVICE);
+        return FALSE;
+    }
+    if(1 != nSelected)
+    {
+        AfxMessageBox(IDS_PLEASE_SELECT_ONE_DEVICE);
+        return FALSE;
+    }
+    return TRUE;
+}
+
+BOOL CDevicesDlg::GetSelectedHardwareID(CString& sHardwareID)
+{
+    UINT nSelected = m_cDevs.GetSelectedCount();
+    if(1 != nSelected)
     {
         return FALSE;
     }
@@ -262,6 +280,9 @@ BOOL CDevicesDlg::GetSelectedHardwareID(CString& sHardwareID)
 
 void CDevicesDlg::OnRestartDevice() 
 {
+    if(!HasValidSelection())
+        return;
+
     CString sHardwareID;
     if(GetSelectedHardwareID(sHardwareID))
     {
@@ -277,6 +298,9 @@ void CDevicesDlg::OnRestartDevice()
 
 void CDevicesDlg::OnInstallSniffer() 
 {
+    if(!HasValidSelection())
+        return;
+
     CString sHardwareID;
     if(GetSelectedHardwareID(sHardwareID))
     {
@@ -292,12 +316,18 @@ void CDevicesDlg::OnInstallSniffer()
 
 void CDevicesDlg::OnInstallRestart() 
 {
+    if(!HasValidSelection())
+        return;
+
     OnInstallSniffer();
     OnRestartDevice();
 }
 
 void CDevicesDlg::OnUninstallSniffer() 
 {
+    if(!HasValidSelection())
+        return;
+    
     CString sHardwareID;
     if(GetSelectedHardwareID(sHardwareID))
     {
@@ -313,6 +343,9 @@ void CDevicesDlg::OnUninstallSniffer()
 
 void CDevicesDlg::OnUninstallRestart() 
 {
+    if(!HasValidSelection())
+        return;
+
     OnUninstallSniffer();
     OnRestartDevice();
 }
@@ -410,14 +443,14 @@ void CDevicesDlg::ToggleYourself(void)
 {
     if(IsWindowVisible())
     {
-        GetApp().WriteProfileInt("DevicesWindow", "Visible", FALSE);
+        GetApp().WriteProfileInt(REGSTR_DEVICESWINDOW, REGSTR_VISIBLE, FALSE);
 	    CDialog::OnCancel();
     }
     else
     {
         ShowWindow(SW_NORMAL);
         SetForegroundWindow();
-        GetApp().WriteProfileInt("DevicesWindow", "Visible", TRUE);
+        GetApp().WriteProfileInt(REGSTR_DEVICESWINDOW, REGSTR_VISIBLE, TRUE);
     }
 }
 
@@ -565,6 +598,9 @@ void CDevicesDlg::OnTimer(UINT nIDEvent)
 /*************************************************************************
 
   $Log: not supported by cvs2svn $
+  Revision 1.1  2002/08/14 23:03:35  rbosa
+  the application to capture urbs and display them...
+
  * 
  * 4     2/22/02 6:10p Rbosa
  * - added log

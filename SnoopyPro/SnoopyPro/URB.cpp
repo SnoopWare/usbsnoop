@@ -255,7 +255,14 @@ DWORD CURB::GetSequenceNr(void)
     return m_dwSequence;
 }
 
-void CURB::GetDirection(LPTSTR sBuffer)
+int CURB::GetDirection(void)
+{
+    int nResult = m_dwFlags;
+    nResult &= ~(URBFLAGS_DIRECTION_IN | URBFLAGS_DIRECTION_OUT | URBFLAGS_COMING_UP);
+    return nResult;
+}
+
+void CURB::GetDirectionStr(LPTSTR sBuffer)
 {
     if(IsDirectionIn() && IsDirectionOut())
     {
@@ -284,7 +291,12 @@ void CURB::GetDirection(LPTSTR sBuffer)
     }
 }
 
-void CURB::GetEndpoint(LPTSTR sBuffer)
+int CURB::GetEndpoint(void)
+{
+    return (URBFLAGS_ENDPOINTKNOWN & m_dwFlags) ? m_cEndpoint : -1;
+}
+
+void CURB::GetEndpointStr(LPTSTR sBuffer)
 {
     if(URBFLAGS_ENDPOINTKNOWN & m_dwFlags)
     {
@@ -329,9 +341,25 @@ DWORD CURB::GetLinkNo(void)
     return m_dwLink;
 }
 
-void CURB::GetDataDump(LPTSTR sBuffer)
+void CURB::GetDataDumpStr(LPTSTR sBuffer)
 {
     _tcscpy(sBuffer, "");
+}
+
+int CURB::GetPayloadCount(void)
+{
+    return 0;
+}
+
+PUCHAR CURB::GetPayload(void)
+{
+    return NULL;
+}
+
+LPCTSTR CURB::GetPayloadXML(LPTSTR sBuffer)
+{
+    _tcscpy(sBuffer, "");
+    return sBuffer;
 }
 
 void CURB::SetChunkAllocator(CChunkAllocator *pChunkAllocator)
@@ -624,7 +652,31 @@ void CURB_TransferBuffer::Serialize(CArchive &ar)
     }
 }
 
-void CURB_TransferBuffer::GetDataDump(LPTSTR sBuffer)
+int CURB_TransferBuffer::GetPayloadCount(void)
+{
+    return m_TransferLength;
+}
+
+PUCHAR CURB_TransferBuffer::GetPayload(void)
+{
+    return m_TransferBuffer;
+}
+
+LPCTSTR CURB_TransferBuffer::GetPayloadXML(LPTSTR sBuffer)
+{
+    if(NULL == GetPayload())
+    {
+        return CURB::GetPayloadXML(sBuffer);
+    }
+    
+    for(int nIndex = 0; nIndex < m_TransferLength; ++nIndex)
+    {
+        sprintf(&sBuffer[nIndex << 1], "%02x", m_TransferBuffer[nIndex]);
+    }
+    return sBuffer;
+}
+
+void CURB_TransferBuffer::GetDataDumpStr(LPTSTR sBuffer)
 {
     if(m_TransferBuffer)
     {
@@ -1436,7 +1488,7 @@ void CURB_IsochTransfer::Serialize(CArchive &ar)
     }
 }
 
-void CURB_IsochTransfer::GetDataDump(LPTSTR sBuffer)
+void CURB_IsochTransfer::GetDataDumpStr(LPTSTR sBuffer)
 {
     if(0 != m_nTransferBufferCnt)
     {
@@ -1683,6 +1735,9 @@ void CMyDWORDArray::RemoveDuplicates(void)
 /*************************************************************************
 
   $Log: not supported by cvs2svn $
+  Revision 1.1  2002/08/14 23:03:34  rbosa
+  the application to capture urbs and display them...
+
  * 
  * 4     2/22/02 6:13p Rbosa
  * - fixed Isochronous IN in terms of transferbuffer displayed

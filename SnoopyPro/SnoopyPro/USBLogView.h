@@ -99,6 +99,7 @@ protected:
 	afx_msg void OnPlayPause();
 	afx_msg void OnStop();
 	afx_msg void OnToolsAnalyzeLog();
+	afx_msg void OnFileExport();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

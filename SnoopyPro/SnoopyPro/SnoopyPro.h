@@ -21,6 +21,17 @@ class CUSBLogDoc;
 // See SnoopyPro.cpp for the implementation of this class
 //
 
+#define REGSTR_DEVICESWINDOW            "DevicesWindow"
+#define REGSTR_POSITIONTOP              "PositionTop"
+#define REGSTR_POSITIONLEFT             "PositionLeft"
+#define REGSTR_POSITIONBOTTOM           "PositionBottom"
+#define REGSTR_POSITIONRIGHT            "PositionRight"
+#define REGSTR_VISIBLE                  "Visible"
+
+#define REGSTR_EXPORTER                 "Exporter"
+#define REGSTR_FILENAME                 "Filename"
+#define REGSTR_EXPORTERTYPE             "ExporterType"
+
 class CSnoopyProApp : public CWinApp
 {
 public:

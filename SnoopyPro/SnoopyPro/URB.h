@@ -43,9 +43,12 @@ class CArrayURB;
 #define URBFLAGS_PIPEHANDLE_PRESENT             (0x00000002)
 #define URBFLAGS_DIRECTION_IN                   (0x00000004)
 #define URBFLAGS_DIRECTION_OUT                  (0x00000008)
+#define URBFLAGS_COMING_UP                      (0x00000010)
 
 #define MAX_LINES_PER_URB_LOG2                  (10)
 #define MAX_LINES_PER_URB                       ((1 << MAX_LINES_PER_URB_LOG2) - 2)
+
+#define MAX_USB_TRANSFERBUFFER_SIZE             (1024)
 
 class CURB : public CObject
 {
@@ -60,14 +63,20 @@ public:
     // access methods
     void GetSequenceNo(LPTSTR sBuffer);
     DWORD GetSequenceNr(void);
-    void GetDirection(LPTSTR sBuffer);
-    void GetEndpoint(LPTSTR sBuffer);
+    int GetDirection(void);
+    void GetDirectionStr(LPTSTR sBuffer);
+    int GetEndpoint(void);
+    void GetEndpointStr(LPTSTR sBuffer);
     DWORD GetTime(CArrayURB *parURB);
     USHORT GetFunction(void);
     LPCTSTR GetFunctionStr(void);
     LONG GetStatus(void);
+    void GetStatusStr(LPTSTR sBuffer);
     DWORD GetLinkNo(void);
-	virtual void GetDataDump(LPTSTR sBuffer);
+    virtual int GetPayloadCount(void);
+    virtual PUCHAR GetPayload(void);
+    virtual LPCTSTR GetPayloadXML(LPTSTR sBuffer);
+    virtual void GetDataDumpStr(LPTSTR sBuffer);
 
     // for detailed output
     void SetChunkAllocator(CChunkAllocator *pChunkAllocator);
@@ -77,7 +86,7 @@ public:
     LPCTSTR GetExpandedLine(int nLine);
 
     // general filter methods
-	BOOL IsSelectURB(void);
+    BOOL IsSelectURB(void);
     BOOL IsControlURB(void);
     BOOL IsBulkURB(void);
     virtual BOOL HasNoPayload(void);
@@ -140,7 +149,10 @@ public:
     virtual void Serialize(CArchive &ar);
     
     // access member
-    virtual void GetDataDump(LPTSTR sBuffer);
+    virtual int GetPayloadCount(void);
+    virtual PUCHAR GetPayload(void);
+    virtual LPCTSTR GetPayloadXML(LPTSTR sBuffer);
+    virtual void GetDataDumpStr(LPTSTR sBuffer);
     
     // filter methods
     virtual BOOL HasNoPayload(void);
@@ -273,7 +285,7 @@ public:
     DECLARE_SERIAL(CURB_IsochTransfer);
     virtual void Serialize(CArchive &ar);
     
-    virtual void GetDataDump(LPTSTR sBuffer);
+    virtual void GetDataDumpStr(LPTSTR sBuffer);
     virtual void RenderProperties(void);
 
     virtual void GrabData(PPACKET_HEADER ph);
