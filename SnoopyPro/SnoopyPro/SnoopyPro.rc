@@ -1,0 +1,594 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "Resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "Resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "#ifdef _WIN32\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#pragma code_page(1252)\r\n"
+    "#endif //_WIN32\r\n"
+    "#include ""Res\\SnoopyPro.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""afxres.rc""         // Standard components\r\n"
+    "#include ""afxprint.rc""       // printing/print preview resources\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON    DISCARDABLE     "Res\\SnoopyPro.ico"
+IDR_USBLOGTYPE          ICON    DISCARDABLE     "Res\\USBLogDoc.ico"
+IDI_CLOSED              ICON    DISCARDABLE     "Res\\Closed.ico"
+IDI_OPEN                ICON    DISCARDABLE     "Res\\Open.ico"
+IDI_OPENINV             ICON    DISCARDABLE     "Res\\OpenInv.ico"
+IDI_CLOSEDINV           ICON    DISCARDABLE     "Res\\ClosedInv.ico"
+IDI_USB_LOGO            ICON    DISCARDABLE     "Res\\USBLogo.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDR_MAINFRAME           BITMAP  MOVEABLE PURE   "res\\Toolbar.bmp"
+IDB_PLAY                BITMAP  DISCARDABLE     "Res\\Play.bmp"
+IDB_PAUSE               BITMAP  DISCARDABLE     "Res\\Pause.bmp"
+IDB_STOP                BITMAP  DISCARDABLE     "Res\\Stop.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Toolbar
+//
+
+IDR_MAINFRAME TOOLBAR DISCARDABLE  16, 15
+BEGIN
+    BUTTON      ID_FILE_NEW
+    BUTTON      ID_FILE_OPEN
+    BUTTON      ID_FILE_SAVE
+    SEPARATOR
+    BUTTON      ID_EDIT_CUT
+    BUTTON      ID_EDIT_COPY
+    BUTTON      ID_EDIT_PASTE
+    SEPARATOR
+    BUTTON      ID_FILE_PRINT
+    SEPARATOR
+    BUTTON      ID_APP_ABOUT
+    SEPARATOR
+    BUTTON      ID_VIEW_DEVICES
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MAINFRAME MENU PRELOAD DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&New\tCtrl+N",                ID_FILE_NEW
+        MENUITEM "&Open...\tCtrl+O",            ID_FILE_OPEN
+        MENUITEM SEPARATOR
+        MENUITEM "P&rint Setup...",             ID_FILE_PRINT_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "Recent File",                 ID_FILE_MRU_FILE1, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID_APP_EXIT
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&USB Devices\tF2",            ID_VIEW_DEVICES
+        MENUITEM SEPARATOR
+        MENUITEM "&Toolbar",                    ID_VIEW_TOOLBAR
+        MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "Display &Readme.txt...",      ID_HELP_README
+        MENUITEM SEPARATOR
+        MENUITEM "&About SnoopyPro...",         ID_APP_ABOUT
+    END
+END
+
+IDR_USBLOGTYPE MENU PRELOAD DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&New\tCtrl+N",                ID_FILE_NEW
+        MENUITEM "&Open...\tCtrl+O",            ID_FILE_OPEN
+        MENUITEM "&Close",                      ID_FILE_CLOSE
+        MENUITEM "&Save\tCtrl+S",               ID_FILE_SAVE
+        MENUITEM "Save &As...",                 ID_FILE_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "&Print...\tCtrl+P",           ID_FILE_PRINT
+        MENUITEM "Print Pre&view",              ID_FILE_PRINT_PREVIEW
+        MENUITEM "P&rint Setup...",             ID_FILE_PRINT_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "Recent File",                 ID_FILE_MRU_FILE1, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID_APP_EXIT
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Undo\tCtrl+Z",               ID_EDIT_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "Cu&t\tCtrl+X",                ID_EDIT_CUT
+        MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
+        MENUITEM "&Paste\tCtrl+V",              ID_EDIT_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "&Delete\tDel",                ID_EDIT_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "Select &All\tCtrl-A",         ID_EDIT_SELECTALL
+        MENUITEM "Select All Going Down",       ID_EDIT_SELECTALL_DIR_DOWN
+        MENUITEM "Select All Going Up",         ID_EDIT_SELECTALL_DIR_UP
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Expand\tNum-Plus",           ID_EXPAND
+        MENUITEM "&Collapse\tNum-Minus",        ID_COLLAPSE
+        MENUITEM SEPARATOR
+        MENUITEM "&Autofit Columns\tCtrl-Num-Plus", ID_AUTOFIT_COLUMNS
+        MENUITEM SEPARATOR
+        MENUITEM "&USB Devices\tF2",            ID_VIEW_DEVICES
+        MENUITEM SEPARATOR
+        MENUITEM "&Toolbar",                    ID_VIEW_TOOLBAR
+        MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
+    END
+    POPUP "&Tools"
+    BEGIN
+        MENUITEM "&Analyze Log",                ID_TOOLS_ANALYZE_LOG
+    END
+    POPUP "&Window"
+    BEGIN
+        MENUITEM "&New Window",                 ID_WINDOW_NEW
+        MENUITEM "&Cascade",                    ID_WINDOW_CASCADE
+        MENUITEM "&Tile",                       ID_WINDOW_TILE_HORZ
+        MENUITEM "&Arrange Icons",              ID_WINDOW_ARRANGE
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "Display &Readme.txt...",      ID_HELP_README
+        MENUITEM SEPARATOR
+        MENUITEM "&About SnoopyPro...",         ID_APP_ABOUT
+    END
+END
+
+IDR_DEVICELIST MENU DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Unpack Drivers",             ID_UNPACK_DRIVERS
+        MENUITEM SEPARATOR
+        MENUITEM "Install Service",             ID_INSTALL_SERVICE
+        MENUITEM "Uninstall Service",           ID_UNINSTALL_SERVICE
+        MENUITEM SEPARATOR
+        MENUITEM "&Close",                      ID_VIEW_DEVICES
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Restart Device",             ID_RESTART_DEVICE
+        MENUITEM SEPARATOR
+        MENUITEM "&Install Sniffer",            ID_INSTALL_SNIFFER
+        MENUITEM "&Uninstall Sniffer",          ID_UNINSTALL_SNIFFER
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Refresh\tF5",                ID_VIEW_REFRESH
+    END
+END
+
+IDR_DEVICE_CONTEXT MENU DISCARDABLE 
+BEGIN
+    POPUP "USBSNOOP"
+    BEGIN
+        MENUITEM "&Restart Device",             ID_RESTART_DEVICE
+        MENUITEM SEPARATOR
+        MENUITEM "&Install",                    ID_INSTALL_SNIFFER
+        MENUITEM "&Uninstall",                  ID_UNINSTALL_SNIFFER
+        MENUITEM SEPARATOR
+        MENUITEM "Install &Service",            ID_INSTALL_SERVICE
+        MENUITEM "Uninstall S&ervice",          ID_UNINSTALL_SERVICE
+        MENUITEM SEPARATOR
+        MENUITEM "I&nstall and Restart",        ID_INSTALL_RESTART
+        MENUITEM "Uninst&all and Restart",      ID_UNINSTALL_RESTART
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_MAINFRAME ACCELERATORS PRELOAD MOVEABLE PURE 
+BEGIN
+    "A",            ID_EDIT_SELECTALL,      VIRTKEY, CONTROL, NOINVERT
+    "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    "N",            ID_FILE_NEW,            VIRTKEY, CONTROL, NOINVERT
+    "O",            ID_FILE_OPEN,           VIRTKEY, CONTROL, NOINVERT
+    "P",            ID_FILE_PRINT,          VIRTKEY, CONTROL, NOINVERT
+    "S",            ID_FILE_SAVE,           VIRTKEY, CONTROL, NOINVERT
+    "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL, NOINVERT
+    VK_ADD,         ID_EXPAND,              VIRTKEY, NOINVERT
+    VK_ADD,         ID_AUTOFIT_COLUMNS,     VIRTKEY, CONTROL, NOINVERT
+    VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT, NOINVERT
+    VK_DELETE,      ID_EDIT_DELETE,         VIRTKEY, NOINVERT
+    VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, SHIFT, NOINVERT
+    VK_F2,          ID_VIEW_DEVICES,        VIRTKEY, NOINVERT
+    VK_F5,          ID_VIEW_REFRESH,        VIRTKEY, NOINVERT
+    VK_F6,          ID_NEXT_PANE,           VIRTKEY, NOINVERT
+    VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT, NOINVERT
+    VK_F7,          ID_TOOLS_ANALYZE_LOG,   VIRTKEY, NOINVERT
+    VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY, SHIFT, NOINVERT
+    VK_SUBTRACT,    ID_COLLAPSE,            VIRTKEY, NOINVERT
+    "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
+    "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOG DISCARDABLE  0, 0, 232, 76
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About SnoopyPro"
+FONT 8, "MS Sans Serif"
+BEGIN
+    ICON            IDR_MAINFRAME,IDC_STATIC,10,10,21,20
+    LTEXT           "application info",IDC_APP_INFO,40,10,185,20,SS_NOPREFIX
+    DEFPUSHBUTTON   "OK",IDOK,90,55,50,14,WS_GROUP
+    CTEXT           "url",IDC_URL,5,40,220,8,SS_NOTIFY
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,5,35,
+                    220,1
+END
+
+IDD_SNOOPYPRO_FORM DIALOG DISCARDABLE  0, 0, 426, 123
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "List1",IDC_USBLOG,"SysListView32",LVS_REPORT | 
+                    LVS_OWNERDRAWFIXED | LVS_OWNERDATA | WS_BORDER | 
+                    WS_TABSTOP,7,20,412,96
+    LTEXT           "99999 packets",IDC_STATUS,7,7,50,10,SS_NOPREFIX | 
+                    SS_SUNKEN
+    CONTROL         "&Relative Timestamps",IDC_TIMEFORMAT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,338,7,81,10
+    LTEXT           "Static",IDC_HARDWAREID,98,7,233,10,SS_NOPREFIX | 
+                    SS_SUNKEN
+    PUSHBUTTON      "P",IDC_PLAY_PAUSE,62,5,14,14,BS_BITMAP
+    PUSHBUTTON      "S",IDC_STOP,79,5,14,14,BS_BITMAP
+END
+
+IDD_DEVICELIST DIALOG DISCARDABLE  0, 0, 335, 183
+STYLE DS_ABSALIGN | WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "USB Devices"
+MENU IDR_DEVICELIST
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "List1",IDC_DEVICES,"SysListView32",WS_BORDER | 
+                    WS_TABSTOP,5,40,299,118
+    LTEXT           "Static",IDC_DRIVER_STATUS,203,15,95,8
+END
+
+IDD_README DIALOG DISCARDABLE  0, 0, 437, 221
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Readme"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_README,7,7,423,188,ES_MULTILINE | ES_AUTOVSCROLL | 
+                    ES_AUTOHSCROLL | ES_READONLY | ES_WANTRETURN | 
+                    WS_VSCROLL | WS_HSCROLL
+    DEFPUSHBUTTON   "&Close",IDCANCEL,380,200,50,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 225
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 69
+    END
+
+    IDD_SNOOPYPRO_FORM, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 419
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 116
+    END
+
+    IDD_DEVICELIST, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 328
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 176
+    END
+
+    IDD_README, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 430
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 214
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDR_MAINFRAME           "SnoopyPro"
+    IDR_USBLOGTYPE          "\nUSBLog\nUSBLog\nUSB Log Files (*.usblog)\n.usblog\nSnoopyPro.Document\nUSBLog Document"
+    IDS_CLIPBOARDFORMAT     "SnoopyPro_Binary_URB_020"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    AFX_IDS_APP_TITLE       "SnoopyPro"
+    AFX_IDS_IDLEMESSAGE     "Ready"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_INDICATOR_EXT        "EXT"
+    ID_INDICATOR_CAPS       "CAP"
+    ID_INDICATOR_NUM        "NUM"
+    ID_INDICATOR_SCRL       "SCRL"
+    ID_INDICATOR_OVR        "OVR"
+    ID_INDICATOR_REC        "REC"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_FILE_NEW             "Create a new empty log\nNew"
+    ID_FILE_OPEN            "Open an existing log\nOpen"
+    ID_FILE_CLOSE           "Close the active log\nClose"
+    ID_FILE_SAVE            "Save the active log\nSave"
+    ID_FILE_SAVE_AS         "Save the active log with a new name\nSave As"
+    ID_FILE_PAGE_SETUP      "Change the printing options\nPage Setup"
+    ID_FILE_PRINT_SETUP     "Change the printer and printing options\nPrint Setup"
+    ID_FILE_PRINT           "Print the active log\nPrint"
+    ID_FILE_PRINT_PREVIEW   "Display full pages\nPrint Preview"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_APP_ABOUT            "Display program information, version number and copyright\nAbout"
+    ID_APP_EXIT             "Quit the application; prompts to save logs\nExit"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_FILE_MRU_FILE1       "Open this log"
+    ID_FILE_MRU_FILE2       "Open this document"
+    ID_FILE_MRU_FILE3       "Open this document"
+    ID_FILE_MRU_FILE4       "Open this document"
+    ID_FILE_MRU_FILE5       "Open this document"
+    ID_FILE_MRU_FILE6       "Open this document"
+    ID_FILE_MRU_FILE7       "Open this document"
+    ID_FILE_MRU_FILE8       "Open this document"
+    ID_FILE_MRU_FILE9       "Open this document"
+    ID_FILE_MRU_FILE10      "Open this document"
+    ID_FILE_MRU_FILE11      "Open this document"
+    ID_FILE_MRU_FILE12      "Open this document"
+    ID_FILE_MRU_FILE13      "Open this document"
+    ID_FILE_MRU_FILE14      "Open this document"
+    ID_FILE_MRU_FILE15      "Open this document"
+    ID_FILE_MRU_FILE16      "Open this document"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_NEXT_PANE            "Switch to the next window pane\nNext Pane"
+    ID_PREV_PANE            "Switch back to the previous window pane\nPrevious Pane"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_WINDOW_NEW           "Open another window for the active document\nNew Window"
+    ID_WINDOW_ARRANGE       "Arrange icons at the bottom of the window\nArrange Icons"
+    ID_WINDOW_CASCADE       "Arrange windows so they overlap\nCascade Windows"
+    ID_WINDOW_TILE_HORZ     "Arrange windows as non-overlapping tiles\nTile Windows"
+    ID_WINDOW_TILE_VERT     "Arrange windows as non-overlapping tiles\nTile Windows"
+    ID_WINDOW_SPLIT         "Split the active window into panes\nSplit"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_EDIT_CLEAR           "Erase the selection\nErase"
+    ID_EDIT_CLEAR_ALL       "Erase everything\nErase All"
+    ID_EDIT_COPY            "Copy the selection and put it on the Clipboard\nCopy"
+    ID_EDIT_CUT             "Cut the selection and put it on the Clipboard\nCut"
+    ID_EDIT_FIND            "Find the specified text\nFind"
+    ID_EDIT_PASTE           "Insert Clipboard contents\nPaste"
+    ID_EDIT_REPEAT          "Repeat the last action\nRepeat"
+    ID_EDIT_REPLACE         "Replace specific text with different text\nReplace"
+    ID_EDIT_SELECT_ALL      "Select the entire document\nSelect All"
+    ID_EDIT_UNDO            "Undo the last action\nUndo"
+    ID_EDIT_REDO            "Redo the previously undone action\nRedo"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_VIEW_TOOLBAR         "Show or hide the toolbar\nToggle ToolBar"
+    ID_VIEW_STATUS_BAR      "Show or hide the status bar\nToggle StatusBar"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    AFX_IDS_SCSIZE          "Change the window size"
+    AFX_IDS_SCMOVE          "Change the window position"
+    AFX_IDS_SCMINIMIZE      "Reduce the window to an icon"
+    AFX_IDS_SCMAXIMIZE      "Enlarge the window to full size"
+    AFX_IDS_SCNEXTWINDOW    "Switch to the next document window"
+    AFX_IDS_SCPREVWINDOW    "Switch to the previous document window"
+    AFX_IDS_SCCLOSE         "Close the active window and prompts to save the documents"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    AFX_IDS_SCRESTORE       "Restore the window to normal size"
+    AFX_IDS_SCTASKLIST      "Activate Task List"
+    AFX_IDS_MDICHILD        "Activate this window"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    AFX_IDS_PREVIEW_CLOSE   "Close print preview mode\nCancel Preview"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_COL_VIDPID          "VID/PID"
+    IDS_COL_FILTERINSTALLED "Snooper installed?"
+    IDS_COL_DESCRIPTION     "Description"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_LOWERFILTERS        "LowerFilters"
+    IDS_INSTALLED           "Installed"
+    IDS_NOTINSTALLED        "-"
+    IDS_FILTERFILENAME      "USBSnoop.sys"
+    IDS_BRIDGEFILENAME_2K   "USBSnpys.sys"
+    IDS_BRIDGEFILENAME_9X   "USBSnpyV.vxd"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_VIEW_DEVICES         "Toggles the USB devices window\nToggle USB Devices"
+    ID_VIEW_REFRESH         "Refreshes the list of devices\nRefresh"
+    ID_INSTALL_SNIFFER      "Installs the Sniffer Filter on the selected device."
+    ID_UNINSTALL_SNIFFER    "Uninstalls the Sniffer filter from the selected device."
+    ID_EXPAND               "Expand the selected URB(s)\nExpand"
+    ID_COLLAPSE             "Collapse the selected URB(s)\nCollapse"
+    ID_INSTALL_SERVICE      "Installs the Sniffer service (only needed on W2K and WXP)"
+    ID_UNINSTALL_SERVICE    "Uninstalls the Sniffer service (only needed on W2K and WXP)"
+    ID_AUTOFIT_COLUMNS      "Adjusts the columns to fit all text\nAutofit Columns"
+    ID_EDIT_SELECTALL       "Select all URBs\nSelect All"
+    ID_EDIT_DELETE          "Delete the selection\nDelete"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_EDIT_SELECTALL_DIR_DOWN 
+                            "Select all URBs which are going to the device\nSelect All Down"
+    ID_EDIT_SELECTALL_DIR_UP 
+                            "Select all URBs which come back from the device\nSelect All Up"
+    ID_INDICATOR_PROGRESS   "<--- progress indicator goes here --->"
+    ID_CLOSE                "Close this window\nClose"
+    ID_UNPACK_DRIVERS       "Extracts the binary drivers and copies them to the appropriate Windows system folder.\nUnpack Drivers"
+    ID_HELP_README          "Displays the readme.txt for the current release\nDisplay Readme.txt"
+    ID_RESTART_DEVICE       "Restarts the selected device."
+    ID_INDICATOR_SNPYS_STATUS "<-- Snpys status goes here -->"
+    ID_INSTALL_RESTART      "Installs the Sniffer filter and restarts the device."
+    ID_UNINSTALL_RESTART    "Uninstalls the Sniffer filter and restarts the device."
+    ID_TOOLS_ANALYZE_LOG    "Parses through the URBs and fixes up some information...\nAnalyze Log"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_FILTERNAME_9X       "USBSnoopy.sys"
+    IDS_FILTERNAME_2K       "USBSNOOP"
+    IDS_FILTERSERVICEDESCRIPTION "USB Snoopy Filter Driver Service"
+    IDS_BRIDGESERVICEDESCRIPTION "USB Snoopy Driver Exposer Service"
+    IDS_BRIDGESERVICENAME   "USBSNPYS"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE 9, 1
+#pragma code_page(1252)
+#endif //_WIN32
+#include "Res\SnoopyPro.rc2"  // non-Microsoft Visual C++ edited resources
+#include "afxres.rc"         // Standard components
+#include "afxprint.rc"       // printing/print preview resources
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
