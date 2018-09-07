@@ -1,0 +1,49 @@
+2010: Graeme W. Gill <graeme@argyllcms.com>
+
+	V 0.26g
+
+	Added 64 bit driver support. As a result, the DDK needs to be
+	used to build 64 bit USBSnoop, before the main application is built.
+
+2008/12/13: Graeme M. Gill <graeme@argyllcms.com>
+
+	V 0.23g
+
+	Removed Win98 VxD driver, since DDK isn't available.
+
+	Increased buffer in SnoopyPro/USBLogDoc.cpp GetNewURBSFromSniffer() line 205
+	to avoid lockup with big USB packets.
+
+	Bumped version number to 0.23G to label change.
+
+	Fixed formatting slightly to make blank lines sane,
+	and better deliniate each packet.
+
+15/07/2001: Benoit Papillault <benoit.papillault@free.fr>
+
+	V 0.13
+
+	Added DumpBuffer() method to dump a buffer, with a call to KdPrint() per
+	line, instead of per byte
+
+	Added a PipeHandle/Endpoint matching table, which is used to display
+    endpoint numbers instead of Windows PipeHandle
+
+	Corrected display of URB_FUNCTION_SELECT_CONFIGURATION. Analize was wrong
+    in case of several interfaces.
+
+14/07/2001: Benoit Papillault <benoit.papillault@free.fr>
+
+	V 0.12
+
+19/03/2001: Benoit Papillault <benoit.papillault@free.fr>
+
+	V 0.11
+
+--/--/----: tom@wingmanteam.com, roland@wingmanteam.com
+
+
+	V 0.1
+	
+	SniffUSB - USB packet watcher 0.1
+
