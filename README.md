@@ -8,8 +8,6 @@ Original version was using a WDM filter driver, which can filter all traffic flo
 
 ## Code structure
 
-There appear to be three components:
-
  * SnoopyPro: the user application
  * USBSnoop: the Kernel driver that captures the URBs, and is installed in a given devices USB driver chain.
  * USBSnpys: Windows 2K WDM driver bridge that accesses the captured URBs for the application.
@@ -26,21 +24,25 @@ shared/RingBuffer.cpp
 
 Do this by opening a 64 bit DDK checked build envirenment window, and:
 
+```
 cd USBSnoop
 make
+```
 
+```
 cd ..\USBSnpys
 make
+```
 
 Open the project file in VC++.
 
 Set the following active configurations and build them:
 
-UsbSnoopy - Win32 Debug
-UsbSnoopy - Win32 Release
-USBSnpys - Win32 Debug
-USBSnpys - Win32 Release
-SnoopyPro - Win32 Release
+ * UsbSnoopy - Win32 Debug
+ * UsbSnoopy - Win32 Release
+ * USBSnpys - Win32 Debug
+ * USBSnpys - Win32 Release
+ * SnoopyPro - Win32 Release
 
 ## Deployment
 
@@ -48,5 +50,5 @@ To run it on a 64 bit Vista or Win7 machine, you need to boot while pressing F8,
 
 ## LEGAL
 
-This package is provided as is, no warranties are expressed or implied, no liability whatsoever is assumed, if this program burns down your house or puts your fish on fire, it's all your fault.
+This package is provided as is, no warranties are expressed or implied, no liability whatsoever is assumed. If this program burns down your house or puts your fish on fire, it's all your fault.
 
