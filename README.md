@@ -52,3 +52,9 @@ To run it on a 64 bit Vista or Win7 machine, you need to boot while pressing F8,
 
 This package is provided as is, no warranties are expressed or implied, no liability whatsoever is assumed. If this program burns down your house or puts your fish on fire, it's all your fault.
 
+## Developers & Contributors
+
+ * Tom & Roland of Wingman Team <tom@wingmanteam.com>, <roland@wingmanteam.com>
+ * Benoit Papillault <benoit.papillault@free.fr>
+ * Graeme W. Gill <graeme@argyllcms.com>
+
