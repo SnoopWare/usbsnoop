@@ -37,7 +37,10 @@ typedef struct USBSNPYS_GLOBALS
 //** end of Driver.h *****************************************************
 /*************************************************************************
 
-  $Log: not supported by cvs2svn $
+  $Log: Driver.h,v $
+  Revision 1.1  2002/08/14 23:10:42  rbosa
+  the WDM driver to connect to the snooper filter (used under Win2K)
+
  * 
  * 2     2/05/02 9:09p Rbosa
  * - added unique DeviceID instead of DeviceObject as ID

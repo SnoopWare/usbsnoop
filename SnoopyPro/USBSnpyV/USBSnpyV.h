@@ -34,7 +34,10 @@ typedef struct USBSNPYS_GLOBALS
 //** end of USBSnpyV.h ***************************************************
 /*************************************************************************
 
-  $Log: not supported by cvs2svn $
+  $Log: USBSnpyV.h,v $
+  Revision 1.1  2002/08/14 23:09:43  rbosa
+  the VxD driver bridge (used under Windows 9x)
+
  * 
  * 1     2/05/02 9:08p Rbosa
  * - base for USBSnoopies VxD

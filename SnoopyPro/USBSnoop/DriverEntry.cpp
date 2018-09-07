@@ -9,6 +9,7 @@
 #include "Interface.h"
 #include "Driver.h"
 
+#ifdef NEVER // GWG
 // 98 DDK stuff
 extern "C"
 {
@@ -19,10 +20,12 @@ extern "C"
 #include <vxdldr.h>
 #include <vxdwraps.h>
 };
+#endif // NEVER
 
 
 VOID DriverUnload(IN PDRIVER_OBJECT DriverObject);
-NTSTATUS CompleteRequest(IN PIRP Irp, IN NTSTATUS status, IN ULONG *info);
+//NTSTATUS CompleteRequest(IN PIRP Irp, IN NTSTATUS status, IN ULONG *info);
+NTSTATUS CompleteRequest(IN PIRP Irp, IN NTSTATUS status, IN ULONG_PTR info);
 NTSTATUS AddDevice(IN PDRIVER_OBJECT DriverObject, IN PDEVICE_OBJECT pdo);
 NTSTATUS DispatchAny(IN PDEVICE_OBJECT fido, IN PIRP Irp);
 NTSTATUS DispatchPower(IN PDEVICE_OBJECT fido, IN PIRP Irp);
@@ -49,6 +52,10 @@ BOOLEAN bIsThisWin9x;
 
 ///////////////////////////////////////////////////////////////////////////////
 
+// To enable Kernel Messages on a free build:
+#undef KdPrint
+#define KdPrint(_x_) DbgPrint _x_
+
 #pragma INITCODE
 
 NTSTATUS GetRegistryDword(IN PWCHAR pRegPath, IN PWCHAR ValueName, IN OUT PULONG Value)
@@ -72,7 +79,6 @@ extern "C" NTSTATUS __stdcall DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUN
     UNREFERENCED_PARAMETER(RegistryPath);
 
     DbgPrint("USBSnoop " _VERSION_STR_  " - Entering DriverEntry: DriverObject %8.8lX\n", DriverObject);
-
     // Insist that OS support at least the WDM 1.0 (Win98 DDK)
     if (!IoIsWdmVersionAvailable(1, 0))
     {
@@ -83,6 +89,11 @@ extern "C" NTSTATUS __stdcall DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUN
     // See if we're running under Win98 or NT:
     bIsThisWin9x = !IoIsWdmVersionAvailable(1, 10);
     KdPrint(("USBSnoop - Running under Windows %s\n", bIsThisWin9x ? "98" : "NT"));
+
+	if (bIsThisWin9x) {
+        KdPrint(("USBSnoop - Can't run on Windows 98\n"));
+        return STATUS_UNSUCCESSFUL;
+	}
 
     // Initialize the global stuff
     RtlZeroMemory(&GlobalData.Snoopies, sizeof(GlobalData.Snoopies));
@@ -109,6 +120,7 @@ extern "C" NTSTATUS __stdcall DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUN
     
     if(!GlobalData.lStealEntrypoints)
     {
+		// Not stealing entry points..
         DriverObject->MajorFunction[IRP_MJ_PNP] = DispatchPnp;
         DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = DispatchInternalIOCTL;
     }
@@ -132,6 +144,7 @@ VOID DriverUnload(IN PDRIVER_OBJECT DriverObject)
         GlobalData.Snoopies.pfnUSBSnoopUnloading();
     }
 
+#ifdef NEVER // GWG
     if(bIsThisWin9x)
     {
         // we release the VxD here...
@@ -145,6 +158,7 @@ VOID DriverUnload(IN PDRIVER_OBJECT DriverObject)
             }
         }
     }
+#endif // NEVER
 
     DbgPrint("USBSnoop - unloaded.\n");
 
@@ -304,7 +318,7 @@ NTSTATUS AddDevice(IN PDRIVER_OBJECT DriverObject, IN PDEVICE_OBJECT pdo)
     NTSTATUS status = GetHardwareID(pdo, hardwareid, sizeof(hardwareid), &length);
     if(NT_SUCCESS(status))
     {
-        DbgPrint("USBSnoop - Loaded for %S\n", hardwareid);
+		DbgPrint("USBSnoop - Loaded for %S\n", hardwareid);
     }
 
     PDEVICE_OBJECT fido;
@@ -447,6 +461,7 @@ NTSTATUS ConnectToUSBSnpys(void)
     Snoopy.pfnReleaseSnoopies = ReleaseSnoopies;    
     Snoopy.pfnEnableLogging = EnableLogging;
     
+#ifdef NEVER // GWG
     if(bIsThisWin9x)
     {
         // connect to a VxD
@@ -489,6 +504,7 @@ NTSTATUS ConnectToUSBSnpys(void)
         // we will unload the VxD as soon as we unload...
     }
     else
+#endif // NEVER
     {
         // connect to a NT4 driver
         UNICODE_STRING USBSnpysName;
@@ -558,7 +574,7 @@ ULONG EnableLogging(PDEVICE_OBJECT DeviceObject, ULONG bEnable)
 {
     PDEVICE_EXTENSION pdx = (PDEVICE_EXTENSION) DeviceObject->DeviceExtension;
     pdx->bLoggingEnabled = (0 != bEnable);
-    // KdPrint(("USBSnoop - Logging is %sabled for device %08x\n", pdx->bLoggingEnabled ? "en" : "dis", DeviceObject));
+    KdPrint(("USBSnoop - Logging is %sabled for device %08x\n", pdx->bLoggingEnabled ? "en" : "dis", DeviceObject));
     return pdx->bLoggingEnabled;
 }
 
@@ -576,6 +592,7 @@ void CopyUserData(PVOID pDest, ULONG &uOffset, PVOID pSrc, ULONG uSize)
 static UCHAR PointerPresent = 1;
 static UCHAR PointerNull = 0;
 
+/* Copy a URB structure plus a transfer buffer */
 void CopyTransferBuffer(PVOID pDest, ULONG &uOffset, PUCHAR pBuffer, PMDL pMdl, ULONG uSize)
 {
     CopyUserData(pDest, uOffset, &PointerPresent, sizeof(PointerPresent));
@@ -584,7 +601,7 @@ void CopyTransferBuffer(PVOID pDest, ULONG &uOffset, PUCHAR pBuffer, PMDL pMdl, 
     {
         if(pMdl)
         {
-            // KdPrint(("??? weird transfer buffer, both MDL and flat specified. Ignoring MDL\n"));
+//			KdPrint(("??? weird transfer buffer, both MDL and flat specified. Ignoring MDL\n"));
         }
         CopyUserData(pDest, uOffset, &PointerPresent, sizeof(PointerPresent));
         CopyUserData(pDest, uOffset, &uSize, sizeof(ULONG));
@@ -610,6 +627,7 @@ void CopyTransferBuffer(PVOID pDest, ULONG &uOffset, PUCHAR pBuffer, PMDL pMdl, 
     }
 }
 
+/* Copy just a URB structure */
 void CopyNoTransferBuffer(PVOID pDest, ULONG &uOffset)
 {
     CopyUserData(pDest, uOffset, &PointerNull, sizeof(PointerNull));
@@ -642,14 +660,18 @@ void CopyBufferOrMdl(PVOID pDest, ULONG &uOffset, PVOID pBuffer, PMDL pMdl, ULON
     CopyMemoryBlock(pDest, uOffset, pBuffer, uOfs, uSize);
 }
 
+/* Serialize the URB user data into the buffer that will be put in the ring buffer  */
 ULONG DecodeContents(IN PURB pUrb, IN PUCHAR pDest, BOOLEAN bReturnedFromHCD)
 {
     ULONG uUrbUserDataSize = 0;
+
+	KdPrint(("USBSnoop: DecodeContents got function code 0x%04x\n", pUrb->UrbHeader.Function));
     switch(pUrb->UrbHeader.Function)
     {
     case URB_FUNCTION_SELECT_CONFIGURATION:
         {
             struct _URB_SELECT_CONFIGURATION *pSelectConfiguration = (struct _URB_SELECT_CONFIGURATION*) pUrb;
+			/* And configuration descriptor */
             if(pSelectConfiguration->Hdr.Length >= FIELD_OFFSET(_URB_SELECT_CONFIGURATION, ConfigurationHandle))
             {
                 PUSB_CONFIGURATION_DESCRIPTOR pCD = pSelectConfiguration->ConfigurationDescriptor;
@@ -781,10 +803,11 @@ ULONG DecodeContents(IN PURB pUrb, IN PUCHAR pDest, BOOLEAN bReturnedFromHCD)
 
 NTSTATUS AddPacket(IN PDEVICE_OBJECT fido, IN PURB pUrb, ULONG uSequenceNumber, BOOLEAN bReturnedFromHCD)
 {
+	KdPrint(("USBSnoop: AddPacket\n"));
     PDEVICE_EXTENSION pdx = (PDEVICE_EXTENSION) fido->DeviceExtension;
     if(!pdx->bLoggingEnabled)
     {
-        //KdPrint(("USBSnoop - Logging is disabled\n"));
+        KdPrint(("USBSnoop - Logging is disabled\n"));
         return STATUS_SUCCESS;
     }
 
@@ -795,11 +818,13 @@ NTSTATUS AddPacket(IN PDEVICE_OBJECT fido, IN PURB pUrb, ULONG uSequenceNumber, 
         uUrbSize = sizeof(URB);
     }
 
+	// Figure the size
     ULONG uSerializedUrbContentsSize = DecodeContents(pUrb, NULL, bReturnedFromHCD);
     ULONG uTotalUrbSize = FIELD_OFFSET(PACKET_HEADER, UrbHeader) + uUrbSize + uSerializedUrbContentsSize;
     PPACKET_HEADER pPacket = (PPACKET_HEADER) ExAllocatePool(NonPagedPool, uTotalUrbSize);
     if(pPacket)
     {
+		// Fill in the header
         pPacket->uLen = uTotalUrbSize;
         pPacket->uSequenceNumber = uSequenceNumber;
         pPacket->bDirection = bReturnedFromHCD ? DIRECTION_FROM_DEVICE : DIRECTION_TO_DEVICE;
@@ -816,21 +841,25 @@ NTSTATUS AddPacket(IN PDEVICE_OBJECT fido, IN PURB pUrb, ULONG uSequenceNumber, 
         {
             if(!pdx->pCurrentBuffer->WriteBytes(pPacket, uTotalUrbSize))
             {
-                KdPrint(("USBSnoop - Overflow occurred (URB %d couldn't be added anymore)!\n",uSequenceNumber));
+                KdPrint(("USBSnoop - Overflow occurred (URB %d couldn't be added anymore)!\n",pPacket->uSequenceNumber));
                 pdx->pCurrentBuffer->SetOverflowOccurred(true);
             }
         }
         ExFreePool(pPacket);
-    }
+    } else {
+        KdPrint(("USBSnoop - ExAllocatePool %d bytes failed\n", uTotalUrbSize));
+	}
 
     return STATUS_SUCCESS;
 
 }
 
-NTSTATUS CompleteRequest(IN PIRP Irp, IN NTSTATUS status, IN ULONG *info)
+//NTSTATUS CompleteRequest(IN PIRP Irp, IN NTSTATUS status, IN ULONG *info)
+NTSTATUS CompleteRequest(IN PIRP Irp, IN NTSTATUS status, IN ULONG_PTR info)
 {
     Irp->IoStatus.Status = status;
-    Irp->IoStatus.Information = (ULONG) info;
+//    Irp->IoStatus.Information = (ULONG) info;
+    Irp->IoStatus.Information = info;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
     return status;
@@ -842,6 +871,7 @@ NTSTATUS CompleteRequest(IN PIRP Irp, IN NTSTATUS status, IN ULONG *info)
 
 NTSTATUS DispatchAny(IN PDEVICE_OBJECT fido, IN PIRP Irp)
 {
+    KdPrint(("\nUsbSnoop - DispatchAny\n"));
     PDEVICE_EXTENSION pdx = (PDEVICE_EXTENSION) fido->DeviceExtension;
 
     if(GlobalData.lStealEntrypoints)
@@ -867,14 +897,16 @@ NTSTATUS DispatchAny(IN PDEVICE_OBJECT fido, IN PIRP Irp)
 
 NTSTATUS InternalIOCTLCompletion(IN PDEVICE_OBJECT fido, IN PIRP Irp, IN PVOID Context)
 {
+    KdPrint(("\nUsbSnoop - InternalIOCTLCompletion\n"));
     if(Irp->PendingReturned)
     {
         IoMarkIrpPending(Irp);
     }
     
-    ULONG uSequenceNumber = (ULONG)Context;
+    ULONG uSequenceNumber = (ULONG)((DWORD_PTR)Context);
     PIO_STACK_LOCATION stack = IoGetCurrentIrpStackLocation(Irp);
     ULONG dwControlCode = stack->Parameters.DeviceIoControl.IoControlCode;
+    KdPrint(("\nUsbSnoop - InternalIOCTLCompletion, dwControlCode 0x%x\n",dwControlCode));
     if(IOCTL_INTERNAL_USB_SUBMIT_URB == dwControlCode)
     {
         PURB pUrb = (PURB)stack->Parameters.Others.Argument1;
@@ -887,7 +919,7 @@ NTSTATUS InternalIOCTLCompletion(IN PDEVICE_OBJECT fido, IN PIRP Irp, IN PVOID C
 
 NTSTATUS StealingInternalIOCTLCompletion(IN PDEVICE_OBJECT fido, IN PIRP Irp, IN PVOID inContext)
 {
-    //KdPrint(("UsbSnoop - StealingInternalIOCTLCompletion(%p): fido=%p, Irp=%p, Context=%p\n", fido, Irp, inContext));
+    KdPrint(("\nUsbSnoop - StealingInternalIOCTLCompletion(%p): fido=%p, Irp=%p, Context=%p\n", fido, Irp, inContext));
     
     PCONTEXT Context = (PCONTEXT)inContext;
    
@@ -928,6 +960,7 @@ NTSTATUS DispatchInternalIOCTL(IN PDEVICE_OBJECT fido, IN PIRP Irp)
     PDEVICE_EXTENSION pdx = (PDEVICE_EXTENSION) snoop_fido->DeviceExtension;
     PIO_STACK_LOCATION stack = IoGetCurrentIrpStackLocation(Irp);
     ULONG dwControlCode = stack->Parameters.DeviceIoControl.IoControlCode;
+    KdPrint(("\nUsbSnoop - DispatchInternalIOCTL dwControlCode 0x%x\n",dwControlCode));
 
     NTSTATUS status = MyIoAcquireRemoveLock(&pdx->RemoveLock, Irp);
     if(!NT_SUCCESS(status))
@@ -970,7 +1003,7 @@ NTSTATUS DispatchInternalIOCTL(IN PDEVICE_OBJECT fido, IN PIRP Irp)
         else
         {
             IoCopyCurrentIrpStackLocationToNext(Irp);
-            IoSetCompletionRoutine(Irp, InternalIOCTLCompletion, (PVOID) uSequenceNumber, TRUE, TRUE, TRUE);
+            IoSetCompletionRoutine(Irp, InternalIOCTLCompletion, (PVOID)((DWORD_PTR)uSequenceNumber), TRUE, TRUE, TRUE);
             status = IoCallDriver(pdx->LowerDeviceObject, Irp);
         }
     }
@@ -998,6 +1031,7 @@ NTSTATUS DispatchInternalIOCTL(IN PDEVICE_OBJECT fido, IN PIRP Irp)
 
 NTSTATUS DispatchPower(IN PDEVICE_OBJECT fido, IN PIRP Irp)
 {
+	KdPrint(("\nUSBSnoop - DispatchPower\n"));
 #if DBG
     PIO_STACK_LOCATION stack = IoGetCurrentIrpStackLocation(Irp);
     ULONG fcn = stack->MinorFunction;
@@ -1062,6 +1096,7 @@ NTSTATUS DispatchPower(IN PDEVICE_OBJECT fido, IN PIRP Irp)
 
 NTSTATUS DispatchPnp(IN PDEVICE_OBJECT fido, IN PIRP Irp)
 {
+    KdPrint(("\nUsbSnoop - DispatchPnp\n"));
     PDEVICE_OBJECT snoop_fido = fido;
     if(GlobalData.lStealEntrypoints)
     {
@@ -1111,6 +1146,7 @@ NTSTATUS DispatchPnp(IN PDEVICE_OBJECT fido, IN PIRP Irp)
 
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef _WIN64
 #pragma LOCKEDCODE
 
 extern "C" void __declspec(naked) __cdecl _chkesp()
@@ -1120,11 +1156,15 @@ extern "C" void __declspec(naked) __cdecl _chkesp()
 okay:
     _asm ret
 }
+#endif
 
 //** end of DriverEntry.cpp **********************************************
 /*************************************************************************
 
-  $Log: not supported by cvs2svn $
+  $Log: DriverEntry.cpp,v $
+  Revision 1.1  2002/08/14 23:06:08  rbosa
+  the WDM driver for snooping USB transactions (filter driver)
+
  * 
  * 4     2/22/02 6:16p Rbosa
  * - fixed the SHORT URB problem by packing in more bytes (still not

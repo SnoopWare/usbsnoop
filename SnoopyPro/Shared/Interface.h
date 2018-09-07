@@ -36,11 +36,14 @@
 #define MAX_PATH                        (260)
 #endif
 
+#define HWID_MAX_PATH                   (260)
+
 #define INVALID_DEVICE_ID               (0xdeadbabe)
 
 
 //////////////////////////////////////////////////////////////////////////
 // structures used in IOCTLs
+
 
 #include "RingBuffer.h"
 
@@ -52,11 +55,14 @@ typedef struct SNOOPED_DEVICE
 
     // this one contains the DeviceObjects of each filter known
     PDEVICE_OBJECT DeviceObject;
+#ifndef _WIN64
+	ULONG pack1;
+#endif
 
     // and here are the hardware id of the devices snooped... oh well,
     // this one is rather big, so I probably should think of a better
     // scheme here... TOFIX: use less space here...
-    WCHAR sHardwareIDs[MAX_PATH];
+    WCHAR sHardwareIDs[HWID_MAX_PATH];
 
     // this contains the current milli sec count at the time of plug-in
     // all time stamps in the sniffed URB packets are relative to this one
@@ -88,6 +94,7 @@ typedef enum
 } URB_DIRECTION;
 
 #include <usbdi.h>
+
 typedef struct PACKET_HEADER
 {
     ULONG uLen;                 // total length; pNext = pHere+pHere->uLen

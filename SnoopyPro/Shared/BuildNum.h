@@ -8,21 +8,25 @@
 #define _BUILDNUM_H_INCLUDED_ 
 
 #define _VERSION_MAJOR_         0
-#define _VERSION_MINOR_         22
+#define _VERSION_MINOR_         26
 #define _VERSION_BUILD_         0
 #define _VERSION_SUBBUILD_      0
 
-#define _VERSION_STR_           "0.22"
+#define _VERSION_STR_           "0.26G"
 
-#define _VERSION_WORD_          (0x2200)
-#define _VERSION_DWORD_         (0x00002200)
+#define _VERSION_WORD_          (0x2600)
+#define _VERSION_DWORD_         (0x00002600)
 
 #endif // !_BUILDNUM_H_INCLUDED_ 
 
 //** end of BuildNum.h ***************************************************
 /*************************************************************************
 
-  $Log: not supported by cvs2svn $
+  $Log: /CD/Entertainment/Tools/Snoopy/Shared/BuildNum.h $
+ * 
+ * 6     13/12/08 GWG		Make 64 bit compatible
+ *
+ * 5     13/12/08 GWG		Increase buffer size to avoid deadlock
  * 
  * 4     10/07/02 3:06p Rbosa
  * 

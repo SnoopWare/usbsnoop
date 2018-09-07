@@ -202,7 +202,7 @@ BOOL CUSBLogDoc::GetNewURBSFromSniffer(void)
             &EnableLogging, sizeof(EnableLogging),
             &dwBytesReturned, NULL);
 
-        const int BUFSIZE = 32768;
+        const int BUFSIZE = 0x40000;			// Too small and everything jams up !
         BYTE data[BUFSIZE];
         PGET_URBS pParam = (PGET_URBS) data;
         pParam->nNumOfPackets = 1;
@@ -219,6 +219,7 @@ BOOL CUSBLogDoc::GetNewURBSFromSniffer(void)
                 StopAccessSniffer();
                 break;
             }
+			TRACE("GetNewURBSFromSniffer got %d bytes and %d packets from IoCtl USBSNOOP_GET_URBS\n",dwBytesReturned,pParam->nNumOfPackets);
             InsertURBs(pParam->nNumOfPackets, &pParam->phURBs[0]);
             if(GETURBS_FLAG_OVERFLOW_OCCURRED & pParam->nFlags)
             {
@@ -234,6 +235,7 @@ BOOL CUSBLogDoc::GetNewURBSFromSniffer(void)
         UpdateAllViews(NULL);
         return TRUE;
     }
+	TRACE("GetNewURBSFromSniffer - invalid handle\n");
     return FALSE;
 }
 
@@ -262,6 +264,7 @@ int CUSBLogDoc::GetBufferFullnessEstimate(void)
 
 void CUSBLogDoc::InsertURBs(LONG nNumOfURBs, PVOID data)
 {
+	TRACE("InsertURBs with %d URBs\n",nNumOfURBs);
     for(int i = 0; i < nNumOfURBs; i++)
     {
         PPACKET_HEADER ph = (PPACKET_HEADER) data;
@@ -382,7 +385,12 @@ void CUSBLogDoc::AnalyzeLog(void)
 //** end of CUSBLogDoc.cpp ***********************************************
 /*************************************************************************
 
-  $Log: not supported by cvs2svn $
+  $Log: USBLogDoc.cpp,v $
+  Revision 1.2  2002/10/05 01:10:43  rbosa
+  Added the basic framework for exporting a log into an XML file. The
+  output written is fairly poor. This checkin is mainly to get the
+  framework in place and get feedback on it.
+
  * 
  * 4     2/22/02 6:12p Rbosa
  * - added some analyzing log functionality: find out endpoint address and

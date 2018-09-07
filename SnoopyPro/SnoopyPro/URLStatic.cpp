@@ -128,7 +128,10 @@ UINT CURLStatic::OnNcHitTest(CPoint point)
 //** end of URLStatic.cpp ************************************************
 /*************************************************************************
 
-  $Log: not supported by cvs2svn $
+  $Log: URLStatic.cpp,v $
+  Revision 1.1  2002/08/14 23:03:34  rbosa
+  the application to capture urbs and display them...
+
  * 
  * 1     1/25/02 2:43p Rbosa
 

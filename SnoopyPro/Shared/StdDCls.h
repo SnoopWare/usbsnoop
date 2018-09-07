@@ -48,14 +48,18 @@ extern "C" {
 #endif
 
 
+#ifndef min
 // the always-missing min() and max()
 static inline long min(long a, long b)
 {
     return (a < b) ? a : b;
 }
+#endif
 
+#ifndef max
 static inline long max(long a, long b)
 {
     return (a > b) ? a : b;
 }
+#endif
 

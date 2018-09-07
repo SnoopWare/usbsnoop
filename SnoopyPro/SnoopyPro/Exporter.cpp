@@ -197,7 +197,7 @@ void CExporter::EndExport(void)
 //** end of Exporter.cpp *************************************************
 /*************************************************************************
 
-  $Log: not supported by cvs2svn $
+  $Log: /CD/Entertainment/Tools/Snoopy/SnoopyPro/Exporter.cpp $
  * 
  * 2     10/07/02 2:51p Rbosa
  * 

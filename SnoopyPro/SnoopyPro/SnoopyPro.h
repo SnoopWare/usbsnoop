@@ -12,7 +12,21 @@
     #error include 'stdafx.h' before including this file for PCH
 #endif
 
+// GWG ~~99
+#ifdef TRACE
+#undef TRACE
+#endif
+
+#define TRACE gwg_trace
+
+void gwg_trace(const char *format, ...);
+
+// GWG
+
 #include "Resource.h"       // main symbols
+
+extern BOOL g_bIs64bitsys;	// TRUE if this is a 64 bit operating system (64 bit drivers)
+extern BOOL g_bIsWow64;		// TRUE if this is 32 bit App and 64 bit kernel
 
 class CUSBLogDoc;
 

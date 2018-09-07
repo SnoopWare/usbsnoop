@@ -1,22 +1,24 @@
 //************************************************************************
 //
 // USBSnoopies_Common.inl
+// 
+// Use by USBSnpys and USBSnpyV kernel drivers.
 //
 //************************************************************************
 
 
 NTSTATUS IOCTL_GetSnoopedDevs(PVOID outBuffer, ULONG outputBufferLength)
 {
-    //KdPrint(("USBSnpys - IOCTL: USBSNOOP_GET_SNOOPED_DEVS\n"));
+    KdPrint(("USBSnpys - IOCTL: USBSNOOP_GET_SNOOPED_DEVS\n"));
     if(!outBuffer)
     {
         KdPrint(("USBSnpys - ERROR: no output buffer!\n"));
         return STATUS_INVALID_PARAMETER;
     }
 
-    if(outputBufferLength < sizeof(SNOOPED_DEVICES))
+    if(outputBufferLength != sizeof(SNOOPED_DEVICES))
     {
-        KdPrint(("USBSnpys - ERROR: output buffer not big enough!\n"));
+        KdPrint(("USBSnpys - ERROR: output buffer not big enough! (need SNOOPED_DEVICES %d, got %d)\n",sizeof(SNOOPED_DEVICES),outputBufferLength));
         return STATUS_INVALID_PARAMETER;
     }
     
@@ -26,6 +28,7 @@ NTSTATUS IOCTL_GetSnoopedDevs(PVOID outBuffer, ULONG outputBufferLength)
 
 int IsDIDRegistered(ULONG DeviceID, int *nIndex)
 {
+    KdPrint(("USBSnpys - IsDIDRegistered\n"));
     for(ULONG nSnooped = 0; nSnooped < GlobalData.Snooped.uCount; ++nSnooped)
     {
         if(GlobalData.Snooped.Entry[nSnooped].uDeviceID == DeviceID)
@@ -42,6 +45,7 @@ int IsDIDRegistered(ULONG DeviceID, int *nIndex)
 
 int IsDORegistered(PDEVICE_OBJECT DeviceObject, int *nIndex)
 {
+    KdPrint(("USBSnpys - IsDORegistered\n"));
     for(ULONG nSnooped = 0; nSnooped < GlobalData.Snooped.uCount; ++nSnooped)
     {
         if(GlobalData.Snooped.Entry[nSnooped].DeviceObject == DeviceObject)
@@ -62,6 +66,7 @@ LONG RemovePacket(IN CRingBuffer *pRingBuffer, PUCHAR pOutBuffer, PULONG pBuffer
     ASSERT(NULL != pOutBuffer);
     ASSERT(NULL != pBufferSizeLeft);
     ASSERT(NULL != pRingBuffer);
+    KdPrint(("USBSnpys - RemovePacket, %d bytes left\n",*pBufferSizeLeft));
 
     ULONG uPacketLen = 0;
     if(pRingBuffer->PeekBytes(&uPacketLen, sizeof(ULONG)))
@@ -71,11 +76,18 @@ LONG RemovePacket(IN CRingBuffer *pRingBuffer, PUCHAR pOutBuffer, PULONG pBuffer
             if(pRingBuffer->ReadBytes(pOutBuffer, uPacketLen))
             {
                 *pBufferSizeLeft -= uPacketLen;
+			    KdPrint(("USBSnpys - RemovePacket %d bytes\n",uPacketLen));
                 return uPacketLen;
             }
-        }
-    }
+	    } else {
+		    KdPrint(("USBSnpys - Arrrgg!!! No space left in buffer : - packet = %d bytes, buffer left = %d bytes - Need to increase buffer in SnoopyPro application IoControll call!!\n",uPacketLen,*pBufferSizeLeft));
+		}
 
+    } else {
+	    KdPrint(("USBSnpys - pRingBuffer->PeekBytes returned zero bytes\n"));
+	}
+
+    KdPrint(("USBSnpys - RemovePacket 0 bytes\n"));
     return 0;
 }
 
@@ -119,6 +131,7 @@ ULONG DeviceRemoval(PDEVICE_OBJECT DeviceObject)
 
 void USBSnoopUnloading(void)
 {
+    KdPrint(("USBSnpys - USBSnoopUnloading\n"));
     // if USBSnoop is unloading, then all the buffers are ours to keep...
     for(ULONG nSnooped = 0; nSnooped < GlobalData.Snooped.uCount; ++nSnooped)
     {
@@ -160,13 +173,13 @@ void DeviceDelete(LONG nDeviceID)
 
 NTSTATUS IOCTL_EnableLogging(PVOID inBuffer, ULONG inputBufferLength)
 {
-    //KdPrint(("USBSnpys - IOCTL: USBSNOOP_ENABLE_LOGGING\n"));
+    KdPrint(("USBSnpys - IOCTL: USBSNOOP_ENABLE_LOGGING\n"));
     if(!inBuffer)
     {
         KdPrint(("USBSnpys - ERROR: no inbuffer!\n"));
         return STATUS_INVALID_PARAMETER;
     }
-    if(inputBufferLength < sizeof(ENABLE_LOGGING))
+    if(inputBufferLength != sizeof(ENABLE_LOGGING))
     {
         KdPrint(("USBSnpys - ERROR: input buffer too small!\n"));
         return STATUS_INVALID_PARAMETER;
@@ -218,7 +231,7 @@ NTSTATUS IOCTL_EnableLogging(PVOID inBuffer, ULONG inputBufferLength)
 NTSTATUS IOCTL_GetURBs(PVOID inBuffer, ULONG inputBufferLength, PVOID outBuffer, ULONG outputBufferLength)
 {
             
-    //KdPrint(("USBSnpys - IOCTL: USBSNOOP_GET_URBS\n"));
+    KdPrint(("USBSnpys - IOCTL: USBSNOOP_GET_URBS, inBufLen %d, outBufLen %d\n",inputBufferLength,outputBufferLength));
     if(!inBuffer)
     {
         KdPrint(("USBSnpys - ERROR: no input buffer!\n"));
@@ -231,12 +244,12 @@ NTSTATUS IOCTL_GetURBs(PVOID inBuffer, ULONG inputBufferLength, PVOID outBuffer,
     }
     if(inputBufferLength < sizeof(GET_URBS))
     {
-        KdPrint(("USBSnpys - ERROR: input buffer not big enough!\n"));
+        KdPrint(("USBSnpys - ERROR: input buffer not big enough! (need GET_URBS %d, got %d)\n",sizeof(GET_URBS),inputBufferLength));
         return STATUS_INVALID_PARAMETER;
     }
     if(outputBufferLength < sizeof(GET_URBS))
     {
-        KdPrint(("USBSnpys - ERROR: output buffer not big enough!\n"));
+        KdPrint(("USBSnpys - ERROR: output buffer not big enough! (need GET_URBS %d, got %d)\n",sizeof(GET_URBS),outputBufferLength));
         return STATUS_INVALID_PARAMETER;
     }
     
@@ -293,6 +306,7 @@ NTSTATUS IOCTL_GetURBs(PVOID inBuffer, ULONG inputBufferLength, PVOID outBuffer,
 
 NTSTATUS IOCTL_GetBufferFullness(PVOID inBuffer, ULONG inputBufferLength, PVOID outBuffer, ULONG outputBufferLength)
 {
+    KdPrint(("USBSnpys - IOCTL: GetBufferFullness\n"));
     if(!inBuffer)
     {
         KdPrint(("USBSnpys - ERROR: no input buffer!\n"));
@@ -303,14 +317,14 @@ NTSTATUS IOCTL_GetBufferFullness(PVOID inBuffer, ULONG inputBufferLength, PVOID 
         KdPrint(("USBSnpys - ERROR: no output buffer!\n"));
         return STATUS_INVALID_PARAMETER;
     }
-    if(inputBufferLength < sizeof(GET_BUFFER_FULLNESS))
+    if(inputBufferLength != sizeof(GET_BUFFER_FULLNESS))
     {
-        KdPrint(("USBSnpys - ERROR: input buffer not big enough!\n"));
+        KdPrint(("USBSnpys - ERROR: input buffer not big enough! (need GET_BUFFER_FULLNESS %d, got %d)\n",sizeof(GET_BUFFER_FULLNESS),inputBufferLength));
         return STATUS_INVALID_PARAMETER;
     }
-    if(outputBufferLength < sizeof(GET_BUFFER_FULLNESS))
+    if(outputBufferLength != sizeof(GET_BUFFER_FULLNESS))
     {
-        KdPrint(("USBSnpys - ERROR: output buffer not big enough!\n"));
+        KdPrint(("USBSnpys - ERROR: output buffer not big enough! (need GET_BUFFER_FULLNESS %d, got %d)\n",sizeof(GET_BUFFER_FULLNESS),outputBufferLength));
         return STATUS_INVALID_PARAMETER;
     }
     
@@ -358,6 +372,9 @@ NTSTATUS IOCTL_Hello(PVOID inBuffer, ULONG inputBufferLength, PVOID outBuffer, U
 //** end of USBSnoopies_Common.inl ***************************************
 /*************************************************************************
 
-  $Log: not supported by cvs2svn $
+  $Log: USBSnoopies_Common.inl,v $
+  Revision 1.1  2002/08/14 23:00:58  rbosa
+  shared code between the application and driver and drivers themselves...
+
 
 *************************************************************************/

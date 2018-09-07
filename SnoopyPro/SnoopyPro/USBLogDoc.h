@@ -88,7 +88,12 @@ protected:
 //** end of USBLogDoc.h **************************************************
 /*************************************************************************
 
-  $Log: not supported by cvs2svn $
+  $Log: USBLogDoc.h,v $
+  Revision 1.2  2002/10/05 01:10:43  rbosa
+  Added the basic framework for exporting a log into an XML file. The
+  output written is fairly poor. This checkin is mainly to get the
+  framework in place and get feedback on it.
+
  * 
  * 4     2/22/02 6:12p Rbosa
  * - added some analyzing log functionality: find out endpoint address and

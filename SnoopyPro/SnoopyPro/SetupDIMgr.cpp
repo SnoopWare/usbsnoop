@@ -5,6 +5,7 @@
 //************************************************************************
 
 #include "StdAfx.h"
+#include "SnoopyPro.h"
 #include "SetupDIMgr.h"
 
 #ifdef _DEBUG
@@ -12,7 +13,6 @@
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
-
 
 //////////////////////////////////////////////////////////////////////////
 // CSetupDIMgr
@@ -34,6 +34,13 @@ CSetupDIMgr::CSetupDIMgr(BOOL bPresentOnly /* = FALSE */)
 
 	// if we're running under Win2K/NT we might need this...
 	m_bUseMultiSZ = (GetVersion() < 0x80000000);
+
+	OSVERSIONINFO vi;
+	vi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+
+	GetVersionEx(&vi);
+
+	m_bIsVistaOrLater = vi.dwMajorVersion >= 6;
 }
 
 CSetupDIMgr::~CSetupDIMgr(void)
@@ -173,34 +180,44 @@ BOOL CSetupDIMgr::FindHardwareID(LPCTSTR sHardwareID, int nStartAt /* = 0 */)
 
 BOOL CSetupDIMgr::AddLowerFilter(LPCTSTR sFilterName)
 {
+	TRACE("AddLowerFilter '%s'\n",sFilterName);
     TCHAR sServiceName[MAX_PATH];
     _tcscpy(sServiceName, sFilterName);
     if(m_bUseMultiSZ)
     {
         // on W2K and up we have to enter the service name
         PathRemoveExtension(sServiceName);
+		TRACE("Service name '%s'\n",sServiceName);
     }
 	CString sHardwareID;
 	if(HardwareID(sHardwareID))
 	{
+		TRACE("Got HardwareID '%s'\n",sHardwareID);
 		do
 		{
 			if(!IsLowerFilterPresent(sServiceName))
 			{
+				TRACE("LowerFilter is not present on service '%s'\n",sServiceName);
 				CString sLowerFilters;
 				if(GetRegProperty(sLowerFilters, SPDRP_LOWERFILTERS))
 				{
+					TRACE("Got Reg Property\n");
 					if(!sLowerFilters.IsEmpty())
 						_tcscat(sServiceName, ",");
 					_tcscat(sServiceName, sLowerFilters);
+					TRACE("Service name '%s'\n",sServiceName);
 				}
-				if(!SetRegProperty(sServiceName, SPDRP_LOWERFILTERS, TRUE))
+				if(!SetRegProperty(sServiceName, SPDRP_LOWERFILTERS, TRUE)) {
+					TRACE("SetRegProperty failed\n");
 					return FALSE;
+				}
+				TRACE("SetRegProperty suceeded\n");
 			}
 		}
 		while(FindHardwareID(sHardwareID, m_nDevIndex));
 		return TRUE;
 	}
+	TRACE("Didn't get HardwareID '%s'\n",sHardwareID);
 	return FALSE;
 }
 
@@ -423,6 +440,9 @@ PBYTE CSetupDIMgr::GetDeviceRegistryProperty(HDEVINFO DeviceInfoSet,
 
 BOOL CSetupDIMgr::InstallService(LPCTSTR sFilterServiceName, LPCTSTR sFilterBinaryPath, LPCTSTR sFilterDescription)
 {
+	TRACE("Install Service name '%s', path '%s', desc '%s'\n",
+	       sFilterServiceName, sFilterBinaryPath, sFilterDescription);
+
 	BOOL bResult = FALSE;
 	SC_HANDLE hScm = OpenSCManager(NULL, SERVICES_ACTIVE_DATABASE, SC_MANAGER_ALL_ACCESS);
 	
@@ -432,6 +452,16 @@ BOOL CSetupDIMgr::InstallService(LPCTSTR sFilterServiceName, LPCTSTR sFilterBina
 		if((NULL == hService) && (ERROR_SERVICE_DOES_NOT_EXIST == GetLastError()))
 		{
 			// service doesn't exist. Let's create it.
+#ifdef NEVER
+		    TCHAR sWinDir[MAX_PATH];
+    		if(0 == GetWindowsDirectory(sWinDir, MAX_PATH))
+		    {
+		        TRACE("There was an error getting the windows directory!\n");
+       		 return FALSE;
+    		}
+    		PathAppend(sWinDir, sFilterBinaryPath);
+			TRACE("Full binary path '%s'\n",sWinDir);
+#endif
 			hService = CreateService(hScm, sFilterServiceName, sFilterDescription,
 				SERVICE_ALL_ACCESS, SERVICE_KERNEL_DRIVER, SERVICE_DEMAND_START,
 				SERVICE_ERROR_NORMAL, sFilterBinaryPath, NULL, NULL, NULL, NULL, NULL);
@@ -447,9 +477,31 @@ BOOL CSetupDIMgr::InstallService(LPCTSTR sFilterServiceName, LPCTSTR sFilterBina
 		}
 		else if(NULL != hService)
 		{
+			TRACE("Service already exists\n");
+			// Make sure it's setup properly
+			if (!ChangeServiceConfig(hService, SERVICE_KERNEL_DRIVER, SERVICE_DEMAND_START,SERVICE_ERROR_NORMAL, sFilterBinaryPath, NULL, NULL, NULL, NULL, NULL, sFilterDescription)) {
+				TRACE("ChangeServiceConfig(Service) failed with %08x\n", GetLastError());
+			}
 			CloseServiceHandle(hService);
 		}
 		CloseServiceHandle(hScm);
+		// This doesn't seem to do anything...
+		if (g_bIsWow64) {
+		    TCHAR kpath[MAX_PATH];
+			HKEY hk;
+			strcpy(kpath, "SYSTEM\\CurrentControlSet\\services");
+    		PathAppend(kpath, sFilterServiceName);
+			if (ERROR_SUCCESS == RegOpenKeyEx(HKEY_LOCAL_MACHINE, kpath, 0, KEY_ALL_ACCESS, &hk)) {
+				if (ERROR_SUCCESS == RegQueryValueEx(hk, "WOW64", NULL, NULL, NULL, NULL)) {
+					if (ERROR_SUCCESS == RegDeleteValue(hk, "WOW64")) {
+						TRACE("Removed key '%s\\WOW64",kpath);
+					}
+				}
+				RegCloseKey(hk);
+			}
+		}
+	} else {
+		TRACE("OpenSCManager() failed with %08x\n", GetLastError());
 	}
 	return bResult;
 }
@@ -473,14 +525,19 @@ BOOL CSetupDIMgr::RemoveService(LPCTSTR sFilterServiceName)
 				TRACE("DeleteService() failed with %08x\n", GetLastError());
 			}
 			CloseServiceHandle(hService);
+        } else {
+			TRACE("OpenService() failed with %08x\n", GetLastError());
 		}
 		CloseServiceHandle(hScm);
+    } else {
+		TRACE("OpenSCManager() failed with %08x\n", GetLastError());
 	}
 	return bResult;
 }
 
 BOOL CSetupDIMgr::StartService(LPCTSTR sServiceName)
 {
+	TRACE("StartService '%s'\n",sServiceName);
 	BOOL bResult = FALSE;
 	SC_HANDLE hScm = OpenSCManager(NULL, SERVICES_ACTIVE_DATABASE, SC_MANAGER_ALL_ACCESS);
 	if(NULL != hScm)
@@ -492,17 +549,23 @@ BOOL CSetupDIMgr::StartService(LPCTSTR sServiceName)
             {
                 TRACE("Started service succesfully!\n");
 				bResult = TRUE;
-            }
-            TRACE("GetLastError(): %d\n", GetLastError());
+            } else {
+	            TRACE("StartService failed with %08x\n", GetLastError());
+			}
 			CloseServiceHandle(hService);
-        }
+        } else {
+			TRACE("OpenService('%s') failed with %08x\n", sServiceName, GetLastError());
+		}
         CloseServiceHandle(hScm);
-    }
+    } else {
+		TRACE("OpenSCManager() failed with %08x\n", GetLastError());
+	}
     return bResult;
 }
 
 BOOL CSetupDIMgr::StopService(LPCTSTR sServiceName)
 {
+	TRACE("About to stop service '%s'\n",sServiceName);
 	BOOL bResult = FALSE;
 	SC_HANDLE hScm = OpenSCManager(NULL, SERVICES_ACTIVE_DATABASE, SC_MANAGER_ALL_ACCESS);
 	
@@ -517,8 +580,9 @@ BOOL CSetupDIMgr::StopService(LPCTSTR sServiceName)
             {
                 TRACE("Succesfully stopped service...\n");
                 bResult = TRUE;
+	        } else {
+				TRACE("Failed to stop service with %08x\n", GetLastError());
             }
-            TRACE("GetLastError(): %d\n", GetLastError());
 			CloseServiceHandle(hService);
 		}
 		CloseServiceHandle(hScm);
@@ -529,7 +593,10 @@ BOOL CSetupDIMgr::StopService(LPCTSTR sServiceName)
 //** end of SetupDIMgr.cpp ***********************************************
 /*************************************************************************
 
-  $Log: not supported by cvs2svn $
+  $Log: SetupDIMgr.cpp,v $
+  Revision 1.1  2002/08/14 23:03:35  rbosa
+  the application to capture urbs and display them...
+
  * 
  * 4     2/21/02 4:29p Rbosa
  * - now installing the filter in front of the LowerFilters entry, so it's

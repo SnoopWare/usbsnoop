@@ -1,3 +1,6 @@
+
+// Windows 2K WDM driver
+
 //************************************************************************
 //
 // DriverEntry.cpp
@@ -18,6 +21,10 @@ NTSTATUS CreateControllerObject(IN PDRIVER_OBJECT DriverObject);
 NTSTATUS RemoveControllerObject(void);
 
 struct USBSNPYS_GLOBALS GlobalData;
+
+// To enable Kernel Messages on a free build:
+#undef KdPrint
+#define KdPrint(_x_) DbgPrint _x_
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -95,7 +102,7 @@ VOID DriverUnload(IN PDRIVER_OBJECT DriverObject)
 NTSTATUS CompleteRequest(IN PIRP Irp, IN NTSTATUS status, IN ULONG *info)
 {
     Irp->IoStatus.Status = status;
-    Irp->IoStatus.Information = (ULONG) info;
+    Irp->IoStatus.Information = (ULONG)((DWORD_PTR)info);
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
     return status;
@@ -114,10 +121,10 @@ NTSTATUS DispatchCreateClose(IN PDEVICE_OBJECT fido, IN PIRP Irp)
     switch(stack->MajorFunction)
     {
     case IRP_MJ_CREATE:
-        KdPrint(("USBSnpys::CreateClose() - IRP_MJ_CREATE\n"));
+//		KdPrint(("USBSnpys::CreateClose() - IRP_MJ_CREATE\n"));
         break;
     case IRP_MJ_CLOSE:
-        KdPrint(("USBSnpys::CreateClose() - IRP_MJ_CLOSE\n"));
+//		KdPrint(("USBSnpys::CreateClose() - IRP_MJ_CLOSE\n"));
         break;
     default:
         break;
@@ -247,6 +254,7 @@ NTSTATUS RemoveControllerObject()
 
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef _WIN64
 #pragma LOCKEDCODE
 
 extern "C" void __declspec(naked) __cdecl _chkesp()
@@ -256,11 +264,15 @@ extern "C" void __declspec(naked) __cdecl _chkesp()
 okay:
     _asm ret
 }
+#endif // _WIN64
 
 //** end of DriverEntry.cpp **********************************************
 /*************************************************************************
 
-  $Log: not supported by cvs2svn $
+  $Log: DriverEntry.cpp,v $
+  Revision 1.1  2002/08/14 23:10:42  rbosa
+  the WDM driver to connect to the snooper filter (used under Win2K)
+
  * 
  * 2     2/05/02 9:27p Rbosa
  * - moved common code over to inlined file

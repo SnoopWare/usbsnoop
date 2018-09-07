@@ -136,7 +136,10 @@ void CMyMemFile::SetLength(DWORD dwNewLen)
 //** end of MyMemFile.cpp ************************************************
 /*************************************************************************
 
-  $Log: not supported by cvs2svn $
+  $Log: MyMemFile.cpp,v $
+  Revision 1.1  2002/08/14 23:03:35  rbosa
+  the application to capture urbs and display them...
+
  * 
  * 1     2/05/02 8:53p Rbosa
 

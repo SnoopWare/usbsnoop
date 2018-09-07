@@ -1,5 +1,5 @@
 # Microsoft Developer Studio Project File - Name="USBSnpyV" - Package Owner=<4>
-# Microsoft Developer Studio Generated Build File, Format Version 60000
+# Microsoft Developer Studio Generated Build File, Format Version 6.00
 # ** DO NOT EDIT **
 
 # TARGTYPE "Win32 (x86) Console Application" 0x0103
@@ -68,7 +68,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /Gz /W4 /GX /Zi /Oi /I "..\Shared" /I "..\98DDK" /D "_DEBUG" /D "DEBUG" /D "WIN32" /D "WIN40COMPAT" /D "VXD" /D "IS_32" /D "_X86_" /D "_WINDOWS" /D "_MBCS" /D _X86_=1 /D i386=1 /D "STD_CALL" /D CONDITION_HANDLING=1 /D NT_UP=1 /D NT_INST=0 /D WIN32=100 /D _NT1X_=100 /D WINNT=1 /D _WIN32_WINNT=0x0500 /D _WIN32_IE=0x0400 /D WIN32_LEAN_AND_MEAN=1 /D DBG=1 /D DEVL=1 /D FPO=0 /D "NDEBUG" /D _DLL=1 /D "DRIVER" /D "_IDWBUILD" /D "RDRDBG" /D "SRVDBG" /FD /GZ /c
+# ADD CPP /nologo /Gz /W4 /GX /Zi /Oi /I "..\98DDK" /I "..\Shared" /I "D:\WINDDK\inc\ddk\wdm\w2k" /I "D:\WINDDK\inc\w2k" /D "_DEBUG" /D "DEBUG" /D "WIN32" /D "WIN40COMPAT" /D "VXD" /D "IS_32" /D "_X86_" /D "_WINDOWS" /D "_MBCS" /D _X86_=1 /D i386=1 /D "STD_CALL" /D CONDITION_HANDLING=1 /D NT_UP=1 /D NT_INST=0 /D WIN32=100 /D _NT1X_=100 /D WINNT=1 /D _WIN32_WINNT=0x0500 /D _WIN32_IE=0x0400 /D WIN32_LEAN_AND_MEAN=1 /D DBG=1 /D DEVL=1 /D FPO=0 /D "NDEBUG" /D _DLL=1 /D "DRIVER" /D "_IDWBUILD" /D "RDRDBG" /D "SRVDBG" /FD /GZ /c
 # SUBTRACT CPP /YX
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
@@ -77,7 +77,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 vxdwraps.clb wdmvxd.clb /nologo /incremental:no /map /debug /machine:I386 /nodefaultlib /out:"Debug/USBSnpyV.VxD" /pdbtype:sept /libpath:"..\98DDK" /vxd /exetype:dynamic
+# ADD LINK32 vxdwraps.clb wdmvxd.clb /nologo /incremental:no /map /debug /machine:I386 /nodefaultlib /out:"Debug/USBSnpyV.VxD" /pdbtype:sept /libpath:"..\98DDK" /libpath:"d:\WINDDK\lib\w2k\i386" /vxd /exetype:dynamic
 # SUBTRACT LINK32 /pdb:none
 
 !ENDIF 

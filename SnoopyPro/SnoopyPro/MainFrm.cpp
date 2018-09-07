@@ -15,6 +15,13 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
+
+BOOL g_bIs64bitsys = FALSE;	// TRUE if this is a 64 bit operating system (64 bit drivers)
+BOOL g_bIsWow64 = FALSE;	// TRUE if this is 32 bit App and 64 bit kernel
+
+typedef BOOL (WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
+
+/////////////////////////////////////////////////////////////////////////////
 // CMainFrame
 
 IMPLEMENT_DYNAMIC(CMainFrame, CMDIFrameWnd)
@@ -45,6 +52,23 @@ CMainFrame::CMainFrame()
 {
     ZeroMemory(&m_NotificationFilter, sizeof(m_NotificationFilter));
     m_hDevNotify = NULL;
+
+#ifdef _WIN64
+	g_bIs64bitsys = TRUE;
+	g_bIsWow64 = FALSE;
+#else
+	g_bIs64bitsys = FALSE;
+
+	LPFN_ISWOW64PROCESS fnIsWow64Process;
+	fnIsWow64Process = (LPFN_ISWOW64PROCESS) GetProcAddress(
+		GetModuleHandle(TEXT("kernel32")),"IsWow64Process");
+	if (fnIsWow64Process != NULL) {
+		if (!fnIsWow64Process(GetCurrentProcess(),&g_bIs64bitsys))
+			g_bIs64bitsys = FALSE;		// Error - assume it's false
+	}
+	g_bIsWow64 = g_bIs64bitsys;
+#endif // _WIN64
+ 
 }
 
 CMainFrame::~CMainFrame()

@@ -47,7 +47,10 @@ public:
 //** end of MyMemFile.h **************************************************
 /*************************************************************************
 
-  $Log: not supported by cvs2svn $
+  $Log: MyMemFile.h,v $
+  Revision 1.1  2002/08/14 23:03:35  rbosa
+  the application to capture urbs and display them...
+
  * 
  * 1     2/05/02 8:52p Rbosa
 

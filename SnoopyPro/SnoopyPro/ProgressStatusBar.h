@@ -28,7 +28,10 @@ protected:
 //** end of ProgressStatusBar.h ******************************************
 /*************************************************************************
 
-  $Log: not supported by cvs2svn $
+  $Log: ProgressStatusBar.h,v $
+  Revision 1.1  2002/08/14 23:03:35  rbosa
+  the application to capture urbs and display them...
+
  * 
  * 1     1/25/02 2:43p Rbosa
 

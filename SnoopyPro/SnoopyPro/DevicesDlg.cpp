@@ -16,7 +16,6 @@ static char THIS_FILE[] = __FILE__;
 /////////////////////////////////////////////////////////////////////////////
 // CDevicesDlg dialog
 
-
 CDevicesDlg::CDevicesDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CDevicesDlg::IDD, pParent)
 {
@@ -28,7 +27,7 @@ CDevicesDlg::CDevicesDlg(CWnd* pParent /*=NULL*/)
     m_nCX2 = 0;
 
     m_bIsWin2K = (0 == (GetVersion() & 0x80000000));
-    
+
     if(m_bIsWin2K)
     {
         m_sFilterName.LoadString(IDS_FILTERNAME_2K);
@@ -304,10 +303,11 @@ void CDevicesDlg::OnInstallSniffer()
     CString sHardwareID;
     if(GetSelectedHardwareID(sHardwareID))
     {
-        TRACE("Installing on %s\n", sHardwareID);
+        TRACE("Installing on '%s'\n", sHardwareID);
         CSetupDIMgr mgr;
         if(mgr.FindHardwareID(sHardwareID))
         {
+	        TRACE("Adding lower fileter '%s'\n", m_sFilterName);
             mgr.AddLowerFilter(m_sFilterName);
         }
         OnViewRefresh();
@@ -399,19 +399,25 @@ void CDevicesDlg::OnInstallService()
         CSetupDIMgr mgr;
         CString sFilterFileName, sFilterDesc;
         sFilterFileName.LoadString(IDS_FILTERFILENAME);
-        sFilterDesc.LoadString(IDS_FILTERSERVICEDESCRIPTION);
         sFilterFileName = "System32\\Drivers\\" + sFilterFileName;
+        sFilterDesc.LoadString(IDS_FILTERSERVICEDESCRIPTION);
         sFilterFileName.MakeLower();
+		TRACE("About to install filter name '%s', file '%s', desc '%s'\n",
+		                     m_sFilterName, sFilterFileName, sFilterDesc);
         mgr.InstallService(m_sFilterName, sFilterFileName, sFilterDesc);
 
         CString sBridgeName, sBridgeFileName, sBridgeDesc;
         sBridgeName.LoadString(IDS_BRIDGESERVICENAME);
+		
         sBridgeFileName.LoadString(IDS_BRIDGEFILENAME_2K);
+        sBridgeFileName = "System32\\Drivers\\" + sBridgeFileName;
         sBridgeDesc.LoadString(IDS_BRIDGESERVICEDESCRIPTION);
         sBridgeName.MakeLower();
-        sBridgeFileName = "System32\\Drivers\\" + sBridgeFileName;
         sBridgeFileName.MakeLower();
+		TRACE("About to install filter name '%s', file '%s', desc '%s'\n",
+		                     sBridgeName, sBridgeFileName, sBridgeDesc);
         mgr.InstallService(sBridgeName, sBridgeFileName, sBridgeDesc);
+		TRACE("About to start '%s'\n",sBridgeName);
         mgr.StartService(sBridgeName);
     }
     else
@@ -471,21 +477,21 @@ BOOL UnpackAndInstall(UINT nID, LPCTSTR sSubDir, LPCTSTR sFilename)
     DWORD dwImageSize = SizeofResource(AfxGetResourceHandle(), hRsrc);
     if(0 == dwImageSize)
     {
-        TRACE("Size of image is 0!");
+        TRACE("Size of driver binary image is 0!");
         return FALSE;
     }
 
     HGLOBAL hBinImage = LoadResource(AfxGetResourceHandle(), hRsrc);
     if(NULL == hBinImage)
     {
-        TRACE("Couldn't load binary image from resources!");
+        TRACE("Couldn't load driver binary image from resources!");
         return FALSE;
     }
 
     PVOID pBinImage = LockResource(hBinImage);
     if(NULL == pBinImage)
     {
-        TRACE("Couldn't lock binary image from resources!");
+        TRACE("Couldn't lock driver binary image from resources!");
         return FALSE;
     }
 
@@ -499,6 +505,7 @@ BOOL UnpackAndInstall(UINT nID, LPCTSTR sSubDir, LPCTSTR sFilename)
     PathAppend(sWinDir, sSubDir);
     PathAppend(sWinDir, sFilename);
 
+TRACE("~1 Copying from nID %d to '%s'\n",nID,sWinDir);
     HANDLE hFile = CreateFile(
         sWinDir,
         GENERIC_READ | GENERIC_WRITE,
@@ -534,10 +541,16 @@ BOOL UnpackAndInstall(UINT nID, LPCTSTR sSubDir, LPCTSTR sFilename)
 #ifdef _DEBUG
 #define BIN_USBSNOOPY           BIN_USBSNOOPYD
 #define BIN_USBSNPYS            BIN_USBSNPYSD
+#define BIN_USBSNOOPY64         BIN_USBSNOOPY64D
+#define BIN_USBSNPYS64          BIN_USBSNPYS64D
+// Not used
 #define BIN_USBSNPYV            BIN_USBSNPYVD
 #else
 #define BIN_USBSNOOPY           BIN_USBSNOOPYR
 #define BIN_USBSNPYS            BIN_USBSNPYSR
+#define BIN_USBSNOOPY64         BIN_USBSNOOPY64R
+#define BIN_USBSNPYS64          BIN_USBSNPYS64R
+// Not used
 #define BIN_USBSNPYV            BIN_USBSNPYVR
 #endif
 
@@ -545,9 +558,11 @@ void CDevicesDlg::OnUnpackDrivers()
 {
     CString sFilename, sMsg;
     sFilename.LoadString(IDS_FILTERFILENAME);
-    if(!UnpackAndInstall(BIN_USBSNOOPY, "SYSTEM32\\Drivers", sFilename))
+    if(!UnpackAndInstall(g_bIs64bitsys ? BIN_USBSNOOPY64 : BIN_USBSNOOPY,
+	                     g_bIsWow64 ? "Sysnative\\Drivers" : "System32\\Drivers",
+	                     sFilename))
     {
-        sMsg.Format("There was an error while installing >%s<!", sFilename);
+        sMsg.Format("There was an error while unpacking >%s<!", sFilename);
         AfxMessageBox(sMsg, MB_ICONERROR);
         return;
     }
@@ -555,9 +570,11 @@ void CDevicesDlg::OnUnpackDrivers()
     if(m_bIsWin2K)
     {
         sFilename.LoadString(IDS_BRIDGEFILENAME_2K);
-        if(!UnpackAndInstall(BIN_USBSNPYS, "SYSTEM32\\Drivers", sFilename))
+        if(!UnpackAndInstall(g_bIs64bitsys ? BIN_USBSNPYS64 : BIN_USBSNPYS,
+	                         g_bIsWow64 ? "Sysnative\\Drivers" : "System32\\Drivers",
+		                     sFilename))
         {
-            sMsg.Format("There was an error while installing >%s<!", sFilename);
+            sMsg.Format("There was an error while unpacking >%s<!", sFilename);
             AfxMessageBox(sMsg, MB_ICONERROR);
             return;
         }
@@ -567,7 +584,7 @@ void CDevicesDlg::OnUnpackDrivers()
         sFilename.LoadString(IDS_BRIDGEFILENAME_9X);
         if(!UnpackAndInstall(BIN_USBSNPYV, "SYSTEM", sFilename))
         {
-            sMsg.Format("There was an error while installing >%s<!", sFilename);
+            sMsg.Format("There was an error while unpacking >%s<!", sFilename);
             AfxMessageBox(sMsg, MB_ICONERROR);
             return;
         }
@@ -597,7 +614,12 @@ void CDevicesDlg::OnTimer(UINT nIDEvent)
 //** end of DevicesDlg.cpp ***********************************************
 /*************************************************************************
 
-  $Log: not supported by cvs2svn $
+  $Log: DevicesDlg.cpp,v $
+  Revision 1.2  2002/10/05 01:10:43  rbosa
+  Added the basic framework for exporting a log into an XML file. The
+  output written is fairly poor. This checkin is mainly to get the
+  framework in place and get feedback on it.
+
   Revision 1.1  2002/08/14 23:03:35  rbosa
   the application to capture urbs and display them...
 

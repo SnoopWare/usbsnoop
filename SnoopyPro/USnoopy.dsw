@@ -7,10 +7,6 @@ Project: "SnoopyPro"=.\SnoopyPro\SnoopyPro.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
-    begin source code control
-    "$/CD/Entertainment/Tools/Snoopy/SnoopyPro", WHACAAAA
-    .\snoopypro
-    end source code control
 }}}
 
 Package=<4>
@@ -21,25 +17,6 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name USBSnpys
     End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name USBSnpyV
-    End Project Dependency
-}}}
-
-###############################################################################
-
-Project: "USBSnpyV"=.\USBSnpyV\USBSnpyV.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-    begin source code control
-    "$/CD/Entertainment/Tools/Snoopy/USBSnpyV", WRJCAAAA
-    .\usbsnpyv
-    end source code control
-}}}
-
-Package=<4>
-{{{
 }}}
 
 ###############################################################################
@@ -48,10 +25,6 @@ Project: "USBSnpys"=.\USBSnpys\USBSnpys.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
-    begin source code control
-    "$/CD/Entertainment/Tools/Snoopy/USBSnpys", DNJCAAAA
-    .\usbsnpys
-    end source code control
 }}}
 
 Package=<4>
@@ -64,10 +37,6 @@ Project: "UsbSnoop"=.\USBSnoop\UsbSnoop.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
-    begin source code control
-    "$/CD/Entertainment/Tools/Snoopy/USBSnoop", CNJCAAAA
-    .\usbsnoop
-    end source code control
 }}}
 
 Package=<4>
@@ -80,10 +49,6 @@ Global:
 
 Package=<5>
 {{{
-    begin source code control
-    "$/CD/Entertainment/Tools/Snoopy", VHACAAAA
-    .
-    end source code control
 }}}
 
 Package=<3>

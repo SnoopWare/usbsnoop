@@ -8,6 +8,7 @@
 
 #include "StdAfx.h"
 #include "URB.h"
+#include "SnoopyPro.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -396,6 +397,7 @@ LPCTSTR CURB::GetExpandedLine(int nLine)
     return (LPCTSTR) m_arRenderedLines[nLine];
 }
 
+// Actually renders the expanded lines as well as returning the size ??
 int CURB::GetExpandSize(void)
 {
     if(-1 == m_nExpandedSize)
@@ -404,6 +406,7 @@ int CURB::GetExpandSize(void)
         m_arRenderedLines.RemoveAll();
         ASSERT(NULL != m_pCA);
         RenderProperties();
+	    AddPropLine("  ");
         m_nExpandedSize = m_arRenderedLines.GetSize();
     }
 
@@ -432,9 +435,9 @@ void CURB::AddPropLine(LPCTSTR sFormat, ...)
 
 void CURB::RenderProperties(void)
 {
-    AddPropLine("URB Header (length: %d)", m_PH.UrbHeader.Length);
-    AddPropLine("SequenceNumber: %d", m_dwSequence);
-    AddPropLine("Function: %04x (%s)", m_nFunction, GetFunctionStr());
+    AddPropLine("  URB Header (length: %d)", m_PH.UrbHeader.Length);
+    AddPropLine("  SequenceNumber: %d", m_dwSequence);
+    AddPropLine("  Function: %04x (%s)", m_nFunction, GetFunctionStr());
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -542,6 +545,7 @@ void CURB::GenerateHexDump(PVOID pBuffer, int nSize)
         return;
     
     // each line consists of:
+    //  2 bytes for indentation
     //  4 bytes for address
     //  2 bytes for ': '
     // 3n bytes for the hexdump ('%02x ')
@@ -550,12 +554,14 @@ void CURB::GenerateHexDump(PVOID pBuffer, int nSize)
     // 7 + 3n bytes per line (with n==8 bytes per line)
     
     const int nBytesPerLine = 16;
-    TCHAR sLine[7 + 3 * nBytesPerLine];
+    TCHAR sLine[2 + 7 + 3 * nBytesPerLine];
     
     int nAddress = 0;
     while(nSize > 0)
     {
         LPTSTR sBuffer = sLine;
+        *sBuffer++ = ' ';
+        *sBuffer++ = ' ';
         PokeHexNumber(sBuffer, nAddress, 4);
         *sBuffer++ = ':';
         *sBuffer++ = ' ';
@@ -709,14 +715,13 @@ void CURB_TransferBuffer::RenderProperties(void)
     if(m_TransferBuffer)
     {
         AddPropLine("");
-        AddPropLine("TransferBuffer: 0x%08x (%d) length", m_TransferLength, m_TransferLength);
+        AddPropLine("  TransferBuffer: 0x%08x (%d) length", m_TransferLength, m_TransferLength);
         GenerateHexDump(m_TransferBuffer, m_TransferLength);
     }
     else
     {
         AddPropLine("");
-        AddPropLine("No TransferBuffer");
-        AddPropLine("");
+        AddPropLine("  No TransferBuffer");
     }
 }
 
@@ -729,6 +734,8 @@ void CURB_TransferBuffer::GrabTransferBuffer(PUCHAR pData, int nLength)
         {
             ULONG uSize = *((PULONG)pData);
             pData += sizeof(uSize);
+// ~~99
+TRACE("CURB_TransferBuffer::GrabTransferBuffer assert uSize = %d == m_TransferLength = %d\n",uSize,m_TransferLength);
             ASSERT((int) uSize == m_TransferLength);
          
             ASSERT(NULL == m_TransferBuffer);
@@ -827,67 +834,67 @@ void CURB_SelectConfiguration::RenderProperties(void)
 
 	if(m_UCDPresent)
 	{
-		AddPropLine("Configuration Descriptor:");
+		AddPropLine("  Configuration Descriptor:");
 
         CString S;
-        AddPropLine("bLength: %d (0x%02x)", m_UCD.bLength, m_UCD.bLength);
-        AddPropLine("bDescriptorType: %d (0x%02x)", m_UCD.bDescriptorType, m_UCD.bDescriptorType);
+        AddPropLine("  bLength: %d (0x%02x)", m_UCD.bLength, m_UCD.bLength);
+        AddPropLine("  bDescriptorType: %d (0x%02x)", m_UCD.bDescriptorType, m_UCD.bDescriptorType);
         if(m_UCD.bDescriptorType != 0x02)
         {
-            AddPropLine("  (should be 0x02!)");
+            AddPropLine("    (should be 0x02!)");
         }
-        AddPropLine("wTotalLength: %d (0x%04x)", m_UCD.wTotalLength, m_UCD.wTotalLength);
-        AddPropLine("bNumInterfaces: %d (0x%02x)", m_UCD.bNumInterfaces, m_UCD.bNumInterfaces);
-        AddPropLine("bConfigurationValue: %d (0x%02x)", m_UCD.bConfigurationValue, m_UCD.bConfigurationValue);
-        AddPropLine("iConfiguration: %d (0x%02x)", m_UCD.iConfiguration, m_UCD.iConfiguration);
-        AddPropLine("bmAttributes: %d (0x%02x)", m_UCD.bmAttributes, m_UCD.bmAttributes);
+        AddPropLine("  wTotalLength: %d (0x%04x)", m_UCD.wTotalLength, m_UCD.wTotalLength);
+        AddPropLine("  bNumInterfaces: %d (0x%02x)", m_UCD.bNumInterfaces, m_UCD.bNumInterfaces);
+        AddPropLine("  bConfigurationValue: %d (0x%02x)", m_UCD.bConfigurationValue, m_UCD.bConfigurationValue);
+        AddPropLine("  iConfiguration: %d (0x%02x)", m_UCD.iConfiguration, m_UCD.iConfiguration);
+        AddPropLine("  bmAttributes: %d (0x%02x)", m_UCD.bmAttributes, m_UCD.bmAttributes);
         if(0 != (0x80 & m_UCD.bmAttributes))
         {
-            AddPropLine("  0x80: Bus Powered");
+            AddPropLine("    0x80: Bus Powered");
         }
         if(0 != (0x40 & m_UCD.bmAttributes))
         {
-            AddPropLine("  0x40: Self Powered");
+            AddPropLine("    0x40: Self Powered");
         }
         if(0 != (0x20 & m_UCD.bmAttributes))
         {
-            AddPropLine("  0x20: Remote Wakeup");
+            AddPropLine("    0x20: Remote Wakeup");
         }
-        AddPropLine("MaxPower: %d (0x%02x)", m_UCD.MaxPower, m_UCD.MaxPower);
-        AddPropLine("  (in 2 mA units, therefore %d mA power consumption)", m_UCD.MaxPower * 2);
+        AddPropLine("  MaxPower: %d (0x%02x)", m_UCD.MaxPower, m_UCD.MaxPower);
+        AddPropLine("    (in 2 mA units, therefore %d mA power consumption)", m_UCD.MaxPower * 2);
 
-        AddPropLine("");
-        AddPropLine("Number of interfaces: %d", m_uNumInterfaces);
+        AddPropLine("  ");
+        AddPropLine("  Number of interfaces: %d", m_uNumInterfaces);
         
         for(ULONG i = 0; i < m_uNumInterfaces; i++)
         {
-            AddPropLine("Interface[%d]:", i);
-            AddPropLine("  Length: 0x%04x", m_pInterfaces[i]->Length);
+            AddPropLine("  Interface[%d]:", i);
+            AddPropLine("    Length: 0x%04x", m_pInterfaces[i]->Length);
             if(m_pInterfaces[i]->Length >= FIELD_OFFSET(USBD_INTERFACE_INFORMATION, InterfaceNumber))
             {
-                AddPropLine("  InterfaceNumber: 0x%02x", m_pInterfaces[i]->InterfaceNumber);
+                AddPropLine("    InterfaceNumber: 0x%02x", m_pInterfaces[i]->InterfaceNumber);
                 if(m_pInterfaces[i]->Length >= FIELD_OFFSET(USBD_INTERFACE_INFORMATION, AlternateSetting))
                 {
-                    AddPropLine("  AlternateSetting: 0x%02x", m_pInterfaces[i]->AlternateSetting);
+                    AddPropLine("    AlternateSetting: 0x%02x", m_pInterfaces[i]->AlternateSetting);
                     if(m_pInterfaces[i]->Length >= FIELD_OFFSET(USBD_INTERFACE_INFORMATION, Class))
                     {
-                        AddPropLine("  Class             = 0x%02x", m_pInterfaces[i]->Class);
+                        AddPropLine("    Class             = 0x%02x", m_pInterfaces[i]->Class);
                         if(m_pInterfaces[i]->Length >= FIELD_OFFSET(USBD_INTERFACE_INFORMATION, SubClass))
                         {
-                            AddPropLine("  SubClass          = 0x%02x", m_pInterfaces[i]->SubClass);
+                            AddPropLine("    SubClass          = 0x%02x", m_pInterfaces[i]->SubClass);
                             if(m_pInterfaces[i]->Length >= FIELD_OFFSET(USBD_INTERFACE_INFORMATION, Protocol))
                             {
-                                AddPropLine("  Protocol          = 0x%02x", m_pInterfaces[i]->Protocol);
+                                AddPropLine("    Protocol          = 0x%02x", m_pInterfaces[i]->Protocol);
                                 if(m_pInterfaces[i]->Length >= FIELD_OFFSET(USBD_INTERFACE_INFORMATION, InterfaceHandle))
                                 {
-                                    AddPropLine("  InterfaceHandle   = 0x%08x", m_pInterfaces[i]->InterfaceHandle);
+                                    AddPropLine("    InterfaceHandle   = 0x%08x", m_pInterfaces[i]->InterfaceHandle);
                                     if(m_pInterfaces[i]->Length >= FIELD_OFFSET(USBD_INTERFACE_INFORMATION, NumberOfPipes))
                                     {
-                                        AddPropLine("  NumberOfPipes     = 0x%08x", m_pInterfaces[i]->NumberOfPipes);
+                                        AddPropLine("    NumberOfPipes     = 0x%08x", m_pInterfaces[i]->NumberOfPipes);
                                         ULONG uNumPipes = m_pInterfaces[i]->NumberOfPipes;
                                         if(uNumPipes > 0x1f)
                                         {
-                                            AddPropLine("ERROR: uNumPipes is too large (%d), resetting to 1", uNumPipes);
+                                            AddPropLine("  ERROR: uNumPipes is too large (%d), resetting to 1", uNumPipes);
                                             uNumPipes = 1;
                                         }
                                         
@@ -896,24 +903,24 @@ void CURB_SelectConfiguration::RenderProperties(void)
                                             if(m_pInterfaces[i]->Length >= (FIELD_OFFSET(USBD_INTERFACE_INFORMATION, Pipes) + (p + 1) * sizeof(USBD_PIPE_INFORMATION)))
                                             {
                                                 PUSBD_PIPE_INFORMATION pPipe = &m_pInterfaces[i]->Pipes[p];
-                                                AddPropLine("  Pipe[%d]:", p);
-                                                AddPropLine("    MaximumPacketSize = 0x%04x", pPipe->MaximumPacketSize);
-                                                AddPropLine("    EndpointAddress   = 0x%02x", pPipe->EndpointAddress);
-                                                AddPropLine("    Interval          = 0x%02x", pPipe->Interval);
-                                                AddPropLine("    PipeType          = 0x%02x", pPipe->PipeType);
+                                                AddPropLine("    Pipe[%d]:", p);
+                                                AddPropLine("      MaximumPacketSize = 0x%04x", pPipe->MaximumPacketSize);
+                                                AddPropLine("      EndpointAddress   = 0x%02x", pPipe->EndpointAddress);
+                                                AddPropLine("      Interval          = 0x%02x", pPipe->Interval);
+                                                AddPropLine("      PipeType          = 0x%02x", pPipe->PipeType);
                                                 if(pPipe->PipeType == UsbdPipeTypeControl)
-                                                    AddPropLine("      UsbdPipeTypeControl");
+                                                    AddPropLine("        UsbdPipeTypeControl");
                                                 else if(pPipe->PipeType == UsbdPipeTypeIsochronous)
-                                                    AddPropLine("      UsbdPipeTypeIsochronous");
+                                                    AddPropLine("        UsbdPipeTypeIsochronous");
                                                 else if(pPipe->PipeType == UsbdPipeTypeBulk)
-                                                    AddPropLine("      UsbdPipeTypeBulk");
+                                                    AddPropLine("        UsbdPipeTypeBulk");
                                                 else if(pPipe->PipeType == UsbdPipeTypeInterrupt)
-                                                    AddPropLine("      UsbdPipeTypeInterrupt");
+                                                    AddPropLine("        UsbdPipeTypeInterrupt");
                                                 else
-                                                    AddPropLine("      !!! INVALID !!!");
-                                                AddPropLine("    PipeHandle        = 0x%08x", pPipe->PipeHandle);
-                                                AddPropLine("    MaxTransferSize   = 0x%08x", pPipe->MaximumTransferSize);
-                                                AddPropLine("    PipeFlags         = 0x%02x", pPipe->PipeFlags);
+                                                    AddPropLine("        !!! INVALID !!!");
+                                                AddPropLine("      PipeHandle        = 0x%08x", pPipe->PipeHandle);
+                                                AddPropLine("      MaxTransferSize   = 0x%08x", pPipe->MaximumTransferSize);
+                                                AddPropLine("      PipeFlags         = 0x%02x", pPipe->PipeFlags);
                                             }
                                         }
                                     }
@@ -927,10 +934,152 @@ void CURB_SelectConfiguration::RenderProperties(void)
     }
     else
     {
-        AddPropLine("no Configuration Descriptor present => unconfigure device!");
+        AddPropLine("  no Configuration Descriptor present => unconfigure device!");
     }
 }
 
+#define FIELD_DIFF(low, high) ((UCHAR *)(&(high)) - (UCHAR *)(&(low)))
+
+#ifndef NEVER
+void CURB_SelectConfiguration::GrabData(PPACKET_HEADER ph)
+{
+	CURB::GrabData(ph);
+
+	PUCHAR pData = (PUCHAR)(&ph->UrbHeader);
+    _URB_SELECT_CONFIGURATION *pSC = (_URB_SELECT_CONFIGURATION *)(&ph->UrbHeader);
+	if (g_bIsWow64) {
+TRACE("~1 SelectConfig: Hdr.Length before = %d\n",pSC->Hdr.Length);
+		// Yuk! We're getting a 64 bit struct, and we expect a 32 bit one!
+		// Copy it section by section between pointers/handles.
+		_URB_SELECT_CONFIGURATION *mpSC = pSC;
+
+		// First part of header including bottom 32 bits of Device Handle
+	    CopyMemory(&m_SelectConfiguration,
+		            mpSC,
+		            FIELD_OFFSET(_URB_SELECT_CONFIGURATION, Hdr.UsbdFlags));
+		mpSC = (_URB_SELECT_CONFIGURATION *) ((UCHAR *)mpSC + 4);	// Skip top 32 bits of handle
+		m_SelectConfiguration.Hdr.Length -= 4;
+TRACE("~1 SelectConfig: Hdr.Length after Dev Handle = %d\n",m_SelectConfiguration.Hdr.Length);
+
+		// Balance of header, UsbdFlags
+		m_SelectConfiguration.Hdr.UsbdFlags = mpSC->Hdr.UsbdFlags;
+
+		// Align to 64 bit boundary
+		mpSC = (_URB_SELECT_CONFIGURATION *) ((UCHAR *)mpSC + 4);
+		m_SelectConfiguration.Hdr.Length -= 4;
+TRACE("~1 SelectConfig: Hdr.Length after Align = %d\n",m_SelectConfiguration.Hdr.Length);
+
+		// bottom 32 bits of ConfigurationDescriptor pointer
+		m_SelectConfiguration.ConfigurationDescriptor = mpSC->ConfigurationDescriptor;
+		mpSC = (_URB_SELECT_CONFIGURATION *) ((UCHAR *)mpSC + 4);	// Top 32 bits of pointer
+		PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor2 = mpSC->ConfigurationDescriptor;
+		m_SelectConfiguration.Hdr.Length -= 4;
+TRACE("~1 SelectConfig: Hdr.Length after ConfigDesc pointer = %d\n",m_SelectConfiguration.Hdr.Length);
+
+	    if(m_SelectConfiguration.Hdr.Length >= FIELD_OFFSET(_URB_SELECT_CONFIGURATION, ConfigurationHandle)) {
+TRACE("~1 got interface info\n");
+			// Grab the number of interfaces
+            m_uNumInterfaces = 0;
+	        m_UCDPresent = (   NULL != m_SelectConfiguration.ConfigurationDescriptor
+	                        || NULL != ConfigurationDescriptor2);
+	        if(m_UCDPresent) {
+	            CopyMemory(&m_UCD, pData + pSC->Hdr.Length, sizeof(m_UCD));
+				m_uNumInterfaces = m_UCD.bNumInterfaces;
+TRACE("~1 UCDPresent, NumInterfaces %d\n",m_uNumInterfaces);
+			}
+
+			// ConfigurationHandle
+			m_SelectConfiguration.ConfigurationHandle = mpSC->ConfigurationHandle;
+			mpSC = (_URB_SELECT_CONFIGURATION *) ((UCHAR *)mpSC + 4);	// Skip top 32 bits handle
+			m_SelectConfiguration.Hdr.Length -= 4;
+TRACE("~1 SelectConfig: Hdr.Length after ConfigHandle = %d\n",m_SelectConfiguration.Hdr.Length);
+
+            PUSBD_INTERFACE_INFORMATION pSCIF = &mpSC->Interface;	// Initial source
+
+            ULONG nInterface = 0;
+            while(nInterface < m_uNumInterfaces) {
+	            PUSBD_INTERFACE_INFORMATION mpSCIF = pSCIF;	// Movable version of source
+
+				// (pSCIF->Length will be longer than needed)
+                m_pInterfaces[nInterface] = (PUSBD_INTERFACE_INFORMATION) new BYTE [pSCIF->Length];
+	            PUSBD_INTERFACE_INFORMATION pInterface = m_pInterfaces[nInterface];	// Dest
+TRACE("~1 Interface %d, initial length %d\n",nInterface,mpSCIF->Length);
+
+				// From Length including bottom 32 bits of InterfaceHandle
+			    CopyMemory(&pInterface->Length,
+				           &mpSCIF->Length,
+				           FIELD_DIFF(pInterface->Length,
+				                      pInterface->NumberOfPipes));
+				mpSCIF = (USBD_INTERFACE_INFORMATION *) ((UCHAR *)mpSCIF + 4);	// Skip top 32 
+				m_SelectConfiguration.Hdr.Length -= 4;
+				pInterface->Length -= 4;
+TRACE("~1 SelectConfig: Hdr.Length after InterfaceHandle = %d\n",m_SelectConfiguration.Hdr.Length);
+
+				// The number of pipes
+				pInterface->NumberOfPipes = mpSCIF->NumberOfPipes;
+TRACE("~1 Interface %d, number of pipes %d\n",nInterface,pInterface->NumberOfPipes);
+
+				// Align to 64 bit boundary, because USBD_PIPE_INFORMATION contains pointer
+				mpSCIF = (USBD_INTERFACE_INFORMATION *) ((UCHAR *)mpSCIF + 4);
+				m_SelectConfiguration.Hdr.Length -= 4;
+				pInterface->Length -= 4;
+TRACE("~1 SelectConfig: Hdr.Length after Align = %d\n",m_SelectConfiguration.Hdr.Length);
+
+				// Copy each of the pipe structures */
+				ULONG pix;
+				for (pix = 0; pix < pInterface->NumberOfPipes; pix++) {
+
+					// MaximumPacketSize including lower 32 bits of PipeHandle
+				    CopyMemory(&pInterface->Pipes[pix].MaximumPacketSize,
+					           &mpSCIF->Pipes[pix].MaximumPacketSize,
+					           FIELD_DIFF(pInterface->Pipes[pix].MaximumPacketSize,
+					                      pInterface->Pipes[pix].MaximumTransferSize));
+					mpSCIF = (USBD_INTERFACE_INFORMATION *) ((UCHAR *)mpSCIF + 4);	// Skip top 32
+					pInterface->Length -= 4;
+					m_SelectConfiguration.Hdr.Length -= 4;
+TRACE("~1 SelectConfig: Hdr.Length after InterfaceHandle = %d\n",m_SelectConfiguration.Hdr.Length);
+		
+					// MaximumTransferSize and PipeFlags
+				    CopyMemory(&pInterface->Pipes[pix].MaximumTransferSize,
+					           &mpSCIF->Pipes[pix].MaximumTransferSize,
+					           FIELD_DIFF(pInterface->Pipes[pix].MaximumTransferSize,
+					                      pInterface->Pipes[pix+1]));
+TRACE("~1 Interface %d, after pipe %d, length %d\n",nInterface,pix,pInterface->Length);
+				}
+TRACE("~1 Interface %d, initial length %d\n",nInterface,pInterface->Length);
+                pSCIF = (PUSBD_INTERFACE_INFORMATION)(((PUCHAR)pSCIF) + pSCIF->Length);
+				nInterface++;
+			}
+		}
+TRACE("~1 SelectConfig: Hdr.Length after = %d\n",m_SelectConfiguration.Hdr.Length);
+	} else {
+TRACE("~1 SelectConfig: Hdr.Length = %d\n",pSC->Hdr.Length);
+	    CopyMemory(&m_SelectConfiguration, pSC, sizeof(m_SelectConfiguration));
+
+	    if(m_SelectConfiguration.Hdr.Length >= FIELD_OFFSET(_URB_SELECT_CONFIGURATION, ConfigurationHandle))
+	    {
+TRACE("~1 got interface info\n");
+	        m_UCDPresent = (NULL != m_SelectConfiguration.ConfigurationDescriptor);
+	        if(m_UCDPresent)	// USBD_INTERFACE_INFORMATION is after _URB_SELECT_CONFIGURATION
+	        {
+	            CopyMemory(&m_UCD, pData + m_SelectConfiguration.Hdr.Length, sizeof(m_UCD));
+	            m_uNumInterfaces = m_UCD.bNumInterfaces;
+	            ULONG nInterface = 0;
+	            PUSBD_INTERFACE_INFORMATION pInterface = &pSC->Interface;
+TRACE("~1 UCDPresent, NumInterfaces %d\n",m_uNumInterfaces);
+	            while(nInterface < m_uNumInterfaces)
+	            {
+	                m_pInterfaces[nInterface] = (PUSBD_INTERFACE_INFORMATION) new BYTE [pInterface->Length];
+	                CopyMemory(m_pInterfaces[nInterface], pInterface, pInterface->Length);
+	                pInterface = (PUSBD_INTERFACE_INFORMATION)(((PUCHAR)pInterface) + pInterface->Length);
+	                ++nInterface;
+	            }
+	        }
+	    }
+	}
+}
+#else
+// Old code
 void CURB_SelectConfiguration::GrabData(PPACKET_HEADER ph)
 {
 	CURB::GrabData(ph);
@@ -957,6 +1106,7 @@ void CURB_SelectConfiguration::GrabData(PPACKET_HEADER ph)
         }
     }
 }
+#endif
 
 DWORD CURB_SelectConfiguration::GetInterfaceCountFromConfiguration(void)
 {
@@ -1023,20 +1173,20 @@ void CURB_SelectInterface::RenderProperties(void)
 {
     CURB::RenderProperties();
 
-    AddPropLine("ConfigurationHandle: 0x%08x (%d)", 
+    AddPropLine("  ConfigurationHandle: 0x%08x (%d)", 
         m_pSelectInterface->ConfigurationHandle,
         m_pSelectInterface->ConfigurationHandle);
 
     AddPropLine("");
-    AddPropLine("Interface:");
+    AddPropLine("  Interface:");
     PUSBD_INTERFACE_INFORMATION pInterface = &m_pSelectInterface->Interface;
-    AddPropLine("  Length: 0x%04x (%d)", 
+    AddPropLine("    Length: 0x%04x (%d)", 
         pInterface->Length,
         pInterface->Length);
-    AddPropLine("  InterfaceNumber: 0x%02x (%d)",
+    AddPropLine("    InterfaceNumber: 0x%02x (%d)",
         pInterface->InterfaceNumber,
         pInterface->InterfaceNumber);
-    AddPropLine("  AlternateSetting: 0x%02x (%d)",
+    AddPropLine("    AlternateSetting: 0x%02x (%d)",
         pInterface->AlternateSetting,
         pInterface->AlternateSetting);
 
@@ -1045,23 +1195,23 @@ void CURB_SelectInterface::RenderProperties(void)
         return;
     }
 
-    AddPropLine("");
-    AddPropLine("Output");
-    AddPropLine("  Class: 0x%02x (%d)",
+    AddPropLine("  ");
+    AddPropLine("  Output");
+    AddPropLine("    Class: 0x%02x (%d)",
         pInterface->Class,
         pInterface->Class);
-    AddPropLine("  SubClass: 0x%02x (%d)",
+    AddPropLine("    SubClass: 0x%02x (%d)",
         pInterface->SubClass,
         pInterface->SubClass);
-    AddPropLine("  Protocol: 0x%02x (%d)",
+    AddPropLine("    Protocol: 0x%02x (%d)",
         pInterface->Protocol,
         pInterface->Protocol);
-    AddPropLine("  Reserved: 0x%02x",
+    AddPropLine("    Reserved: 0x%02x",
         pInterface->Reserved);
 
-    AddPropLine("  InterfaceHandle: 0x%08x",
+    AddPropLine("    InterfaceHandle: 0x%08x",
         pInterface->InterfaceHandle);
-    AddPropLine("  NumberOfPipes: 0x%08x (%d)",
+    AddPropLine("    NumberOfPipes: 0x%08x (%d)",
         pInterface->NumberOfPipes,
         pInterface->NumberOfPipes);
 
@@ -1070,47 +1220,47 @@ void CURB_SelectInterface::RenderProperties(void)
     ULONG nPipe = 0;
     while((nPipe < pInterface->NumberOfPipes) && (0 < nBufferLeft))
     {
-        AddPropLine("  Pipe[%d]:", nPipe);
+        AddPropLine("    Pipe[%d]:", nPipe);
         pPipe = &pInterface->Pipes[nPipe];
 
         // OUTPUT from USBD
-        AddPropLine("    MaximumPacketSize: 0x%04x (%d)",
+        AddPropLine("      MaximumPacketSize: 0x%04x (%d)",
             pPipe->MaximumPacketSize,
             pPipe->MaximumPacketSize);
-        AddPropLine("    EndpointAddress: 0x%02x (%d)",
+        AddPropLine("      EndpointAddress: 0x%02x (%d)",
             pPipe->EndpointAddress,
             pPipe->EndpointAddress);
-        AddPropLine("    Interval: %d ms",
+        AddPropLine("      Interval: %d ms",
             pPipe->Interval);
-        AddPropLine("    PipeType: 0x%02x",
+        AddPropLine("      PipeType: 0x%02x",
             pPipe->PipeType);
         switch(pPipe->PipeType)
         {
         case UsbdPipeTypeControl:
-            AddPropLine("      UsbdPipeTypeControl");
+            AddPropLine("        UsbdPipeTypeControl");
             break;
         case UsbdPipeTypeIsochronous:
-            AddPropLine("      UsbdPipeTypeIsochronous");
+            AddPropLine("        UsbdPipeTypeIsochronous");
             break;
         case UsbdPipeTypeBulk:
-            AddPropLine("      UsbdPipeTypeBulk");
+            AddPropLine("        UsbdPipeTypeBulk");
             break;
         case UsbdPipeTypeInterrupt:
-            AddPropLine("      UsbdPipeTypeInterrupt");
+            AddPropLine("        UsbdPipeTypeInterrupt");
             break;
         default:
-            AddPropLine("      invalid!");
+            AddPropLine("        invalid!");
         }
-        AddPropLine("    PipeHandle: 0x%08x",
+        AddPropLine("      PipeHandle: 0x%08x",
             pPipe->PipeHandle);
 
         // INPUT
         // These fields are filled in by the client driver
-        AddPropLine("");
-        AddPropLine("    MaximumTransferSize: 0x%08x (%d) bytes",
+        AddPropLine("  ");
+        AddPropLine("      MaximumTransferSize: 0x%08x (%d) bytes",
             pPipe->MaximumTransferSize,
             pPipe->MaximumTransferSize);
-        AddPropLine("    PipeFlags: 0x%08x (%d)",
+        AddPropLine("      PipeFlags: 0x%08x (%d)",
             pPipe->PipeFlags,
             pPipe->PipeFlags);
 
@@ -1126,7 +1276,71 @@ void CURB_SelectInterface::GrabData(PPACKET_HEADER ph)
     PUCHAR pData = (PUCHAR)(&ph->UrbHeader);
     m_dwSelectInterfaceSize = max(ph->UrbHeader.Length, sizeof(_URB_SELECT_INTERFACE));
     m_pSelectInterface = (_URB_SELECT_INTERFACE*) m_pCA->AllocBlock(m_dwSelectInterfaceSize);
-    CopyMemory(m_pSelectInterface, pData, m_dwSelectInterfaceSize);
+	if (g_bIsWow64) {
+		// Yuk! We're getting a 64 bit struct, and we expect a 32 bit one!
+		// Copy it section by section between pointers/handles.
+		_URB_SELECT_INTERFACE *mpSI = (_URB_SELECT_INTERFACE *)&ph->UrbHeader;
+TRACE("~1 SelectInterf: Hdr.Length before = %d\n",mpSI->Hdr.Length);
+
+		// First part of header including Device Handle
+	    CopyMemory(m_pSelectInterface,
+		            mpSI,
+		            FIELD_OFFSET(_URB_SELECT_INTERFACE, Hdr.UsbdFlags));
+		mpSI = (_URB_SELECT_INTERFACE *) ((UCHAR *)mpSI + 4);	// Skip top 32 bits of pointer
+		m_pSelectInterface->Hdr.Length -= 4;
+
+		// Balance of header, UsbdFlags
+		m_pSelectInterface->Hdr.UsbdFlags = mpSI->Hdr.UsbdFlags;
+
+		// Align to 64 bit boundary
+		mpSI = (_URB_SELECT_INTERFACE *) ((UCHAR *)mpSI + 4);
+		m_pSelectInterface->Hdr.Length -= 4;
+
+		// bottom 32 bits of ConfigurationHandle pointer
+		m_pSelectInterface->ConfigurationHandle = mpSI->ConfigurationHandle;
+		mpSI = (_URB_SELECT_INTERFACE *) ((UCHAR *)mpSI + 4);	// Skip top 32 bits of pointer
+		m_pSelectInterface->Hdr.Length -= 4;
+
+		// From Interface to Interface.InterfaceHandle
+	    CopyMemory(&m_pSelectInterface->Interface,
+		           &mpSI->Interface,
+		           FIELD_DIFF(m_pSelectInterface->Interface,
+		                      m_pSelectInterface->Interface.NumberOfPipes));
+		mpSI = (_URB_SELECT_INTERFACE *) ((UCHAR *)mpSI + 4);	// Skip top 32 bits of pointer
+		m_pSelectInterface->Hdr.Length -= 4;
+		m_pSelectInterface->Interface.Length -= 4;
+
+		// The number of pipes
+		m_pSelectInterface->Interface.NumberOfPipes = mpSI->Interface.NumberOfPipes;
+
+		// Align to 64 bit boundary, because USBD_PIPE_INFORMATION contains pointer
+		mpSI = (_URB_SELECT_INTERFACE *) ((UCHAR *)mpSI + 4);
+		m_pSelectInterface->Hdr.Length -= 4;
+		m_pSelectInterface->Interface.Length -= 4;
+
+		// Copy each of the pipe structures */
+		ULONG pix;
+		for (pix = 0; pix < mpSI->Interface.NumberOfPipes; pix++) {
+
+			// From start of Pipe including bottom 32 bits of PipeHandle
+		    CopyMemory(&m_pSelectInterface->Interface.Pipes[pix],
+			           &mpSI->Interface.Pipes[pix],
+			           FIELD_DIFF(m_pSelectInterface->Interface.Pipes[pix],
+			                      m_pSelectInterface->Interface.Pipes[pix].MaximumTransferSize));
+			mpSI = (_URB_SELECT_INTERFACE *) ((UCHAR *)mpSI + 4);	// Skip top 32 bits of pointer
+			m_pSelectInterface->Hdr.Length -= 4;
+			m_pSelectInterface->Interface.Length -= 4;
+
+			// From MaximumTransferSize to end of Pipe
+		    CopyMemory(&m_pSelectInterface->Interface.Pipes[pix].MaximumTransferSize,
+			           &mpSI->Interface.Pipes[pix].MaximumTransferSize,
+			           FIELD_DIFF(m_pSelectInterface->Interface.Pipes[pix].MaximumTransferSize,
+			                      m_pSelectInterface->Interface.Pipes[pix+1]));
+		}
+TRACE("~1 SelectInterf: Hdr.Length after = %d\n",m_pSelectInterface->Hdr.Length);
+	} else {
+	    CopyMemory(m_pSelectInterface, pData, m_dwSelectInterfaceSize);
+	}
 }
 
 DWORD CURB_SelectInterface::GetPipeCountFromInterface(void)
@@ -1177,10 +1391,10 @@ void CURB_ControlTransfer::RenderProperties(void)
 {
     CURB::RenderProperties();
 
-    AddPropLine("PipeHandle: %08x", m_ControlTransfer.PipeHandle);
+    AddPropLine("  PipeHandle: %08x", m_ControlTransfer.PipeHandle);
     
-    AddPropLine("");
-    AddPropLine("SetupPacket:");
+    AddPropLine("  ");
+    AddPropLine("  SetupPacket:");
     GenerateHexDump(m_ControlTransfer.SetupPacket, sizeof(m_ControlTransfer.SetupPacket));
 
     UCHAR bmRequestType = m_ControlTransfer.SetupPacket[0];
@@ -1189,25 +1403,25 @@ void CURB_ControlTransfer::RenderProperties(void)
     //USHORT wIndex = (USHORT)(m_ControlTransfer.SetupPacket[5] + 256 * m_ControlTransfer.SetupPacket[4]);
     //USHORT wLength = (USHORT)(m_ControlTransfer.SetupPacket[7] + 256 * m_ControlTransfer.SetupPacket[6]);
 
-    AddPropLine("bmRequestType: %02x", bmRequestType);
-    AddPropLine("  DIR: %s", USB_ENDPOINT_DIRECTION_IN(bmRequestType) ?
+    AddPropLine("  bmRequestType: %02x", bmRequestType);
+    AddPropLine("    DIR: %s", USB_ENDPOINT_DIRECTION_IN(bmRequestType) ?
         "Device-To-Host" : "Host-To-Device");
 
     BOOL bIsTypeStandard = FALSE;
     switch((bmRequestType & 0x60) >> 5)
     {
     case 0:
-        AddPropLine("  TYPE: Standard");
+        AddPropLine("    TYPE: Standard");
         bIsTypeStandard = TRUE;
         break;
     case 1:
-        AddPropLine("  TYPE: Class");
+        AddPropLine("    TYPE: Class");
         break;
     case 2:
-        AddPropLine("  TYPE: Vendor");
+        AddPropLine("    TYPE: Vendor");
         break;
     case 3:
-        AddPropLine("  TYPE: Reserved");
+        AddPropLine("    TYPE: Reserved");
         break;
     default:
         ASSERT(FALSE);
@@ -1218,24 +1432,24 @@ void CURB_ControlTransfer::RenderProperties(void)
     switch(bmRequestType & 0x1f)
     {
     case 0:
-        AddPropLine("  RECIPIENT: Device");
+        AddPropLine("    RECIPIENT: Device");
         bIsRecipientDevice = TRUE;
         break;
     case 1:
-        AddPropLine("  RECIPIENT: Interface");
+        AddPropLine("    RECIPIENT: Interface");
         break;
     case 2:
-        AddPropLine("  RECIPIENT: Endpoint");
+        AddPropLine("    RECIPIENT: Endpoint");
         break;
     case 3:
-        AddPropLine("  RECIPIENT: Other");
+        AddPropLine("    RECIPIENT: Other");
         break;
     default:
-        AddPropLine("  RECIPIENT: %d => 4..31 == Reserved", bmRequestType & 0x1f);
+        AddPropLine("    RECIPIENT: %d => 4..31 == Reserved", bmRequestType & 0x1f);
         break;
     }
 
-    AddPropLine("bRequest: %02x  ", bRequest);
+    AddPropLine("  bRequest: %02x  ", bRequest);
     
     BOOL bIsReqGetDescriptor = FALSE;
     if(bIsTypeStandard)
@@ -1243,45 +1457,45 @@ void CURB_ControlTransfer::RenderProperties(void)
         switch(bRequest)
         {
         case USB_REQUEST_GET_STATUS:
-            AddPropLine("  GET_STATUS");
+            AddPropLine("    GET_STATUS");
             break;
         case USB_REQUEST_CLEAR_FEATURE:
-            AddPropLine("  CLEAR_FEATURE");
+            AddPropLine("    CLEAR_FEATURE");
             break;
         case 2:
         case 4:
-            AddPropLine("  reserved for future use!!");
+            AddPropLine("    reserved for future use!!");
             break;
         case USB_REQUEST_SET_FEATURE:
-            AddPropLine("  SET_FEATURE");
+            AddPropLine("    SET_FEATURE");
             break;
         case USB_REQUEST_SET_ADDRESS:
-            AddPropLine("  SET_ADDRESS");
+            AddPropLine("    SET_ADDRESS");
             break;
         case USB_REQUEST_GET_DESCRIPTOR:
-            AddPropLine("  GET_DESCRIPTOR");
+            AddPropLine("    GET_DESCRIPTOR");
             bIsReqGetDescriptor = TRUE;
             break;
         case USB_REQUEST_SET_DESCRIPTOR:
-            AddPropLine("  SET_DESCRIPTOR");
+            AddPropLine("    SET_DESCRIPTOR");
             break;
         case USB_REQUEST_GET_CONFIGURATION:
-            AddPropLine("  GET_CONFIGURATION");
+            AddPropLine("    GET_CONFIGURATION");
             break;
         case USB_REQUEST_SET_CONFIGURATION:
-            AddPropLine("  SET_CONFIGURATION");
+            AddPropLine("    SET_CONFIGURATION");
             break;
         case USB_REQUEST_GET_INTERFACE:
-            AddPropLine("  GET_INTERFACE");
+            AddPropLine("    GET_INTERFACE");
             break;
         case USB_REQUEST_SET_INTERFACE:
-            AddPropLine("  SET_INTERFACE");
+            AddPropLine("    SET_INTERFACE");
             break;
         case USB_REQUEST_SYNC_FRAME:
-            AddPropLine("  SYNCH_FRAME");
+            AddPropLine("    SYNCH_FRAME");
             break;
         default:
-            AddPropLine("  unknown!");
+            AddPropLine("    unknown!");
             break;
         }
     }
@@ -1290,37 +1504,36 @@ void CURB_ControlTransfer::RenderProperties(void)
     BOOL bIsConfigurationDescriptorType = FALSE;
     if(bIsReqGetDescriptor)
     {
-        AddPropLine("Descriptor Type: 0x%04x", wValue);
+        AddPropLine("  Descriptor Type: 0x%04x", wValue);
         switch(wValue)
         {
         case USB_DEVICE_DESCRIPTOR_TYPE:
-            AddPropLine("  DEVICE");
+            AddPropLine("    DEVICE");
             bIsDeviceDescriptorType = TRUE;
             break;
             
         case USB_CONFIGURATION_DESCRIPTOR_TYPE:
-            AddPropLine("  CONFIGURATION");
+            AddPropLine("    CONFIGURATION");
             bIsConfigurationDescriptorType = TRUE;
             break;
             
         case USB_STRING_DESCRIPTOR_TYPE:
-            AddPropLine("  STRING");
+            AddPropLine("    STRING");
             break;
             
         case USB_INTERFACE_DESCRIPTOR_TYPE:
-            AddPropLine("  INTERFACE");
+            AddPropLine("    INTERFACE");
             break;
             
         case USB_ENDPOINT_DESCRIPTOR_TYPE:
-            AddPropLine("  ENDPOINT");
+            AddPropLine("    ENDPOINT");
             break;
             
         default:
-            AddPropLine("  unknown");
+            AddPropLine("    unknown");
             break;
         }
     }
-    AddPropLine("");
     
     CURB_TransferBuffer::RenderProperties();
 
@@ -1329,33 +1542,33 @@ void CURB_ControlTransfer::RenderProperties(void)
         if(bIsDeviceDescriptorType)
         {
             USB_DEVICE_DESCRIPTOR *pDesc = (USB_DEVICE_DESCRIPTOR*) m_TransferBuffer;
-            AddPropLine("    bLength            : 0x%02x (%d)", pDesc->bLength, pDesc->bLength);
-            AddPropLine("    bDescriptorType    : 0x%02x (%d)", pDesc->bDescriptorType, pDesc->bDescriptorType);
-            AddPropLine("    bcdUSB             : 0x%04x (%d)", pDesc->bcdUSB, pDesc->bcdUSB);
-            AddPropLine("    bDeviceClass       : 0x%02x (%d)", pDesc->bDeviceClass, pDesc->bDeviceClass);
-            AddPropLine("    bDeviceSubClass    : 0x%02x (%d)", pDesc->bDeviceSubClass, pDesc->bDeviceSubClass);
-            AddPropLine("    bDeviceProtocol    : 0x%02x (%d)", pDesc->bDeviceProtocol, pDesc->bDeviceProtocol);
-            AddPropLine("    bMaxPacketSize0    : 0x%02x (%d)", pDesc->bMaxPacketSize0, pDesc->bMaxPacketSize0);
-            AddPropLine("    idVendor           : 0x%04x (%d)", pDesc->idVendor, pDesc->idVendor);
-            AddPropLine("    idProduct          : 0x%04x (%d)", pDesc->idProduct, pDesc->idProduct);
-            AddPropLine("    bcdDevice          : 0x%04x (%d)", pDesc->bcdDevice, pDesc->bcdDevice);
-            AddPropLine("    iManufacturer      : 0x%02x (%d)", pDesc->iManufacturer, pDesc->iManufacturer);
-            AddPropLine("    iProduct           : 0x%02x (%d)", pDesc->iProduct, pDesc->iProduct);
-            AddPropLine("    iSerialNumber      : 0x%02x (%d)", pDesc->iSerialNumber, pDesc->iSerialNumber);
-            AddPropLine("    bNumConfigurations : 0x%02x (%d)", pDesc->bNumConfigurations, pDesc->bNumConfigurations);
+            AddPropLine("      bLength            : 0x%02x (%d)", pDesc->bLength, pDesc->bLength);
+            AddPropLine("      bDescriptorType    : 0x%02x (%d)", pDesc->bDescriptorType, pDesc->bDescriptorType);
+            AddPropLine("      bcdUSB             : 0x%04x (%d)", pDesc->bcdUSB, pDesc->bcdUSB);
+            AddPropLine("      bDeviceClass       : 0x%02x (%d)", pDesc->bDeviceClass, pDesc->bDeviceClass);
+            AddPropLine("      bDeviceSubClass    : 0x%02x (%d)", pDesc->bDeviceSubClass, pDesc->bDeviceSubClass);
+            AddPropLine("      bDeviceProtocol    : 0x%02x (%d)", pDesc->bDeviceProtocol, pDesc->bDeviceProtocol);
+            AddPropLine("      bMaxPacketSize0    : 0x%02x (%d)", pDesc->bMaxPacketSize0, pDesc->bMaxPacketSize0);
+            AddPropLine("      idVendor           : 0x%04x (%d)", pDesc->idVendor, pDesc->idVendor);
+            AddPropLine("      idProduct          : 0x%04x (%d)", pDesc->idProduct, pDesc->idProduct);
+            AddPropLine("      bcdDevice          : 0x%04x (%d)", pDesc->bcdDevice, pDesc->bcdDevice);
+            AddPropLine("      iManufacturer      : 0x%02x (%d)", pDesc->iManufacturer, pDesc->iManufacturer);
+            AddPropLine("      iProduct           : 0x%02x (%d)", pDesc->iProduct, pDesc->iProduct);
+            AddPropLine("      iSerialNumber      : 0x%02x (%d)", pDesc->iSerialNumber, pDesc->iSerialNumber);
+            AddPropLine("      bNumConfigurations : 0x%02x (%d)", pDesc->bNumConfigurations, pDesc->bNumConfigurations);
         }
         
         if(bIsConfigurationDescriptorType)
         {
             USB_CONFIGURATION_DESCRIPTOR *pDesc = (USB_CONFIGURATION_DESCRIPTOR*) m_TransferBuffer;
-            AddPropLine("    bLength            : 0x%02x (%d)", pDesc->bLength, pDesc->bLength);
-            AddPropLine("    bDescriptorType    : 0x%02x (%d)", pDesc->bDescriptorType, pDesc->bDescriptorType);
-            AddPropLine("    wTotalLength       : 0x%04x (%d)", pDesc->wTotalLength, pDesc->wTotalLength);
-            AddPropLine("    bNumInterfaces     : 0x%02x (%d)", pDesc->bNumInterfaces, pDesc->bNumInterfaces);
-            AddPropLine("    bConfigurationValue: 0x%02x (%d)", pDesc->bConfigurationValue, pDesc->bConfigurationValue);
-            AddPropLine("    iConfiguration     : 0x%02x (%d)", pDesc->iConfiguration, pDesc->iConfiguration);
-            AddPropLine("    bmAttributes       : 0x%02x (%d)", pDesc->bmAttributes, pDesc->bmAttributes);
-            AddPropLine("    MaxPower           : 0x%02x (%d)", pDesc->MaxPower, pDesc->MaxPower);
+            AddPropLine("      bLength            : 0x%02x (%d)", pDesc->bLength, pDesc->bLength);
+            AddPropLine("      bDescriptorType    : 0x%02x (%d)", pDesc->bDescriptorType, pDesc->bDescriptorType);
+            AddPropLine("      wTotalLength       : 0x%04x (%d)", pDesc->wTotalLength, pDesc->wTotalLength);
+            AddPropLine("      bNumInterfaces     : 0x%02x (%d)", pDesc->bNumInterfaces, pDesc->bNumInterfaces);
+            AddPropLine("      bConfigurationValue: 0x%02x (%d)", pDesc->bConfigurationValue, pDesc->bConfigurationValue);
+            AddPropLine("      iConfiguration     : 0x%02x (%d)", pDesc->iConfiguration, pDesc->iConfiguration);
+            AddPropLine("      bmAttributes       : 0x%02x (%d)", pDesc->bmAttributes, pDesc->bmAttributes);
+            AddPropLine("      MaxPower           : 0x%02x (%d)", pDesc->MaxPower, pDesc->MaxPower);
         }
     }
 }
@@ -1364,10 +1577,66 @@ void CURB_ControlTransfer::GrabData(PPACKET_HEADER ph)
 {
     CURB::GrabData(ph);
     
-    PUCHAR pData = (PUCHAR)(&ph->UrbHeader);
-    CopyMemory(&m_ControlTransfer, pData, sizeof(m_ControlTransfer));
-    pData += m_ControlTransfer.Hdr.Length;
+	PUCHAR pData = (PUCHAR)(&ph->UrbHeader);
+	_URB_CONTROL_TRANSFER *pCT = (_URB_CONTROL_TRANSFER *)&ph->UrbHeader;
+	if (g_bIsWow64) {
+		// Yuk! We're getting a 64 bit struct, and we expect a 32 bit one!
+		// Copy it section by section between pointers/handles.
+		_URB_CONTROL_TRANSFER *mpCT = pCT;
+TRACE("~1 ControlTransf: Hdr.Length before = %d\n",mpCT->Hdr.Length);
+
+		// First part of header including Device Handle
+	    CopyMemory(&m_ControlTransfer,
+		            mpCT,
+		            FIELD_OFFSET(_URB_CONTROL_TRANSFER, Hdr.UsbdFlags));
+		mpCT = (_URB_CONTROL_TRANSFER *) ((UCHAR *)mpCT + 4);	// Skip top 32 bits of handle
+		m_ControlTransfer.Hdr.Length -= 4;
+
+		// Balance of header, UsbdFlags
+		m_ControlTransfer.Hdr.UsbdFlags = mpCT->Hdr.UsbdFlags;
+
+		// Align to 64 bit boundary
+		mpCT = (_URB_CONTROL_TRANSFER *) ((UCHAR *)mpCT + 4);	// Skip top 32 bits of handle
+		m_ControlTransfer.Hdr.Length -= 4;
+
+		// Lower 32 bits of PipeHandle
+		m_ControlTransfer.PipeHandle = mpCT->PipeHandle;
+		mpCT = (_URB_CONTROL_TRANSFER *) ((UCHAR *)mpCT + 4);	// Skip top 32 bits of handle
+		m_ControlTransfer.Hdr.Length -= 4;
+
+		// From TransferFlags including bottom 32 bits of TransferBuffer pointer
+	    CopyMemory(&m_ControlTransfer.TransferFlags,
+		           &mpCT->TransferFlags,
+		           FIELD_DIFF(m_ControlTransfer.TransferFlags,
+		                      m_ControlTransfer.TransferBufferMDL));
+		mpCT = (_URB_CONTROL_TRANSFER *) ((UCHAR *)mpCT + 4);	// Skip top 32 bits of pointer
+		m_ControlTransfer.Hdr.Length -= 4;
+
+		// TransferBufferMDL pointer
+		m_ControlTransfer.TransferBufferMDL = mpCT->TransferBufferMDL;
+		mpCT = (_URB_CONTROL_TRANSFER *) ((UCHAR *)mpCT + 4);	// Skip top 32 bits of pointer
+		m_ControlTransfer.Hdr.Length -= 4;
+
+		// UrbLink pointer
+		m_ControlTransfer.UrbLink = mpCT->UrbLink;
+		mpCT = (_URB_CONTROL_TRANSFER *) ((UCHAR *)mpCT + 4);	// Skip top 32 bits of pointer
+		m_ControlTransfer.Hdr.Length -= 4;
+		
+		// _URB_HCD_AREA is 8 pointers, and it's not used. Skip values
+		mpCT = (_URB_CONTROL_TRANSFER *) ((UCHAR *)mpCT + sizeof(struct _URB_HCD_AREA));
+		m_ControlTransfer.Hdr.Length -= sizeof(struct _URB_HCD_AREA);
+		
+		// The SetupPacket
+	    CopyMemory(&m_ControlTransfer.SetupPacket,
+		           &mpCT->SetupPacket,
+		           8);
+TRACE("~1 ControlTransf: Hdr.Length after = %d\n",m_ControlTransfer.Hdr.Length);
+	} else {
+	    CopyMemory(&m_ControlTransfer, pData, sizeof(m_ControlTransfer));
+	}
+	pData += pCT->Hdr.Length;
     GrabTransferBuffer(pData, m_ControlTransfer.TransferBufferLength);
+TRACE("~1 ControlTransf: TransferBufferLength = %d\n",m_ControlTransfer.TransferBufferLength);
     
     SetPipeHandle(m_ControlTransfer.PipeHandle);
 
@@ -1423,7 +1692,7 @@ void CURB_BulkOrInterruptTransfer::RenderProperties(void)
 {
     CURB::RenderProperties();
     
-    AddPropLine("TransferFlags: 0x%08x", m_BulkOrInterruptTransfer.TransferFlags);
+    AddPropLine("  TransferFlags: 0x%08x", m_BulkOrInterruptTransfer.TransferFlags);
 
     CURB_TransferBuffer::RenderProperties();
 }
@@ -1433,8 +1702,59 @@ void CURB_BulkOrInterruptTransfer::GrabData(PPACKET_HEADER ph)
     CURB::GrabData(ph);
     
     PUCHAR pData = (PUCHAR)(&ph->UrbHeader);
-    CopyMemory(&m_BulkOrInterruptTransfer, pData, sizeof(m_BulkOrInterruptTransfer));
-    pData += m_BulkOrInterruptTransfer.Hdr.Length;
+	_URB_BULK_OR_INTERRUPT_TRANSFER *pBIT = (_URB_BULK_OR_INTERRUPT_TRANSFER *)&ph->UrbHeader;
+	if (g_bIsWow64) {
+		// Yuk! We're getting a 64 bit struct, and we expect a 32 bit one!
+		// Copy it section by section between pointers/handles.
+		_URB_BULK_OR_INTERRUPT_TRANSFER *mpBIT = pBIT;
+TRACE("~1 BulkOrInterTrans: Hdr.Length before = %d\n",mpBIT->Hdr.Length);
+
+		// First part of header including bottom 32 bit of Device Handle
+	    CopyMemory(&m_BulkOrInterruptTransfer,
+		            mpBIT,
+		            FIELD_OFFSET(_URB_BULK_OR_INTERRUPT_TRANSFER, Hdr.UsbdFlags));
+		mpBIT = (_URB_BULK_OR_INTERRUPT_TRANSFER *) ((UCHAR *)mpBIT + 4);	// Skip top 32 handle
+		m_BulkOrInterruptTransfer.Hdr.Length -= 4;
+
+		// Balance of header, UsbdFlags
+		m_BulkOrInterruptTransfer.Hdr.UsbdFlags = mpBIT->Hdr.UsbdFlags;
+
+		// Align to 64 bit boundary
+		mpBIT = (_URB_BULK_OR_INTERRUPT_TRANSFER *) ((UCHAR *)mpBIT + 4);	// Skip top 32 handle
+		m_BulkOrInterruptTransfer.Hdr.Length -= 4;
+
+		// Lower 32 bits of PipeHandle
+		m_BulkOrInterruptTransfer.PipeHandle = mpBIT->PipeHandle;
+		mpBIT = (_URB_BULK_OR_INTERRUPT_TRANSFER *) ((UCHAR *)mpBIT + 4);	// Skip top 32 handle
+		m_BulkOrInterruptTransfer.Hdr.Length -= 4;
+
+		// From TransferFlags including TransferBuffer pointer
+	    CopyMemory(&m_BulkOrInterruptTransfer.TransferFlags,
+		           &mpBIT->TransferFlags,
+		           FIELD_DIFF(m_BulkOrInterruptTransfer.TransferFlags,
+		                      m_BulkOrInterruptTransfer.TransferBufferMDL));
+		mpBIT = (_URB_BULK_OR_INTERRUPT_TRANSFER *) ((UCHAR *)mpBIT + 4);	// Skip top 32 pointer
+		m_BulkOrInterruptTransfer.Hdr.Length -= 4;
+
+		// TransferBufferMDL pointer
+		m_BulkOrInterruptTransfer.TransferBufferMDL = mpBIT->TransferBufferMDL;
+		mpBIT = (_URB_BULK_OR_INTERRUPT_TRANSFER *) ((UCHAR *)mpBIT + 4);	// Skip top 32 pointer
+		m_BulkOrInterruptTransfer.Hdr.Length -= 4;
+
+		// UrbLink pointer
+		m_BulkOrInterruptTransfer.UrbLink = mpBIT->UrbLink;
+		mpBIT = (_URB_BULK_OR_INTERRUPT_TRANSFER *) ((UCHAR *)mpBIT + 4);	// Skip top 32 pointer
+		m_BulkOrInterruptTransfer.Hdr.Length -= 4;
+		
+		// _URB_HCD_AREA is 100% pointers, and it's not used. Skip it
+		mpBIT = (_URB_BULK_OR_INTERRUPT_TRANSFER *) ((UCHAR *)mpBIT + sizeof(struct _URB_HCD_AREA));
+		m_BulkOrInterruptTransfer.Hdr.Length -= sizeof(struct _URB_HCD_AREA);
+
+TRACE("~1 BulkOrInterTrans: Hdr.Length after = %d\n",m_BulkOrInterruptTransfer.Hdr.Length);
+	} else {
+	    CopyMemory(&m_BulkOrInterruptTransfer, pData, sizeof(m_BulkOrInterruptTransfer));
+	}
+    pData += pBIT->Hdr.Length;
     GrabTransferBuffer(pData, m_BulkOrInterruptTransfer.TransferBufferLength);
 
     SetPipeHandle(m_BulkOrInterruptTransfer.PipeHandle);
@@ -1559,21 +1879,21 @@ void CURB_IsochTransfer::RenderProperties(void)
 {
     CURB::RenderProperties();
 
-    AddPropLine("NumberOfPackets: 0x%08x (%d)", 
+    AddPropLine("  NumberOfPackets: 0x%08x (%d)", 
         m_pIsochTransfer->NumberOfPackets, 
         m_pIsochTransfer->NumberOfPackets);
 
     for(ULONG nPacket = 0; nPacket < m_pIsochTransfer->NumberOfPackets; ++nPacket)
     {
         PUSBD_ISO_PACKET_DESCRIPTOR pPacket = &m_pIsochTransfer->IsoPacket[nPacket];
-        AddPropLine("Packet %2d: Ofs: 0x%08x  Len: 0x%08x  Status: 0x%08x",
+        AddPropLine("  Packet %2d: Ofs: 0x%08x  Len: 0x%08x  Status: 0x%08x",
             nPacket, pPacket->Offset, pPacket->Length, pPacket->Status);
     }
 
     for(nPacket = 0; nPacket < m_nTransferBufferCnt; ++nPacket)
     {
-        AddPropLine("");
-        AddPropLine("Buffer: %2d: Len: 0x%08x (%d)", nPacket,
+        AddPropLine("  ");
+        AddPropLine("  Buffer: %2d: Len: 0x%08x (%d)", nPacket,
             m_nTransferBufferLength[nPacket], m_nTransferBufferLength[nPacket]);
         GenerateHexDump(m_pTransferBuffer[nPacket], m_nTransferBufferLength[nPacket]);
     }
@@ -1584,10 +1904,69 @@ void CURB_IsochTransfer::GrabData(PPACKET_HEADER ph)
     CURB::GrabData(ph);
     
     PUCHAR pData = (PUCHAR)(&ph->UrbHeader);
-    m_IsochTransferLen = ph->UrbHeader.Length;
     m_pIsochTransfer = (_URB_ISOCH_TRANSFER*) m_pCA->AllocBlock(m_IsochTransferLen);
-    CopyMemory(m_pIsochTransfer, pData, m_IsochTransferLen);
-    pData += m_IsochTransferLen;
+	if (g_bIsWow64) {
+		// Yuk! We're getting a 64 bit struct, and we expect a 32 bit one!
+		// Copy it section by section between pointers/handles.
+		_URB_ISOCH_TRANSFER *mpIST = (_URB_ISOCH_TRANSFER *)&ph->UrbHeader;
+TRACE("~1 IsochTransf: Hdr.Length before = %d\n",mpIST->Hdr.Length);
+
+		// First part of header including Device Handle
+	    CopyMemory(m_pIsochTransfer,
+		            mpIST,
+		            FIELD_OFFSET(_URB_ISOCH_TRANSFER, Hdr.UsbdFlags));
+		mpIST = (_URB_ISOCH_TRANSFER *) ((UCHAR *)mpIST + 4);	// Skip top 32 bits of handle
+		m_pIsochTransfer->Hdr.Length -= 4;
+
+		// Balance of header, UsbdFlags
+		m_pIsochTransfer->Hdr.UsbdFlags = mpIST->Hdr.UsbdFlags;
+
+		// Align to 64 bit boundary
+		mpIST = (_URB_ISOCH_TRANSFER *) ((UCHAR *)mpIST + 4);	// Skip top 32 bits of handle
+		m_pIsochTransfer->Hdr.Length -= 4;
+
+		// Lower 32 bits of PipeHandle
+		m_pIsochTransfer->PipeHandle = mpIST->PipeHandle;
+		mpIST = (_URB_ISOCH_TRANSFER *) ((UCHAR *)mpIST + 4);	// Skip top 32 bits of handle
+		m_pIsochTransfer->Hdr.Length -= 4;
+
+		// From TransferFlags including TransferBuffer pointer
+	    CopyMemory(&m_pIsochTransfer->TransferFlags,
+		           &mpIST->TransferFlags,
+		           FIELD_DIFF(m_pIsochTransfer->TransferFlags,
+		                      m_pIsochTransfer->TransferBufferMDL));
+		mpIST = (_URB_ISOCH_TRANSFER *) ((UCHAR *)mpIST + 4);	// Skip top 32 bits of pointer
+		m_pIsochTransfer->Hdr.Length -= 4;
+
+		// TransferBufferMDL pointer
+		m_pIsochTransfer->TransferBufferMDL = mpIST->TransferBufferMDL;
+		mpIST = (_URB_ISOCH_TRANSFER *) ((UCHAR *)mpIST + 4);	// Skip top 32 bits of pointer
+		m_pIsochTransfer->Hdr.Length -= 4;
+
+		// UrbLink pointer
+		m_pIsochTransfer->UrbLink = mpIST->UrbLink;
+		mpIST = (_URB_ISOCH_TRANSFER *) ((UCHAR *)mpIST + 4);	// Skip top 32 bits of pointer
+		m_pIsochTransfer->Hdr.Length -= 4;
+		
+		// _URB_HCD_AREA is 100% pointers, and it's not used. Skip it
+		mpIST = (_URB_ISOCH_TRANSFER *) ((UCHAR *)mpIST + sizeof(struct _URB_HCD_AREA));
+		m_pIsochTransfer->Hdr.Length -= sizeof(struct _URB_HCD_AREA);
+
+		// From StartFrame to IsoPacket[m_pIsochTransfer.NumberOfPackets]
+	    CopyMemory(&m_pIsochTransfer->StartFrame,
+		           &mpIST->StartFrame,
+		           FIELD_DIFF(m_pIsochTransfer->StartFrame,
+		                      m_pIsochTransfer->IsoPacket[mpIST->NumberOfPackets]));
+
+	    m_IsochTransferLen = FIELD_OFFSET(_URB_ISOCH_TRANSFER, IsoPacket[0])
+		      + mpIST->NumberOfPackets * sizeof(USBD_ISO_PACKET_DESCRIPTOR);
+TRACE("~1 IsochTransf: Hdr.Length after = %d\n",m_pIsochTransfer->Hdr.Length);
+	} else {
+
+	    CopyMemory(m_pIsochTransfer, pData, m_IsochTransferLen);
+	    m_IsochTransferLen = ph->UrbHeader.Length;
+	}
+    pData += ph->UrbHeader.Length;;
     
     // special grabbing for isoch transfer data...
     GrabBytes(pData, &m_nTransferBufferCnt, sizeof(m_nTransferBufferCnt));
@@ -1653,6 +2032,7 @@ void CArrayURB::Serialize(CArchive &ar)
 BOOL CArrayURB::UnserializeURB(PPACKET_HEADER ph)
 {
 	CURB *pURB = NULL;
+	TRACE("UnserializeURB(): function %d (0x%08x)\n", ph->UrbHeader.Function, ph->UrbHeader.Function);
 	switch(ph->UrbHeader.Function)
 	{
 	case URB_FUNCTION_SELECT_CONFIGURATION:
@@ -1789,7 +2169,7 @@ void CMyDWORDArray::RemoveDuplicates(void)
 //** end of URB.cpp ******************************************************
 /*************************************************************************
 
-  $Log: not supported by cvs2svn $
+  $Log: /CD/Entertainment/Tools/Snoopy/SnoopyPro/URB.cpp $
  * 
  * 6     10/07/02 2:52p Rbosa
  * 

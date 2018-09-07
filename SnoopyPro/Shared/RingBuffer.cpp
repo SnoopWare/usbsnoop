@@ -26,8 +26,10 @@ void CRingBuffer::Initialize(void *pBase, long nBufferSize)
 bool CRingBuffer::WriteBytes(void *pData, long nBytes)
 {
     long p1len, p2len;
+DbgPrint("~1 USBSnpys - WriteBytes, nBytes %d, m_nBytes %d\n",nBytes,m_nBytes);
     if(nBytes > GetFreeSize())
     {
+DbgPrint("~1 USBSnpys - FreeSize %d, returning false\n",GetFreeSize());
         return false;
     }
     
@@ -44,6 +46,7 @@ bool CRingBuffer::WriteBytes(void *pData, long nBytes)
     m_nInPtr = MYMOD(m_nInPtr, m_nTotalBytes);
     
     InterlockedExchangeAdd(&m_nBytes, nBytes);
+DbgPrint("~1 USBSnpys - m_nBytes now %d\n",m_nBytes);
     
     return true;
 }
@@ -76,6 +79,7 @@ bool CRingBuffer::ReadBytes(void *pData, long nBytes)
 bool CRingBuffer::PeekBytes(void *pData, long nBytes)
 {
     long p1len, p2len;
+DbgPrint("~1 USBSnpys - PeekBytes, nBytes %d, m_nBytes %d\n",nBytes,m_nBytes);
     if(nBytes > m_nBytes)
     {
         // not enough data in buffer
@@ -106,7 +110,10 @@ bool CRingBuffer::FlushBuffer(void)
 //** end of RingBuffer.cpp ***********************************************
 /*************************************************************************
 
-  $Log: not supported by cvs2svn $
+  $Log: RingBuffer.cpp,v $
+  Revision 1.1  2002/08/14 23:00:58  rbosa
+  shared code between the application and driver and drivers themselves...
+
  * 
  * 1     1/25/02 2:44p Rbosa
 

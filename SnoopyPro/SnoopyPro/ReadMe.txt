@@ -1,5 +1,5 @@
 ==========================================================================
-SnoopyPro 0.22 Readme.txt
+SnoopyPro 0.26g Readme.txt
 ==========================================================================
 
 
@@ -47,6 +47,11 @@ A: Yes.
 ==========================================================================
 RECENT CHANGES:
 ==========================================================================
+
+0.26g	[Graeme W. Gill]
+	Modified to create universal binary that works on 32bit and 64bit.
+	Increased packet limits.
+	Changed report formatting slightly.
 
 0.22:
 [X] Bumped version info to 0.22, fixed a bug in the exporter where it

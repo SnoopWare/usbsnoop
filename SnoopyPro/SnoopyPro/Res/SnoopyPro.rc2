@@ -10,13 +10,19 @@
 /////////////////////////////////////////////////////////////////////////////
 // Add manually edited resources here...
 
-BIN_USBSNOOPYR      DRVR            "..\USBSnoop\Release\USBSnoop.sys"
-BIN_USBSNPYSR       DRVR            "..\USBSnpys\Release\USBSnpys.sys"
-BIN_USBSNPYVR       DRVR            "..\USBSnpyV\Release\USBSnpyV.vxd"
+BIN_USBSNOOPYR      DRVR            "..\\USBSnoop\\Release\\USBSnoop.sys"
+BIN_USBSNPYSR       DRVR            "..\\USBSnpys\\Release\\USBSnpys.sys"
+BIN_USBSNOOPY64R    DRVR            "..\\USBSnoop\\objfre_wnet_amd64\\amd64\\USBSnoop.sys"
+BIN_USBSNPYS64R     DRVR            "..\\USBSnpys\\objfre_wnet_amd64\\amd64\\USBSnpys.sys"
 
-BIN_USBSNOOPYD      DRVR            "..\USBSnoop\Debug\USBSnoop.sys"
-BIN_USBSNPYSD       DRVR            "..\USBSnpys\Debug\USBSnpys.sys"
-BIN_USBSNPYVD       DRVR            "..\USBSnpyV\Debug\USBSnpyV.vxd"
+//BIN_USBSNPYVR       DRVR          "..\\USBSnpyV\\Release\\USBSnpyV.vxd"
+
+BIN_USBSNOOPYD      DRVR            "..\\USBSnoop\\Debug\\USBSnoop.sys"
+BIN_USBSNPYSD       DRVR            "..\\USBSnpys\\Debug\\USBSnpys.sys"
+BIN_USBSNOOPY64D    DRVR            "..\\USBSnoop\\objchk_wnet_amd64\\amd64\\USBSnoop.sys"
+BIN_USBSNPYS64D     DRVR            "..\\USBSnpys\\objchk_wnet_amd64\\amd64\\USBSnpys.sys"
+
+//BIN_USBSNPYVD       DRVR          "..\\USBSnpyV\\Debug\\USBSnpyV.vxd"
 
 README              TEXT            "Readme.txt"
 

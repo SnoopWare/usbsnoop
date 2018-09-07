@@ -26,6 +26,9 @@ public:
 
 private:
     unsigned char *m_pBase;
+#ifndef _WIN64
+    ULONG pack2;
+#endif
     long m_nBytes;
     long m_nTotalBytes;
     long m_nInPtr;
@@ -38,7 +41,10 @@ private:
 //** end of RingBuffer.h *************************************************
 /*************************************************************************
 
-  $Log: not supported by cvs2svn $
+  $Log: RingBuffer.h,v $
+  Revision 1.1  2002/08/14 23:00:58  rbosa
+  shared code between the application and driver and drivers themselves...
+
  * 
  * 1     1/25/02 2:44p Rbosa
 

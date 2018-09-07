@@ -16,6 +16,20 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+// GWG
+void gwg_trace(const char *format, ...) {
+	FILE *fp;
+	va_list args;
+
+	va_start(args, format);
+	if ((fp = fopen("log.txt", "a+")) != NULL) {
+		vfprintf(fp, format, args);
+		fclose(fp);
+	}
+	va_end(args);
+}
+// GWG
+
 //////////////////////////////////////////////////////////////////////////
 // CSnoopyProApp
 
@@ -267,6 +281,7 @@ void CSnoopyProApp::DeinitializeWorkTicks(void)
     SetPercent(0);
 }
 
+// This is called by the MFC despatch loop ?
 BOOL CSnoopyProApp::OnIdle(LONG lCount) 
 {
     CWinApp::OnIdle(lCount);
@@ -301,6 +316,8 @@ BOOL CSnoopyProApp::OnIdle(LONG lCount)
         m_DocsNeedingUpdate.RemoveAt(pos);
     }
 
+// ~~99
+Sleep(100);
     // return zero for enough time used, non-zero for more processing
     return nActiveDocs;
 }

@@ -33,6 +33,7 @@ public:
 
 // private:
 	BOOL m_bUseMultiSZ;
+	BOOL m_bIsVistaOrLater;
 	HDEVINFO m_devInfo;
 	SP_DEVINFO_DATA m_devInfoData;
 	int m_nDevIndex;
@@ -46,7 +47,10 @@ public:
 //** end of SetupDIMgr.h *************************************************
 /*************************************************************************
 
-  $Log: not supported by cvs2svn $
+  $Log: SetupDIMgr.h,v $
+  Revision 1.1  2002/08/14 23:03:35  rbosa
+  the application to capture urbs and display them...
+
  * 
  * 2     1/25/02 2:48p Rbosa
  * This is a good state to check in...not everything is implemented, but

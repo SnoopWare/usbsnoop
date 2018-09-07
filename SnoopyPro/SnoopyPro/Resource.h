@@ -25,10 +25,14 @@
 #define IDS_ABOUT_URL                   202
 #define BIN_USBSNOOPYR                  500
 #define BIN_USBSNPYSR                   501
-#define BIN_USBSNPYVR                   502
+#define BIN_USBSNOOPY64R                502
+#define BIN_USBSNPYS64R                 503
+#define BIN_USBSNPYVR                   504
 #define BIN_USBSNOOPYD                  600
 #define BIN_USBSNPYSD                   601
-#define BIN_USBSNPYVD                   602
+#define BIN_USBSNOOPY64D                602
+#define BIN_USBSNPYS64D                 603
+#define BIN_USBSNPYVD                   604
 #define IDS_COL_VIDPID                  1000
 #define IDC_DEVICES                     1001
 #define IDS_COL_FILTERINSTALLED         1001
@@ -61,6 +65,8 @@
 #define IDS_FILTERFILENAME              1020
 #define IDS_BRIDGEFILENAME_2K           1021
 #define IDS_BRIDGEFILENAME_9X           1022
+#define IDS_FILTERFILENAME64            1023
+#define IDS_BRIDGEFILENAME_2K64         1024
 #define IDS_FILTERNAME_9X               1030
 #define IDS_FILTERNAME_2K               1031
 #define IDS_FILTERSERVICEDESCRIPTION    1032

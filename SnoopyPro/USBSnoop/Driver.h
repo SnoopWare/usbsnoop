@@ -83,7 +83,10 @@ typedef struct USBSNOOP_GLOBALS
 //** end of Driver.h *****************************************************
 /*************************************************************************
 
-  $Log: not supported by cvs2svn $
+  $Log: Driver.h,v $
+  Revision 1.1  2002/08/14 23:06:08  rbosa
+  the WDM driver for snooping USB transactions (filter driver)
+
  * 
  * 1     1/25/02 2:45p Rbosa
 

@@ -28,9 +28,9 @@
 #define VER_PRODUCTVERSION_STR      _VERSION_STR_
 #define VER_PRODUCTVERSION_W        _VERSION_WORD_
 #define VER_PRODUCTVERSION_DW       _VERSION_DWORD_
-#define VER_FILEDESCRIPTION_STR     "USB filter for traffic monitoring"
-#define VER_INTERNALNAME_STR        "UsbSnoop.sys"
-#define VER_ORIGINALFILENAME_STR    "UsbSnoop.sys"
+#define VER_FILEDESCRIPTION_STR     "USB filter for traffic monitoring (64)"
+#define VER_INTERNALNAME_STR        "UsbSnoop64.sys"
+#define VER_ORIGINALFILENAME_STR    "UsbSnoop64.sys"
 
 #include "common.ver"
 

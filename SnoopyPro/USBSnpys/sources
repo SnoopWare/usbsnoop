@@ -1,0 +1,8 @@
+TARGETNAME = USBSnpys
+TARGETPATH = obj 
+TARGETTYPE = DRIVER
+#USER_C_FLAGS = /O2
+TARGETLIBS = $(DDK_LIB_PATH)\usbd.lib
+INCLUDES = ..\Shared
+C_DEFINES = /DDRIVER
+SOURCES = DriverEntry.cpp RingBuffer.cpp USBSnpys.rc

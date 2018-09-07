@@ -67,6 +67,11 @@ protected:
 //** end of Exporter.h ***************************************************
 /*************************************************************************
 
-  $Log: not supported by cvs2svn $
+  $Log: Exporter.h,v $
+  Revision 1.1  2002/10/05 01:10:43  rbosa
+  Added the basic framework for exporting a log into an XML file. The
+  output written is fairly poor. This checkin is mainly to get the
+  framework in place and get feedback on it.
+
 
 *************************************************************************/
