@@ -203,7 +203,7 @@ BOOL CSetupDIMgr::AddLowerFilter(LPCTSTR sFilterName)
 				{
 					TRACE("Got Reg Property\n");
 					if(!sLowerFilters.IsEmpty())
-						_tcscat(sServiceName, ",");
+						_tcscat(sServiceName, _T(","));
 					_tcscat(sServiceName, sLowerFilters);
 					TRACE("Service name '%s'\n",sServiceName);
 				}
@@ -305,7 +305,7 @@ BOOL CSetupDIMgr::SetRegProperty(LPCTSTR sValue, DWORD dwWhich, BOOL bPossiblyMu
 			for(int i = 0; i < size; i++, sScanner++)
 			{
 				if(*sScanner == _T(','))
-					*sScanner = _T(0x00);
+					*sScanner = _T('\0');
 			}
 		}
 
@@ -489,12 +489,12 @@ BOOL CSetupDIMgr::InstallService(LPCTSTR sFilterServiceName, LPCTSTR sFilterBina
 		if (g_bIsWow64) {
 		    TCHAR kpath[MAX_PATH];
 			HKEY hk;
-			strcpy(kpath, "SYSTEM\\CurrentControlSet\\services");
+			_tcscpy(kpath, _T("SYSTEM\\CurrentControlSet\\services"));
     		PathAppend(kpath, sFilterServiceName);
 			if (ERROR_SUCCESS == RegOpenKeyEx(HKEY_LOCAL_MACHINE, kpath, 0, KEY_ALL_ACCESS, &hk)) {
-				if (ERROR_SUCCESS == RegQueryValueEx(hk, "WOW64", NULL, NULL, NULL, NULL)) {
-					if (ERROR_SUCCESS == RegDeleteValue(hk, "WOW64")) {
-						TRACE("Removed key '%s\\WOW64",kpath);
+				if (ERROR_SUCCESS == RegQueryValueEx(hk, _T("WOW64"), NULL, NULL, NULL, NULL)) {
+					if (ERROR_SUCCESS == RegDeleteValue(hk, _T("WOW64"))) {
+						TRACE("Removed key '%s\\WOW64", kpath);
 					}
 				}
 				RegCloseKey(hk);

@@ -36,7 +36,7 @@ void CMyMemFile::Write(const void* lpBuf, UINT nCount)
     m_dwLength += nCount;
 }
 
-LONG CMyMemFile::Seek(LONG lOff, UINT nFrom)
+ULONGLONG CMyMemFile::Seek(LONG lOff, UINT nFrom)
 {
     switch(nFrom)
     {
@@ -64,7 +64,7 @@ LONG CMyMemFile::Seek(LONG lOff, UINT nFrom)
     return m_dwLength;
 }
 
-DWORD CMyMemFile::GetLength() const
+ULONGLONG CMyMemFile::GetLength() const
 {
     return m_dwLength;
 }
@@ -78,7 +78,7 @@ UINT CMyMemFile::GetBufferPtr(UINT nCommand, UINT, void**, void**)
     
 // all other functions are not supported anymore...
 
-DWORD CMyMemFile::GetPosition() const
+ULONGLONG CMyMemFile::GetPosition() const
 {
     AfxThrowNotSupportedException();
     return 0;

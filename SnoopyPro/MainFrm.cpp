@@ -89,7 +89,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		| CBRS_GRIPPER | CBRS_TOOLTIPS | CBRS_FLYBY | CBRS_SIZE_DYNAMIC) ||
 		!m_wndToolBar.LoadToolBar(IDR_MAINFRAME))
 	{
-		TRACE0("Failed to create toolbar\n");
+		TRACE("Failed to create toolbar\n");
 		return -1;      // fail to create
 	}
 
@@ -97,7 +97,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		!m_wndStatusBar.SetIndicators(indicators,
 		  sizeof(indicators)/sizeof(UINT)))
 	{
-		TRACE0("Failed to create status bar\n");
+		TRACE("Failed to create status bar\n");
 		return -1;      // fail to create
 	}
 

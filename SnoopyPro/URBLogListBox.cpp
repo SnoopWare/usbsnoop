@@ -91,10 +91,10 @@ void CURBLogListBox::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
    
    // Draw the text.
    CString S;
-   S.Format("%08x", lpszText);
+   S.Format(_T("%08x"), lpszText);
    dc.DrawText(
        S,
-       strlen(S),
+       S.GetLength(),
        &lpDrawItemStruct->rcItem,
        DT_CENTER|DT_SINGLELINE|DT_VCENTER);
    
@@ -117,7 +117,7 @@ void CURBLogListBox::MeasureItem(LPMEASUREITEMSTRUCT lpMeasureItemStruct)
     CDC*    pDC = GetDC();
     
     CString S;
-    S.Format("%08x", lpszText);
+    S.Format(_T("%08x"), lpszText);
     sz = pDC->GetTextExtent(S);
     
     ReleaseDC(pDC);

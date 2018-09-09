@@ -15,16 +15,16 @@ public:
     
     virtual UINT Read(void* lpBuf, UINT nCount);
     virtual void Write(const void* lpBuf, UINT nCount);
-    virtual LONG Seek(LONG lOff, UINT nFrom);
-    virtual DWORD GetLength() const;
+    virtual ULONGLONG Seek(LONG lOff, UINT nFrom);
+    virtual ULONGLONG GetLength() const;
     
 protected:
     PBYTE m_pData;
-    DWORD m_dwLength;
+    ULONGLONG m_dwLength;
 
     // all other functions are not supported anymore...
 public:
-    virtual DWORD GetPosition() const;
+    virtual ULONGLONG GetPosition() const;
     virtual void SetFilePath(LPCTSTR);
     
     // Operations

@@ -125,48 +125,48 @@ class InitURBFCN
 public:
     InitURBFCN()
     {
-        URBFCN(URB_FUNCTION_SELECT_CONFIGURATION, "SELECT_CONFIGURATION", IS_SELECT | IS_DIR_IN | IS_DIR_OUT);
-        URBFCN(URB_FUNCTION_SELECT_INTERFACE, "SELECT_INTERFACE", IS_SELECT | IS_DIR_IN | IS_DIR_OUT);
-        URBFCN(URB_FUNCTION_ABORT_PIPE, "ABORT_PIPE", 0);
-        URBFCN(URB_FUNCTION_TAKE_FRAME_LENGTH_CONTROL, "TAKE_FRAME_LENGTH_CONTROL", 0);
-        URBFCN(URB_FUNCTION_RELEASE_FRAME_LENGTH_CONTROL, "RELEASE_FRAME_LENGTH_CONTROL", 0);
-        URBFCN(URB_FUNCTION_GET_FRAME_LENGTH, "GET_FRAME_LENGTH", IS_DIR_IN);
-        URBFCN(URB_FUNCTION_SET_FRAME_LENGTH, "SET_FRAME_LENGTH", IS_DIR_OUT);
-        URBFCN(URB_FUNCTION_GET_CURRENT_FRAME_NUMBER, "GET_CURRENT_FRAME_NUMBER", 0);
-        URBFCN(URB_FUNCTION_CONTROL_TRANSFER, "CONTROL_TRANSFER", IS_CONTROL);
-        URBFCN(URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER, "BULK_OR_INTERRUPT_TRANSFER", IS_BULK);
-        URBFCN(URB_FUNCTION_ISOCH_TRANSFER, "ISOCH_TRANSFER", 0);
-        URBFCN(URB_FUNCTION_RESET_PIPE, "RESET_PIPE", 0);
-        URBFCN(URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE, "GET_DESCRIPTOR_FROM_DEVICE", IS_DIR_IN);
-        URBFCN(URB_FUNCTION_GET_DESCRIPTOR_FROM_ENDPOINT, "GET_DESCRIPTOR_FROM_ENDPOINT", IS_DIR_IN);
-        URBFCN(URB_FUNCTION_GET_DESCRIPTOR_FROM_INTERFACE, "GET_DESCRIPTOR_FROM_INTERFACE", IS_DIR_IN);
-        URBFCN(URB_FUNCTION_SET_DESCRIPTOR_TO_DEVICE, "SET_DESCRIPTOR_TO_DEVICE", IS_DIR_OUT);
-        URBFCN(URB_FUNCTION_SET_DESCRIPTOR_TO_ENDPOINT, "SET_DESCRIPTOR_TO_ENDPOINT", IS_DIR_OUT);
-        URBFCN(URB_FUNCTION_SET_DESCRIPTOR_TO_INTERFACE, "SET_DESCRIPTOR_TO_INTERFACE", IS_DIR_OUT);
-        URBFCN(URB_FUNCTION_SET_FEATURE_TO_DEVICE, "SET_FEATURE_TO_DEVICE", IS_DIR_OUT);
-        URBFCN(URB_FUNCTION_SET_FEATURE_TO_INTERFACE, "SET_FEATURE_TO_INTERFACE", IS_DIR_OUT);
-        URBFCN(URB_FUNCTION_SET_FEATURE_TO_ENDPOINT, "SET_FEATURE_TO_ENDPOINT", IS_DIR_OUT);
-        URBFCN(URB_FUNCTION_SET_FEATURE_TO_OTHER, "SET_FEATURE_TO_OTHER", IS_DIR_OUT);
-        URBFCN(URB_FUNCTION_CLEAR_FEATURE_TO_DEVICE, "CLEAR_FEATURE_TO_DEVICE", IS_DIR_OUT);
-        URBFCN(URB_FUNCTION_CLEAR_FEATURE_TO_INTERFACE, "CLEAR_FEATURE_TO_INTERFACE", IS_DIR_OUT);
-        URBFCN(URB_FUNCTION_CLEAR_FEATURE_TO_ENDPOINT, "CLEAR_FEATURE_TO_ENDPOINT", IS_DIR_OUT);
-        URBFCN(URB_FUNCTION_CLEAR_FEATURE_TO_OTHER, "CLEAR_FEATURE_TO_OTHER", IS_DIR_OUT);
-        URBFCN(URB_FUNCTION_GET_STATUS_FROM_DEVICE, "GET_STATUS_FROM_DEVICE", IS_DIR_IN);
-        URBFCN(URB_FUNCTION_GET_STATUS_FROM_INTERFACE, "GET_STATUS_FROM_INTERFACE", IS_DIR_IN);
-        URBFCN(URB_FUNCTION_GET_STATUS_FROM_ENDPOINT, "GET_STATUS_FROM_ENDPOINT", IS_DIR_IN);
-        URBFCN(URB_FUNCTION_GET_STATUS_FROM_OTHER, "GET_STATUS_FROM_OTHER", IS_DIR_IN);
-        URBFCN(URB_FUNCTION_RESERVED0, "RESERVED0", 0);
-        URBFCN(URB_FUNCTION_VENDOR_DEVICE, "VENDOR_DEVICE", 0);
-        URBFCN(URB_FUNCTION_VENDOR_INTERFACE, "VENDOR_INTERFACE", 0);
-        URBFCN(URB_FUNCTION_VENDOR_ENDPOINT, "VENDOR_ENDPOINT", 0);
-        URBFCN(URB_FUNCTION_VENDOR_OTHER, "VENDOR_OTHER", 0);
-        URBFCN(URB_FUNCTION_CLASS_DEVICE, "CLASS_DEVICE", 0);
-        URBFCN(URB_FUNCTION_CLASS_INTERFACE, "CLASS_INTERFACE", 0);
-        URBFCN(URB_FUNCTION_CLASS_ENDPOINT, "CLASS_ENDPOINT", 0);
-        URBFCN(URB_FUNCTION_CLASS_OTHER, "CLASS_OTHER", 0);
-        URBFCN(URB_FUNCTION_RESERVED, "RESERVED", 0);
-        URBFCN(URB_FUNCTION_GET_CONFIGURATION, "GET_CONFIGURATION", IS_DIR_IN);
-        URBFCN(URB_FUNCTION_GET_INTERFACE, "GET_INTERFACE", IS_DIR_IN);
+        URBFCN(URB_FUNCTION_SELECT_CONFIGURATION, _T("SELECT_CONFIGURATION"), IS_SELECT | IS_DIR_IN | IS_DIR_OUT);
+        URBFCN(URB_FUNCTION_SELECT_INTERFACE, _T("SELECT_INTERFACE"), IS_SELECT | IS_DIR_IN | IS_DIR_OUT);
+        URBFCN(URB_FUNCTION_ABORT_PIPE, _T("ABORT_PIPE"), 0);
+        URBFCN(URB_FUNCTION_TAKE_FRAME_LENGTH_CONTROL, _T("TAKE_FRAME_LENGTH_CONTROL"), 0);
+        URBFCN(URB_FUNCTION_RELEASE_FRAME_LENGTH_CONTROL, _T("RELEASE_FRAME_LENGTH_CONTROL"), 0);
+        URBFCN(URB_FUNCTION_GET_FRAME_LENGTH, _T("GET_FRAME_LENGTH"), IS_DIR_IN);
+        URBFCN(URB_FUNCTION_SET_FRAME_LENGTH, _T("SET_FRAME_LENGTH"), IS_DIR_OUT);
+        URBFCN(URB_FUNCTION_GET_CURRENT_FRAME_NUMBER, _T("GET_CURRENT_FRAME_NUMBER"), 0);
+        URBFCN(URB_FUNCTION_CONTROL_TRANSFER, _T("CONTROL_TRANSFER"), IS_CONTROL);
+        URBFCN(URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER, _T("BULK_OR_INTERRUPT_TRANSFER"), IS_BULK);
+        URBFCN(URB_FUNCTION_ISOCH_TRANSFER, _T("ISOCH_TRANSFER"), 0);
+        URBFCN(URB_FUNCTION_RESET_PIPE, _T("RESET_PIPE"), 0);
+        URBFCN(URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE, _T("GET_DESCRIPTOR_FROM_DEVICE"), IS_DIR_IN);
+        URBFCN(URB_FUNCTION_GET_DESCRIPTOR_FROM_ENDPOINT, _T("GET_DESCRIPTOR_FROM_ENDPOINT"), IS_DIR_IN);
+        URBFCN(URB_FUNCTION_GET_DESCRIPTOR_FROM_INTERFACE, _T("GET_DESCRIPTOR_FROM_INTERFACE"), IS_DIR_IN);
+        URBFCN(URB_FUNCTION_SET_DESCRIPTOR_TO_DEVICE, _T("SET_DESCRIPTOR_TO_DEVICE"), IS_DIR_OUT);
+        URBFCN(URB_FUNCTION_SET_DESCRIPTOR_TO_ENDPOINT, _T("SET_DESCRIPTOR_TO_ENDPOINT"), IS_DIR_OUT);
+        URBFCN(URB_FUNCTION_SET_DESCRIPTOR_TO_INTERFACE, _T("SET_DESCRIPTOR_TO_INTERFACE"), IS_DIR_OUT);
+        URBFCN(URB_FUNCTION_SET_FEATURE_TO_DEVICE, _T("SET_FEATURE_TO_DEVICE"), IS_DIR_OUT);
+        URBFCN(URB_FUNCTION_SET_FEATURE_TO_INTERFACE, _T("SET_FEATURE_TO_INTERFACE"), IS_DIR_OUT);
+        URBFCN(URB_FUNCTION_SET_FEATURE_TO_ENDPOINT, _T("SET_FEATURE_TO_ENDPOINT"), IS_DIR_OUT);
+        URBFCN(URB_FUNCTION_SET_FEATURE_TO_OTHER, _T("SET_FEATURE_TO_OTHER"), IS_DIR_OUT);
+        URBFCN(URB_FUNCTION_CLEAR_FEATURE_TO_DEVICE, _T("CLEAR_FEATURE_TO_DEVICE"), IS_DIR_OUT);
+        URBFCN(URB_FUNCTION_CLEAR_FEATURE_TO_INTERFACE, _T("CLEAR_FEATURE_TO_INTERFACE"), IS_DIR_OUT);
+        URBFCN(URB_FUNCTION_CLEAR_FEATURE_TO_ENDPOINT, _T("CLEAR_FEATURE_TO_ENDPOINT"), IS_DIR_OUT);
+        URBFCN(URB_FUNCTION_CLEAR_FEATURE_TO_OTHER, _T("CLEAR_FEATURE_TO_OTHER"), IS_DIR_OUT);
+        URBFCN(URB_FUNCTION_GET_STATUS_FROM_DEVICE, _T("GET_STATUS_FROM_DEVICE"), IS_DIR_IN);
+        URBFCN(URB_FUNCTION_GET_STATUS_FROM_INTERFACE, _T("GET_STATUS_FROM_INTERFACE"), IS_DIR_IN);
+        URBFCN(URB_FUNCTION_GET_STATUS_FROM_ENDPOINT, _T("GET_STATUS_FROM_ENDPOINT"), IS_DIR_IN);
+        URBFCN(URB_FUNCTION_GET_STATUS_FROM_OTHER, _T("GET_STATUS_FROM_OTHER"), IS_DIR_IN);
+        URBFCN(URB_FUNCTION_RESERVED0, _T("RESERVED0"), 0);
+        URBFCN(URB_FUNCTION_VENDOR_DEVICE, _T("VENDOR_DEVICE"), 0);
+        URBFCN(URB_FUNCTION_VENDOR_INTERFACE, _T("VENDOR_INTERFACE"), 0);
+        URBFCN(URB_FUNCTION_VENDOR_ENDPOINT, _T("VENDOR_ENDPOINT"), 0);
+        URBFCN(URB_FUNCTION_VENDOR_OTHER, _T("VENDOR_OTHER"), 0);
+        URBFCN(URB_FUNCTION_CLASS_DEVICE, _T("CLASS_DEVICE"), 0);
+        URBFCN(URB_FUNCTION_CLASS_INTERFACE, _T("CLASS_INTERFACE"), 0);
+        URBFCN(URB_FUNCTION_CLASS_ENDPOINT, _T("CLASS_ENDPOINT"), 0);
+        URBFCN(URB_FUNCTION_CLASS_OTHER, _T("CLASS_OTHER"), 0);
+        URBFCN(URB_FUNCTION_RESERVED, _T("RESERVED"), 0);
+        URBFCN(URB_FUNCTION_GET_CONFIGURATION, _T("GET_CONFIGURATION"), IS_DIR_IN);
+        URBFCN(URB_FUNCTION_GET_INTERFACE, _T("GET_INTERFACE"), IS_DIR_IN);
     }
 
     LPCTSTR sString[URB_FUNCTION_LAST];
@@ -248,7 +248,7 @@ void CURB::Serialize(CArchive &ar)
 
 void CURB::GetSequenceNo(LPTSTR sBuffer)
 {
-    _stprintf(sBuffer, "%d", m_dwSequence);
+    _stprintf(sBuffer, _T("%d"), m_dwSequence);
 }
 
 DWORD CURB::GetSequenceNr(void)
@@ -267,28 +267,28 @@ void CURB::GetDirectionStr(LPTSTR sBuffer)
 {
     if(IsDirectionIn() && IsDirectionOut())
     {
-        _tcscpy(sBuffer, "inout");
+        _tcscpy(sBuffer, _T("inout"));
     }
     else if(IsDirectionIn())
     {
-        _tcscpy(sBuffer, "in");
+        _tcscpy(sBuffer, _T("in"));
     }
     else if(IsDirectionOut())
     {
-        _tcscpy(sBuffer, "out");
+        _tcscpy(sBuffer, _T("out"));
     }
     else
     {
-        _tcscpy(sBuffer, "???");
+        _tcscpy(sBuffer, _T("???"));
     }
 
     if(IsComingUp())
     {
-        _tcscat(sBuffer, " up");
+        _tcscat(sBuffer, _T(" up"));
     }
     else
     {
-        _tcscat(sBuffer, " down");
+        _tcscat(sBuffer, _T(" down"));
     }
 }
 
@@ -301,11 +301,11 @@ void CURB::GetEndpointStr(LPTSTR sBuffer)
 {
     if(URBFLAGS_ENDPOINTKNOWN & m_dwFlags)
     {
-        _stprintf(sBuffer, "0x%02x", m_cEndpoint);
+        _stprintf(sBuffer, _T("0x%02x"), m_cEndpoint);
     }
     else
     {
-        _tcscpy(sBuffer, "n/a");
+        _tcscpy(sBuffer, _T("n/a"));
     }
 }
 
@@ -344,7 +344,7 @@ DWORD CURB::GetLinkNo(void)
 
 void CURB::GetDataDumpStr(LPTSTR sBuffer)
 {
-    _tcscpy(sBuffer, "");
+    _tcscpy(sBuffer, _T(""));
 }
 
 int CURB::GetPacketCount(void)
@@ -367,7 +367,7 @@ PUCHAR CURB::GetPayload(int nPacket)
 LPCTSTR CURB::GetPayloadXML(int nPacket, LPTSTR sBuffer)
 {
     ASSERT((-1 == nPacket) || (0 == nPacket));
-    _tcscpy(sBuffer, "");
+    _tcscpy(sBuffer, _T(""));
     return sBuffer;
 }
 
@@ -406,7 +406,7 @@ int CURB::GetExpandSize(void)
         m_arRenderedLines.RemoveAll();
         ASSERT(NULL != m_pCA);
         RenderProperties();
-	    AddPropLine("  ");
+	    AddPropLine(_T("  "));
         m_nExpandedSize = m_arRenderedLines.GetSize();
     }
 
@@ -418,7 +418,7 @@ void CURB::AddPropLine(LPCTSTR sFormat, ...)
 {
     if(MAX_LINES_PER_URB == m_arRenderedLines.GetSize())
     {
-        m_arRenderedLines.Add(m_pCA->AllocLine("...", 3));
+        m_arRenderedLines.Add(m_pCA->AllocLine(_T("..."), 3));
     }
     if(MAX_LINES_PER_URB < m_arRenderedLines.GetSize())
     {
@@ -435,9 +435,9 @@ void CURB::AddPropLine(LPCTSTR sFormat, ...)
 
 void CURB::RenderProperties(void)
 {
-    AddPropLine("  URB Header (length: %d)", m_PH.UrbHeader.Length);
-    AddPropLine("  SequenceNumber: %d", m_dwSequence);
-    AddPropLine("  Function: %04x (%s)", m_nFunction, GetFunctionStr());
+    AddPropLine(_T("  URB Header (length: %d)"), m_PH.UrbHeader.Length);
+    AddPropLine(_T("  SequenceNumber: %d"), m_dwSequence);
+    AddPropLine(_T("  Function: %04x (%s)"), m_nFunction, GetFunctionStr());
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -504,7 +504,7 @@ BOOL CURB::IsPipeHandleAvailable(void)
 
 void PokeHexNumber(LPTSTR &sBuffer, ULONG uNumber, int nDigits)
 {
-    static TCHAR s_HexDigit[] = "0123456789abcdef";
+    static TCHAR s_HexDigit[] = _T("0123456789abcdef");
 
     while(0 < nDigits)
     {
@@ -688,7 +688,11 @@ LPCTSTR CURB_TransferBuffer::GetPayloadXML(int nPacket, LPTSTR sBuffer)
     
     for(int nIndex = 0; nIndex < m_TransferLength; ++nIndex)
     {
-        sprintf(&sBuffer[nIndex << 1], "%02x", m_TransferBuffer[nIndex]);
+#ifdef UNICODE
+		swprintf(&sBuffer[nIndex << 1], _T("%02x"), m_TransferBuffer[nIndex]);
+#else
+		sprintf(&sBuffer[nIndex << 1], _T("%02x"), m_TransferBuffer[nIndex]);
+#endif
     }
     return sBuffer;
 }
@@ -701,7 +705,7 @@ void CURB_TransferBuffer::GetDataDumpStr(LPTSTR sBuffer)
     }
     else
     {
-        _tcscpy(sBuffer, "-");
+        _tcscpy(sBuffer, _T("-"));
     }
 }
 
@@ -714,14 +718,14 @@ void CURB_TransferBuffer::RenderProperties(void)
 {
     if(m_TransferBuffer)
     {
-        AddPropLine("");
-        AddPropLine("  TransferBuffer: 0x%08x (%d) length", m_TransferLength, m_TransferLength);
+        AddPropLine(_T(""));
+        AddPropLine(_T("  TransferBuffer: 0x%08x (%d) length"), m_TransferLength, m_TransferLength);
         GenerateHexDump(m_TransferBuffer, m_TransferLength);
     }
     else
     {
-        AddPropLine("");
-        AddPropLine("  No TransferBuffer");
+        AddPropLine(_T(""));
+        AddPropLine(_T("  No TransferBuffer"));
     }
 }
 
@@ -834,67 +838,67 @@ void CURB_SelectConfiguration::RenderProperties(void)
 
 	if(m_UCDPresent)
 	{
-		AddPropLine("  Configuration Descriptor:");
+		AddPropLine(_T("  Configuration Descriptor:"));
 
         CString S;
-        AddPropLine("  bLength: %d (0x%02x)", m_UCD.bLength, m_UCD.bLength);
-        AddPropLine("  bDescriptorType: %d (0x%02x)", m_UCD.bDescriptorType, m_UCD.bDescriptorType);
+        AddPropLine(_T("  bLength: %d (0x%02x)"), m_UCD.bLength, m_UCD.bLength);
+        AddPropLine(_T("  bDescriptorType: %d (0x%02x)"), m_UCD.bDescriptorType, m_UCD.bDescriptorType);
         if(m_UCD.bDescriptorType != 0x02)
         {
-            AddPropLine("    (should be 0x02!)");
+            AddPropLine(_T("    (should be 0x02!)"));
         }
-        AddPropLine("  wTotalLength: %d (0x%04x)", m_UCD.wTotalLength, m_UCD.wTotalLength);
-        AddPropLine("  bNumInterfaces: %d (0x%02x)", m_UCD.bNumInterfaces, m_UCD.bNumInterfaces);
-        AddPropLine("  bConfigurationValue: %d (0x%02x)", m_UCD.bConfigurationValue, m_UCD.bConfigurationValue);
-        AddPropLine("  iConfiguration: %d (0x%02x)", m_UCD.iConfiguration, m_UCD.iConfiguration);
-        AddPropLine("  bmAttributes: %d (0x%02x)", m_UCD.bmAttributes, m_UCD.bmAttributes);
+        AddPropLine(_T("  wTotalLength: %d (0x%04x)"), m_UCD.wTotalLength, m_UCD.wTotalLength);
+        AddPropLine(_T("  bNumInterfaces: %d (0x%02x)"), m_UCD.bNumInterfaces, m_UCD.bNumInterfaces);
+        AddPropLine(_T("  bConfigurationValue: %d (0x%02x)"), m_UCD.bConfigurationValue, m_UCD.bConfigurationValue);
+        AddPropLine(_T("  iConfiguration: %d (0x%02x)"), m_UCD.iConfiguration, m_UCD.iConfiguration);
+        AddPropLine(_T("  bmAttributes: %d (0x%02x)"), m_UCD.bmAttributes, m_UCD.bmAttributes);
         if(0 != (0x80 & m_UCD.bmAttributes))
         {
-            AddPropLine("    0x80: Bus Powered");
+            AddPropLine(_T("    0x80: Bus Powered"));
         }
         if(0 != (0x40 & m_UCD.bmAttributes))
         {
-            AddPropLine("    0x40: Self Powered");
+            AddPropLine(_T("    0x40: Self Powered"));
         }
         if(0 != (0x20 & m_UCD.bmAttributes))
         {
-            AddPropLine("    0x20: Remote Wakeup");
+            AddPropLine(_T("    0x20: Remote Wakeup"));
         }
-        AddPropLine("  MaxPower: %d (0x%02x)", m_UCD.MaxPower, m_UCD.MaxPower);
-        AddPropLine("    (in 2 mA units, therefore %d mA power consumption)", m_UCD.MaxPower * 2);
+        AddPropLine(_T("  MaxPower: %d (0x%02x)"), m_UCD.MaxPower, m_UCD.MaxPower);
+        AddPropLine(_T("    (in 2 mA units, therefore %d mA power consumption)"), m_UCD.MaxPower * 2);
 
-        AddPropLine("  ");
-        AddPropLine("  Number of interfaces: %d", m_uNumInterfaces);
+        AddPropLine(_T("  "));
+        AddPropLine(_T("  Number of interfaces: %d"), m_uNumInterfaces);
         
         for(ULONG i = 0; i < m_uNumInterfaces; i++)
         {
-            AddPropLine("  Interface[%d]:", i);
-            AddPropLine("    Length: 0x%04x", m_pInterfaces[i]->Length);
+            AddPropLine(_T("  Interface[%d]:"), i);
+            AddPropLine(_T("    Length: 0x%04x"), m_pInterfaces[i]->Length);
             if(m_pInterfaces[i]->Length >= FIELD_OFFSET(USBD_INTERFACE_INFORMATION, InterfaceNumber))
             {
-                AddPropLine("    InterfaceNumber: 0x%02x", m_pInterfaces[i]->InterfaceNumber);
+                AddPropLine(_T("    InterfaceNumber: 0x%02x"), m_pInterfaces[i]->InterfaceNumber);
                 if(m_pInterfaces[i]->Length >= FIELD_OFFSET(USBD_INTERFACE_INFORMATION, AlternateSetting))
                 {
-                    AddPropLine("    AlternateSetting: 0x%02x", m_pInterfaces[i]->AlternateSetting);
+                    AddPropLine(_T("    AlternateSetting: 0x%02x"), m_pInterfaces[i]->AlternateSetting);
                     if(m_pInterfaces[i]->Length >= FIELD_OFFSET(USBD_INTERFACE_INFORMATION, Class))
                     {
-                        AddPropLine("    Class             = 0x%02x", m_pInterfaces[i]->Class);
+                        AddPropLine(_T("    Class             = 0x%02x"), m_pInterfaces[i]->Class);
                         if(m_pInterfaces[i]->Length >= FIELD_OFFSET(USBD_INTERFACE_INFORMATION, SubClass))
                         {
-                            AddPropLine("    SubClass          = 0x%02x", m_pInterfaces[i]->SubClass);
+                            AddPropLine(_T("    SubClass          = 0x%02x"), m_pInterfaces[i]->SubClass);
                             if(m_pInterfaces[i]->Length >= FIELD_OFFSET(USBD_INTERFACE_INFORMATION, Protocol))
                             {
-                                AddPropLine("    Protocol          = 0x%02x", m_pInterfaces[i]->Protocol);
+                                AddPropLine(_T("    Protocol          = 0x%02x"), m_pInterfaces[i]->Protocol);
                                 if(m_pInterfaces[i]->Length >= FIELD_OFFSET(USBD_INTERFACE_INFORMATION, InterfaceHandle))
                                 {
-                                    AddPropLine("    InterfaceHandle   = 0x%08x", m_pInterfaces[i]->InterfaceHandle);
+                                    AddPropLine(_T("    InterfaceHandle   = 0x%08x"), m_pInterfaces[i]->InterfaceHandle);
                                     if(m_pInterfaces[i]->Length >= FIELD_OFFSET(USBD_INTERFACE_INFORMATION, NumberOfPipes))
                                     {
-                                        AddPropLine("    NumberOfPipes     = 0x%08x", m_pInterfaces[i]->NumberOfPipes);
+                                        AddPropLine(_T("    NumberOfPipes     = 0x%08x"), m_pInterfaces[i]->NumberOfPipes);
                                         ULONG uNumPipes = m_pInterfaces[i]->NumberOfPipes;
                                         if(uNumPipes > 0x1f)
                                         {
-                                            AddPropLine("  ERROR: uNumPipes is too large (%d), resetting to 1", uNumPipes);
+                                            AddPropLine(_T("  ERROR: uNumPipes is too large (%d), resetting to 1"), uNumPipes);
                                             uNumPipes = 1;
                                         }
                                         
@@ -903,24 +907,24 @@ void CURB_SelectConfiguration::RenderProperties(void)
                                             if(m_pInterfaces[i]->Length >= (FIELD_OFFSET(USBD_INTERFACE_INFORMATION, Pipes) + (p + 1) * sizeof(USBD_PIPE_INFORMATION)))
                                             {
                                                 PUSBD_PIPE_INFORMATION pPipe = &m_pInterfaces[i]->Pipes[p];
-                                                AddPropLine("    Pipe[%d]:", p);
-                                                AddPropLine("      MaximumPacketSize = 0x%04x", pPipe->MaximumPacketSize);
-                                                AddPropLine("      EndpointAddress   = 0x%02x", pPipe->EndpointAddress);
-                                                AddPropLine("      Interval          = 0x%02x", pPipe->Interval);
-                                                AddPropLine("      PipeType          = 0x%02x", pPipe->PipeType);
+                                                AddPropLine(_T("    Pipe[%d]:"), p);
+                                                AddPropLine(_T("      MaximumPacketSize = 0x%04x"), pPipe->MaximumPacketSize);
+                                                AddPropLine(_T("      EndpointAddress   = 0x%02x"), pPipe->EndpointAddress);
+                                                AddPropLine(_T("      Interval          = 0x%02x"), pPipe->Interval);
+                                                AddPropLine(_T("      PipeType          = 0x%02x"), pPipe->PipeType);
                                                 if(pPipe->PipeType == UsbdPipeTypeControl)
-                                                    AddPropLine("        UsbdPipeTypeControl");
+                                                    AddPropLine(_T("        UsbdPipeTypeControl"));
                                                 else if(pPipe->PipeType == UsbdPipeTypeIsochronous)
-                                                    AddPropLine("        UsbdPipeTypeIsochronous");
+                                                    AddPropLine(_T("        UsbdPipeTypeIsochronous"));
                                                 else if(pPipe->PipeType == UsbdPipeTypeBulk)
-                                                    AddPropLine("        UsbdPipeTypeBulk");
+                                                    AddPropLine(_T("        UsbdPipeTypeBulk"));
                                                 else if(pPipe->PipeType == UsbdPipeTypeInterrupt)
-                                                    AddPropLine("        UsbdPipeTypeInterrupt");
+                                                    AddPropLine(_T("        UsbdPipeTypeInterrupt"));
                                                 else
-                                                    AddPropLine("        !!! INVALID !!!");
-                                                AddPropLine("      PipeHandle        = 0x%08x", pPipe->PipeHandle);
-                                                AddPropLine("      MaxTransferSize   = 0x%08x", pPipe->MaximumTransferSize);
-                                                AddPropLine("      PipeFlags         = 0x%02x", pPipe->PipeFlags);
+                                                    AddPropLine(_T("        !!! INVALID !!!"));
+                                                AddPropLine(_T("      PipeHandle        = 0x%08x"), pPipe->PipeHandle);
+                                                AddPropLine(_T("      MaxTransferSize   = 0x%08x"), pPipe->MaximumTransferSize);
+                                                AddPropLine(_T("      PipeFlags         = 0x%02x"), pPipe->PipeFlags);
                                             }
                                         }
                                     }
@@ -934,7 +938,7 @@ void CURB_SelectConfiguration::RenderProperties(void)
     }
     else
     {
-        AddPropLine("  no Configuration Descriptor present => unconfigure device!");
+        AddPropLine(_T("  no Configuration Descriptor present => unconfigure device!"));
     }
 }
 
@@ -1173,20 +1177,20 @@ void CURB_SelectInterface::RenderProperties(void)
 {
     CURB::RenderProperties();
 
-    AddPropLine("  ConfigurationHandle: 0x%08x (%d)", 
+    AddPropLine(_T("  ConfigurationHandle: 0x%08x (%d)"), 
         m_pSelectInterface->ConfigurationHandle,
         m_pSelectInterface->ConfigurationHandle);
 
-    AddPropLine("");
-    AddPropLine("  Interface:");
+    AddPropLine(_T(""));
+    AddPropLine(_T("  Interface:"));
     PUSBD_INTERFACE_INFORMATION pInterface = &m_pSelectInterface->Interface;
-    AddPropLine("    Length: 0x%04x (%d)", 
+    AddPropLine(_T("    Length: 0x%04x (%d)"), 
         pInterface->Length,
         pInterface->Length);
-    AddPropLine("    InterfaceNumber: 0x%02x (%d)",
+    AddPropLine(_T("    InterfaceNumber: 0x%02x (%d)"),
         pInterface->InterfaceNumber,
         pInterface->InterfaceNumber);
-    AddPropLine("    AlternateSetting: 0x%02x (%d)",
+    AddPropLine(_T("    AlternateSetting: 0x%02x (%d)"),
         pInterface->AlternateSetting,
         pInterface->AlternateSetting);
 
@@ -1195,23 +1199,23 @@ void CURB_SelectInterface::RenderProperties(void)
         return;
     }
 
-    AddPropLine("  ");
-    AddPropLine("  Output");
-    AddPropLine("    Class: 0x%02x (%d)",
+    AddPropLine(_T("  "));
+    AddPropLine(_T("  Output"));
+    AddPropLine(_T("    Class: 0x%02x (%d)"),
         pInterface->Class,
         pInterface->Class);
-    AddPropLine("    SubClass: 0x%02x (%d)",
+    AddPropLine(_T("    SubClass: 0x%02x (%d)"),
         pInterface->SubClass,
         pInterface->SubClass);
-    AddPropLine("    Protocol: 0x%02x (%d)",
+    AddPropLine(_T("    Protocol: 0x%02x (%d)"),
         pInterface->Protocol,
         pInterface->Protocol);
-    AddPropLine("    Reserved: 0x%02x",
+    AddPropLine(_T("    Reserved: 0x%02x"),
         pInterface->Reserved);
 
-    AddPropLine("    InterfaceHandle: 0x%08x",
+    AddPropLine(_T("    InterfaceHandle: 0x%08x"),
         pInterface->InterfaceHandle);
-    AddPropLine("    NumberOfPipes: 0x%08x (%d)",
+    AddPropLine(_T("    NumberOfPipes: 0x%08x (%d)"),
         pInterface->NumberOfPipes,
         pInterface->NumberOfPipes);
 
@@ -1220,47 +1224,47 @@ void CURB_SelectInterface::RenderProperties(void)
     ULONG nPipe = 0;
     while((nPipe < pInterface->NumberOfPipes) && (0 < nBufferLeft))
     {
-        AddPropLine("    Pipe[%d]:", nPipe);
+        AddPropLine(_T("    Pipe[%d]:"), nPipe);
         pPipe = &pInterface->Pipes[nPipe];
 
         // OUTPUT from USBD
-        AddPropLine("      MaximumPacketSize: 0x%04x (%d)",
+        AddPropLine(_T("      MaximumPacketSize: 0x%04x (%d)"),
             pPipe->MaximumPacketSize,
             pPipe->MaximumPacketSize);
-        AddPropLine("      EndpointAddress: 0x%02x (%d)",
+        AddPropLine(_T("      EndpointAddress: 0x%02x (%d)"),
             pPipe->EndpointAddress,
             pPipe->EndpointAddress);
-        AddPropLine("      Interval: %d ms",
+        AddPropLine(_T("      Interval: %d ms"),
             pPipe->Interval);
-        AddPropLine("      PipeType: 0x%02x",
+        AddPropLine(_T("      PipeType: 0x%02x"),
             pPipe->PipeType);
         switch(pPipe->PipeType)
         {
         case UsbdPipeTypeControl:
-            AddPropLine("        UsbdPipeTypeControl");
+            AddPropLine(_T("        UsbdPipeTypeControl"));
             break;
         case UsbdPipeTypeIsochronous:
-            AddPropLine("        UsbdPipeTypeIsochronous");
+            AddPropLine(_T("        UsbdPipeTypeIsochronous"));
             break;
         case UsbdPipeTypeBulk:
-            AddPropLine("        UsbdPipeTypeBulk");
+            AddPropLine(_T("        UsbdPipeTypeBulk"));
             break;
         case UsbdPipeTypeInterrupt:
-            AddPropLine("        UsbdPipeTypeInterrupt");
+            AddPropLine(_T("        UsbdPipeTypeInterrupt"));
             break;
         default:
-            AddPropLine("        invalid!");
+            AddPropLine(_T("        invalid!"));
         }
-        AddPropLine("      PipeHandle: 0x%08x",
+        AddPropLine(_T("      PipeHandle: 0x%08x"),
             pPipe->PipeHandle);
 
         // INPUT
         // These fields are filled in by the client driver
-        AddPropLine("  ");
-        AddPropLine("      MaximumTransferSize: 0x%08x (%d) bytes",
+        AddPropLine(_T("  "));
+        AddPropLine(_T("      MaximumTransferSize: 0x%08x (%d) bytes"),
             pPipe->MaximumTransferSize,
             pPipe->MaximumTransferSize);
-        AddPropLine("      PipeFlags: 0x%08x (%d)",
+        AddPropLine(_T("      PipeFlags: 0x%08x (%d)"),
             pPipe->PipeFlags,
             pPipe->PipeFlags);
 
@@ -1391,10 +1395,10 @@ void CURB_ControlTransfer::RenderProperties(void)
 {
     CURB::RenderProperties();
 
-    AddPropLine("  PipeHandle: %08x", m_ControlTransfer.PipeHandle);
+    AddPropLine(_T("  PipeHandle: %08x"), m_ControlTransfer.PipeHandle);
     
-    AddPropLine("  ");
-    AddPropLine("  SetupPacket:");
+    AddPropLine(_T("  "));
+    AddPropLine(_T("  SetupPacket:"));
     GenerateHexDump(m_ControlTransfer.SetupPacket, sizeof(m_ControlTransfer.SetupPacket));
 
     UCHAR bmRequestType = m_ControlTransfer.SetupPacket[0];
@@ -1403,25 +1407,25 @@ void CURB_ControlTransfer::RenderProperties(void)
     //USHORT wIndex = (USHORT)(m_ControlTransfer.SetupPacket[5] + 256 * m_ControlTransfer.SetupPacket[4]);
     //USHORT wLength = (USHORT)(m_ControlTransfer.SetupPacket[7] + 256 * m_ControlTransfer.SetupPacket[6]);
 
-    AddPropLine("  bmRequestType: %02x", bmRequestType);
-    AddPropLine("    DIR: %s", USB_ENDPOINT_DIRECTION_IN(bmRequestType) ?
-        "Device-To-Host" : "Host-To-Device");
+    AddPropLine(_T("  bmRequestType: %02x"), bmRequestType);
+    AddPropLine(_T("    DIR: %s"), USB_ENDPOINT_DIRECTION_IN(bmRequestType) ?
+        _T("Device-To-Host") : _T("Host-To-Device"));
 
     BOOL bIsTypeStandard = FALSE;
     switch((bmRequestType & 0x60) >> 5)
     {
     case 0:
-        AddPropLine("    TYPE: Standard");
+        AddPropLine(_T("    TYPE: Standard"));
         bIsTypeStandard = TRUE;
         break;
     case 1:
-        AddPropLine("    TYPE: Class");
+        AddPropLine(_T("    TYPE: Class"));
         break;
     case 2:
-        AddPropLine("    TYPE: Vendor");
+        AddPropLine(_T("    TYPE: Vendor"));
         break;
     case 3:
-        AddPropLine("    TYPE: Reserved");
+        AddPropLine(_T("    TYPE: Reserved"));
         break;
     default:
         ASSERT(FALSE);
@@ -1432,24 +1436,24 @@ void CURB_ControlTransfer::RenderProperties(void)
     switch(bmRequestType & 0x1f)
     {
     case 0:
-        AddPropLine("    RECIPIENT: Device");
+        AddPropLine(_T("    RECIPIENT: Device"));
         bIsRecipientDevice = TRUE;
         break;
     case 1:
-        AddPropLine("    RECIPIENT: Interface");
+        AddPropLine(_T("    RECIPIENT: Interface"));
         break;
     case 2:
-        AddPropLine("    RECIPIENT: Endpoint");
+        AddPropLine(_T("    RECIPIENT: Endpoint"));
         break;
     case 3:
-        AddPropLine("    RECIPIENT: Other");
+        AddPropLine(_T("    RECIPIENT: Other"));
         break;
     default:
-        AddPropLine("    RECIPIENT: %d => 4..31 == Reserved", bmRequestType & 0x1f);
+        AddPropLine(_T("    RECIPIENT: %d => 4..31 == Reserved"), bmRequestType & 0x1f);
         break;
     }
 
-    AddPropLine("  bRequest: %02x  ", bRequest);
+    AddPropLine(_T("  bRequest: %02x  "), bRequest);
     
     BOOL bIsReqGetDescriptor = FALSE;
     if(bIsTypeStandard)
@@ -1457,45 +1461,45 @@ void CURB_ControlTransfer::RenderProperties(void)
         switch(bRequest)
         {
         case USB_REQUEST_GET_STATUS:
-            AddPropLine("    GET_STATUS");
+            AddPropLine(_T("    GET_STATUS"));
             break;
         case USB_REQUEST_CLEAR_FEATURE:
-            AddPropLine("    CLEAR_FEATURE");
+            AddPropLine(_T("    CLEAR_FEATURE"));
             break;
         case 2:
         case 4:
-            AddPropLine("    reserved for future use!!");
+            AddPropLine(_T("    reserved for future use!!"));
             break;
         case USB_REQUEST_SET_FEATURE:
-            AddPropLine("    SET_FEATURE");
+            AddPropLine(_T("    SET_FEATURE"));
             break;
         case USB_REQUEST_SET_ADDRESS:
-            AddPropLine("    SET_ADDRESS");
+            AddPropLine(_T("    SET_ADDRESS"));
             break;
         case USB_REQUEST_GET_DESCRIPTOR:
-            AddPropLine("    GET_DESCRIPTOR");
+            AddPropLine(_T("    GET_DESCRIPTOR"));
             bIsReqGetDescriptor = TRUE;
             break;
         case USB_REQUEST_SET_DESCRIPTOR:
-            AddPropLine("    SET_DESCRIPTOR");
+            AddPropLine(_T("    SET_DESCRIPTOR"));
             break;
         case USB_REQUEST_GET_CONFIGURATION:
-            AddPropLine("    GET_CONFIGURATION");
+            AddPropLine(_T("    GET_CONFIGURATION"));
             break;
         case USB_REQUEST_SET_CONFIGURATION:
-            AddPropLine("    SET_CONFIGURATION");
+            AddPropLine(_T("    SET_CONFIGURATION"));
             break;
         case USB_REQUEST_GET_INTERFACE:
-            AddPropLine("    GET_INTERFACE");
+            AddPropLine(_T("    GET_INTERFACE"));
             break;
         case USB_REQUEST_SET_INTERFACE:
-            AddPropLine("    SET_INTERFACE");
+            AddPropLine(_T("    SET_INTERFACE"));
             break;
         case USB_REQUEST_SYNC_FRAME:
-            AddPropLine("    SYNCH_FRAME");
+            AddPropLine(_T("    SYNCH_FRAME"));
             break;
         default:
-            AddPropLine("    unknown!");
+            AddPropLine(_T("    unknown!"));
             break;
         }
     }
@@ -1504,33 +1508,33 @@ void CURB_ControlTransfer::RenderProperties(void)
     BOOL bIsConfigurationDescriptorType = FALSE;
     if(bIsReqGetDescriptor)
     {
-        AddPropLine("  Descriptor Type: 0x%04x", wValue);
+        AddPropLine(_T("  Descriptor Type: 0x%04x"), wValue);
         switch(wValue)
         {
         case USB_DEVICE_DESCRIPTOR_TYPE:
-            AddPropLine("    DEVICE");
+            AddPropLine(_T("    DEVICE"));
             bIsDeviceDescriptorType = TRUE;
             break;
             
         case USB_CONFIGURATION_DESCRIPTOR_TYPE:
-            AddPropLine("    CONFIGURATION");
+            AddPropLine(_T("    CONFIGURATION"));
             bIsConfigurationDescriptorType = TRUE;
             break;
             
         case USB_STRING_DESCRIPTOR_TYPE:
-            AddPropLine("    STRING");
+            AddPropLine(_T("    STRING"));
             break;
             
         case USB_INTERFACE_DESCRIPTOR_TYPE:
-            AddPropLine("    INTERFACE");
+            AddPropLine(_T("    INTERFACE"));
             break;
             
         case USB_ENDPOINT_DESCRIPTOR_TYPE:
-            AddPropLine("    ENDPOINT");
+            AddPropLine(_T("    ENDPOINT"));
             break;
             
         default:
-            AddPropLine("    unknown");
+            AddPropLine(_T("    unknown"));
             break;
         }
     }
@@ -1542,33 +1546,33 @@ void CURB_ControlTransfer::RenderProperties(void)
         if(bIsDeviceDescriptorType)
         {
             USB_DEVICE_DESCRIPTOR *pDesc = (USB_DEVICE_DESCRIPTOR*) m_TransferBuffer;
-            AddPropLine("      bLength            : 0x%02x (%d)", pDesc->bLength, pDesc->bLength);
-            AddPropLine("      bDescriptorType    : 0x%02x (%d)", pDesc->bDescriptorType, pDesc->bDescriptorType);
-            AddPropLine("      bcdUSB             : 0x%04x (%d)", pDesc->bcdUSB, pDesc->bcdUSB);
-            AddPropLine("      bDeviceClass       : 0x%02x (%d)", pDesc->bDeviceClass, pDesc->bDeviceClass);
-            AddPropLine("      bDeviceSubClass    : 0x%02x (%d)", pDesc->bDeviceSubClass, pDesc->bDeviceSubClass);
-            AddPropLine("      bDeviceProtocol    : 0x%02x (%d)", pDesc->bDeviceProtocol, pDesc->bDeviceProtocol);
-            AddPropLine("      bMaxPacketSize0    : 0x%02x (%d)", pDesc->bMaxPacketSize0, pDesc->bMaxPacketSize0);
-            AddPropLine("      idVendor           : 0x%04x (%d)", pDesc->idVendor, pDesc->idVendor);
-            AddPropLine("      idProduct          : 0x%04x (%d)", pDesc->idProduct, pDesc->idProduct);
-            AddPropLine("      bcdDevice          : 0x%04x (%d)", pDesc->bcdDevice, pDesc->bcdDevice);
-            AddPropLine("      iManufacturer      : 0x%02x (%d)", pDesc->iManufacturer, pDesc->iManufacturer);
-            AddPropLine("      iProduct           : 0x%02x (%d)", pDesc->iProduct, pDesc->iProduct);
-            AddPropLine("      iSerialNumber      : 0x%02x (%d)", pDesc->iSerialNumber, pDesc->iSerialNumber);
-            AddPropLine("      bNumConfigurations : 0x%02x (%d)", pDesc->bNumConfigurations, pDesc->bNumConfigurations);
+            AddPropLine(_T("      bLength            : 0x%02x (%d)"), pDesc->bLength, pDesc->bLength);
+            AddPropLine(_T("      bDescriptorType    : 0x%02x (%d)"), pDesc->bDescriptorType, pDesc->bDescriptorType);
+            AddPropLine(_T("      bcdUSB             : 0x%04x (%d)"), pDesc->bcdUSB, pDesc->bcdUSB);
+            AddPropLine(_T("      bDeviceClass       : 0x%02x (%d)"), pDesc->bDeviceClass, pDesc->bDeviceClass);
+            AddPropLine(_T("      bDeviceSubClass    : 0x%02x (%d)"), pDesc->bDeviceSubClass, pDesc->bDeviceSubClass);
+            AddPropLine(_T("      bDeviceProtocol    : 0x%02x (%d)"), pDesc->bDeviceProtocol, pDesc->bDeviceProtocol);
+            AddPropLine(_T("      bMaxPacketSize0    : 0x%02x (%d)"), pDesc->bMaxPacketSize0, pDesc->bMaxPacketSize0);
+            AddPropLine(_T("      idVendor           : 0x%04x (%d)"), pDesc->idVendor, pDesc->idVendor);
+            AddPropLine(_T("      idProduct          : 0x%04x (%d)"), pDesc->idProduct, pDesc->idProduct);
+            AddPropLine(_T("      bcdDevice          : 0x%04x (%d)"), pDesc->bcdDevice, pDesc->bcdDevice);
+            AddPropLine(_T("      iManufacturer      : 0x%02x (%d)"), pDesc->iManufacturer, pDesc->iManufacturer);
+            AddPropLine(_T("      iProduct           : 0x%02x (%d)"), pDesc->iProduct, pDesc->iProduct);
+            AddPropLine(_T("      iSerialNumber      : 0x%02x (%d)"), pDesc->iSerialNumber, pDesc->iSerialNumber);
+            AddPropLine(_T("      bNumConfigurations : 0x%02x (%d)"), pDesc->bNumConfigurations, pDesc->bNumConfigurations);
         }
         
         if(bIsConfigurationDescriptorType)
         {
             USB_CONFIGURATION_DESCRIPTOR *pDesc = (USB_CONFIGURATION_DESCRIPTOR*) m_TransferBuffer;
-            AddPropLine("      bLength            : 0x%02x (%d)", pDesc->bLength, pDesc->bLength);
-            AddPropLine("      bDescriptorType    : 0x%02x (%d)", pDesc->bDescriptorType, pDesc->bDescriptorType);
-            AddPropLine("      wTotalLength       : 0x%04x (%d)", pDesc->wTotalLength, pDesc->wTotalLength);
-            AddPropLine("      bNumInterfaces     : 0x%02x (%d)", pDesc->bNumInterfaces, pDesc->bNumInterfaces);
-            AddPropLine("      bConfigurationValue: 0x%02x (%d)", pDesc->bConfigurationValue, pDesc->bConfigurationValue);
-            AddPropLine("      iConfiguration     : 0x%02x (%d)", pDesc->iConfiguration, pDesc->iConfiguration);
-            AddPropLine("      bmAttributes       : 0x%02x (%d)", pDesc->bmAttributes, pDesc->bmAttributes);
-            AddPropLine("      MaxPower           : 0x%02x (%d)", pDesc->MaxPower, pDesc->MaxPower);
+            AddPropLine(_T("      bLength            : 0x%02x (%d)"), pDesc->bLength, pDesc->bLength);
+            AddPropLine(_T("      bDescriptorType    : 0x%02x (%d)"), pDesc->bDescriptorType, pDesc->bDescriptorType);
+            AddPropLine(_T("      wTotalLength       : 0x%04x (%d)"), pDesc->wTotalLength, pDesc->wTotalLength);
+            AddPropLine(_T("      bNumInterfaces     : 0x%02x (%d)"), pDesc->bNumInterfaces, pDesc->bNumInterfaces);
+            AddPropLine(_T("      bConfigurationValue: 0x%02x (%d)"), pDesc->bConfigurationValue, pDesc->bConfigurationValue);
+            AddPropLine(_T("      iConfiguration     : 0x%02x (%d)"), pDesc->iConfiguration, pDesc->iConfiguration);
+            AddPropLine(_T("      bmAttributes       : 0x%02x (%d)"), pDesc->bmAttributes, pDesc->bmAttributes);
+            AddPropLine(_T("      MaxPower           : 0x%02x (%d)"), pDesc->MaxPower, pDesc->MaxPower);
         }
     }
 }
@@ -1692,7 +1696,7 @@ void CURB_BulkOrInterruptTransfer::RenderProperties(void)
 {
     CURB::RenderProperties();
     
-    AddPropLine("  TransferFlags: 0x%08x", m_BulkOrInterruptTransfer.TransferFlags);
+    AddPropLine(_T("  TransferFlags: 0x%08x"), m_BulkOrInterruptTransfer.TransferFlags);
 
     CURB_TransferBuffer::RenderProperties();
 }
@@ -1858,8 +1862,12 @@ LPCTSTR CURB_IsochTransfer::GetPayloadXML(int nPacket, LPTSTR sBuffer)
     PUCHAR pTransferBuffer = m_pTransferBuffer[nPacket];
     for(DWORD nIndex = 0; nIndex < m_nTransferBufferLength[nPacket]; ++nIndex)
     {
-        sprintf(&sBuffer[nIndex << 1], "%02x", pTransferBuffer[nIndex]);
-    }
+#ifdef UNICODE
+		swprintf(&sBuffer[nIndex << 1], _T("%02x"), pTransferBuffer[nIndex]);
+#else
+		sprintf(&sBuffer[nIndex << 1], _T("%02x"), pTransferBuffer[nIndex]);
+#endif
+	}
     return sBuffer;
 }
 
@@ -1871,7 +1879,7 @@ void CURB_IsochTransfer::GetDataDumpStr(LPTSTR sBuffer)
     }
     else
     {
-        _tcscpy(sBuffer, "-");
+        _tcscpy(sBuffer, _T("-"));
     }
 }
 
@@ -1879,21 +1887,21 @@ void CURB_IsochTransfer::RenderProperties(void)
 {
     CURB::RenderProperties();
 
-    AddPropLine("  NumberOfPackets: 0x%08x (%d)", 
+    AddPropLine(_T("  NumberOfPackets: 0x%08x (%d)"), 
         m_pIsochTransfer->NumberOfPackets, 
         m_pIsochTransfer->NumberOfPackets);
 
     for(ULONG nPacket = 0; nPacket < m_pIsochTransfer->NumberOfPackets; ++nPacket)
     {
         PUSBD_ISO_PACKET_DESCRIPTOR pPacket = &m_pIsochTransfer->IsoPacket[nPacket];
-        AddPropLine("  Packet %2d: Ofs: 0x%08x  Len: 0x%08x  Status: 0x%08x",
+        AddPropLine(_T("  Packet %2d: Ofs: 0x%08x  Len: 0x%08x  Status: 0x%08x"),
             nPacket, pPacket->Offset, pPacket->Length, pPacket->Status);
     }
 
-    for(nPacket = 0; nPacket < m_nTransferBufferCnt; ++nPacket)
+    for(ULONG nPacket = 0; nPacket < m_nTransferBufferCnt; ++nPacket)
     {
-        AddPropLine("  ");
-        AddPropLine("  Buffer: %2d: Len: 0x%08x (%d)", nPacket,
+        AddPropLine(_T("  "));
+        AddPropLine(_T("  Buffer: %2d: Len: 0x%08x (%d)"), nPacket,
             m_nTransferBufferLength[nPacket], m_nTransferBufferLength[nPacket]);
         GenerateHexDump(m_pTransferBuffer[nPacket], m_nTransferBufferLength[nPacket]);
     }

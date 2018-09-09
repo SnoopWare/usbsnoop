@@ -22,27 +22,26 @@ shared/RingBuffer.cpp
 
 ## Building
 
-Do this by opening a 64 bit DDK checked build envirenment window, and:
+Prerequisites:
+
+ * Git for Windows
+ * Visual Studio 2017
+ * Windows Driver Kit (WDK): https://docs.microsoft.com/en-us/windows-hardware/drivers/download-the-wdk
+ * CMake for Windows
+
+Run the following commands from the command line:
 
 ```
-cd USBSnoop
-make
+git clone https://github.com/dmikushin/usbsnoop.git
+cd usbsnoop
+git submodule init
+git submodule update
+mkdir build
+cd build
+cmake ..
 ```
 
-```
-cd ..\USBSnpys
-make
-```
-
-Open the project file in VC++.
-
-Set the following active configurations and build them:
-
- * UsbSnoopy - Win32 Debug
- * UsbSnoopy - Win32 Release
- * USBSnpys - Win32 Debug
- * USBSnpys - Win32 Release
- * SnoopyPro - Win32 Release
+Then open the generated Visual Studio solution and build it. The resulting executable will be placed in `build\$(Configuration)`, e.g. in `build\Debug`.
 
 ## Deployment
 

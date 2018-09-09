@@ -1,0 +1,6 @@
+[submodule "3rdParty/FindWDK"]
+	path = 3rdParty/FindWDK
+	url = https://github.com/SergiusTheBest/FindWDK.git
+[submodule "3rdParty/ucm"]
+	path = 3rdParty/ucm
+	url = https://github.com/onqtam/ucm

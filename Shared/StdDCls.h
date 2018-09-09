@@ -11,6 +11,8 @@
 #pragma warning(disable: 4514)
 
 
+#ifdef DRIVER
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -20,6 +22,8 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
+
+#endif // DRIVER
 
 // warning C4200: nonstandard extension used : zero-sized array in struct/union
 #pragma warning(disable: 4200)

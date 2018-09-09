@@ -976,7 +976,7 @@ NTSTATUS DispatchInternalIOCTL(IN PDEVICE_OBJECT fido, IN PIRP Irp)
         
         if(GlobalData.lStealEntrypoints)
         {
-            PCONTEXT Context = (PCONTEXT) ExAllocatePool(PagedPool, sizeof(CONTEXT));
+            _PCONTEXT Context = (_PCONTEXT) ExAllocatePool(PagedPool, sizeof(_CONTEXT));
             if(NULL != Context)
             {
                 Context->CompletionRoutine = stack->CompletionRoutine;

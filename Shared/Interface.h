@@ -6,9 +6,9 @@
 
 #define USBSNPYS_NTNAME                 L"\\Device\\USBSnpys"
 #define USBSNPYS_SYMNAME                L"\\DosDevices\\USBSnpys"
-#define USBSNPYS_W32NAME_2K             "\\\\.\\USBSnpys"
-#define USBSNPYS_W32NAME_9X             "\\\\.\\USBSnpyV.VxD"
-#define USBSNPYS_WDMNAME_9X             "USBSnpyV.VxD"
+#define USBSNPYS_W32NAME_2K             _T("\\\\.\\USBSnpys")
+#define USBSNPYS_W32NAME_9X             _T("\\\\.\\USBSnpyV.VxD")
+#define USBSNPYS_WDMNAME_9X             _T("USBSnpyV.VxD")
 
 #ifndef CTL_CODE
 #include <WinIOCTL.h>

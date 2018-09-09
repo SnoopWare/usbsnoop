@@ -88,7 +88,7 @@ BOOL CExportLogDlg::OnInitDialog(void)
     m_ExporterType = (enum EXPORTER_TYPE) GetApp().GetProfileInt(REGSTR_EXPORTER, REGSTR_EXPORTERTYPE, EXPTYPE_XML);
     m_ExporterType = min(EXPTYPE_LAST, max(EXPTYPE_FIRST, m_ExporterType));
 
-    CString sPrevExport = GetApp().GetProfileString(REGSTR_EXPORTER, REGSTR_FILENAME, "SnoopyProExport.log");
+    CString sPrevExport = GetApp().GetProfileString(REGSTR_EXPORTER, REGSTR_FILENAME, _T("SnoopyProExport.log"));
     m_cFilename.SetWindowText(sPrevExport);
 
     // for now, we only support exporting everything...
@@ -147,7 +147,7 @@ void CExportLogDlg::OnOK(void)
 }
 void CExportLogDlg::OnBrowse() 
 {
-    CFileDialog savedlg(FALSE, "xml", m_sFilename);
+    CFileDialog savedlg(FALSE, _T("xml"), m_sFilename);
     if(IDOK == savedlg.DoModal())
     {
         m_sFilename = savedlg.GetPathName();

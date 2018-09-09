@@ -42,7 +42,7 @@ typedef struct DEVICE_EXTENSION
 //////////////////////////////////////////////////////////////////////////
 // For our context information
 
-typedef struct CONTEXT
+typedef struct _CONTEXT
 {
     // information for the old CompletionRoutine
     PIO_COMPLETION_ROUTINE CompletionRoutine;
@@ -56,7 +56,7 @@ typedef struct CONTEXT
     // the stack where we should restore information
     PIO_STACK_LOCATION Stack;
     PDEVICE_OBJECT SnoopFido;
-} CONTEXT, *PCONTEXT;
+} _CONTEXT, *_PCONTEXT;
 
 
 //////////////////////////////////////////////////////////////////////////

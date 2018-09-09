@@ -239,11 +239,11 @@ void CDevicesDlg::OnRefreshSnpysStatus(void)
     CString sStatus;
     if(GetApp().IsSnpysPresent())
     {
-        sStatus.Format("Snpys bridge is present and accessible (%d out of %d entries used).", GetApp().SnpysUsage(), MAX_SNOOPY_DRIVERS);
+        sStatus.Format(_T("Snpys bridge is present and accessible (%d out of %d entries used)."), GetApp().SnpysUsage(), MAX_SNOOPY_DRIVERS);
     }
     else
     {
-        sStatus.Format("Snpys bridge is not available (check Readme for instructions).");
+        sStatus.Format(_T("Snpys bridge is not available (check Readme for instructions)."));
     }
     m_cDriverStatus.SetWindowText(sStatus);
 }
@@ -467,7 +467,7 @@ void CDevicesDlg::OnCancel()
 
 BOOL UnpackAndInstall(UINT nID, LPCTSTR sSubDir, LPCTSTR sFilename)
 {
-    HRSRC hRsrc = FindResource(AfxGetResourceHandle(), MAKEINTRESOURCE(nID), "DRVR");
+    HRSRC hRsrc = FindResource(AfxGetResourceHandle(), MAKEINTRESOURCE(nID), _T("DRVR"));
     if(NULL == hRsrc)
     {
         TRACE("Couldn't locate driver binary in the resources!");
@@ -538,58 +538,30 @@ TRACE("~1 Copying from nID %d to '%s'\n",nID,sWinDir);
     return TRUE;
 }
 
-#ifdef _DEBUG
-#define BIN_USBSNOOPY           BIN_USBSNOOPYD
-#define BIN_USBSNPYS            BIN_USBSNPYSD
-#define BIN_USBSNOOPY64         BIN_USBSNOOPY64D
-#define BIN_USBSNPYS64          BIN_USBSNPYS64D
-// Not used
-#define BIN_USBSNPYV            BIN_USBSNPYVD
-#else
-#define BIN_USBSNOOPY           BIN_USBSNOOPYR
-#define BIN_USBSNPYS            BIN_USBSNPYSR
-#define BIN_USBSNOOPY64         BIN_USBSNOOPY64R
-#define BIN_USBSNPYS64          BIN_USBSNPYS64R
-// Not used
-#define BIN_USBSNPYV            BIN_USBSNPYVR
-#endif
-
 void CDevicesDlg::OnUnpackDrivers() 
 {
     CString sFilename, sMsg;
     sFilename.LoadString(IDS_FILTERFILENAME);
-    if(!UnpackAndInstall(g_bIs64bitsys ? BIN_USBSNOOPY64 : BIN_USBSNOOPY,
-	                     g_bIsWow64 ? "Sysnative\\Drivers" : "System32\\Drivers",
+    if(!UnpackAndInstall(BIN_USBSNOOP,
+	                     g_bIsWow64 ? _T("Sysnative\\Drivers") : _T("System32\\Drivers"),
 	                     sFilename))
     {
-        sMsg.Format("There was an error while unpacking >%s<!", sFilename);
+        sMsg.Format(_T("There was an error while unpacking >%s<!"), sFilename);
         AfxMessageBox(sMsg, MB_ICONERROR);
         return;
     }
 
-    if(m_bIsWin2K)
+    sFilename.LoadString(IDS_BRIDGEFILENAME_2K);
+    if(!UnpackAndInstall(BIN_USBSNPYS,
+	                        g_bIsWow64 ? _T("Sysnative\\Drivers") : _T("System32\\Drivers"),
+		                    sFilename))
     {
-        sFilename.LoadString(IDS_BRIDGEFILENAME_2K);
-        if(!UnpackAndInstall(g_bIs64bitsys ? BIN_USBSNPYS64 : BIN_USBSNPYS,
-	                         g_bIsWow64 ? "Sysnative\\Drivers" : "System32\\Drivers",
-		                     sFilename))
-        {
-            sMsg.Format("There was an error while unpacking >%s<!", sFilename);
-            AfxMessageBox(sMsg, MB_ICONERROR);
-            return;
-        }
+        sMsg.Format(_T("There was an error while unpacking >%s<!"), sFilename);
+        AfxMessageBox(sMsg, MB_ICONERROR);
+        return;
     }
-    else
-    {
-        sFilename.LoadString(IDS_BRIDGEFILENAME_9X);
-        if(!UnpackAndInstall(BIN_USBSNPYV, "SYSTEM", sFilename))
-        {
-            sMsg.Format("There was an error while unpacking >%s<!", sFilename);
-            AfxMessageBox(sMsg, MB_ICONERROR);
-            return;
-        }
-    }
-    AfxMessageBox("Driver were successfully unpacked...", MB_ICONINFORMATION);
+
+	AfxMessageBox(_T("Driver were successfully unpacked..."), MB_ICONINFORMATION);
 }
 
 void CDevicesDlg::OnViewDevices() 

@@ -228,7 +228,7 @@ void CUSBLogView::OnPrint(CDC* pDC, CPrintInfo* pInfo)
                         sOutput += _tcslen(sOutput);
                         if((LOGCOL_MAX_COLUMN - 1) != nCol)
                         {
-                            _tcscat(sOutput, "\t");
+                            _tcscat(sOutput, _T("\t"));
                             sOutput += _tcslen(sOutput);
                         }
                     }
@@ -421,7 +421,7 @@ void CUSBLogView::OnUpdate(CView* /*pSender*/, LPARAM lHint, CObject* pHint)
         {
             m_nTotalPackets = pDoc->m_arURB.GetSize();
             CString sStatus;
-            sStatus.Format("%d packets", m_nTotalPackets);
+            sStatus.Format(_T("%d packets"), m_nTotalPackets);
             m_cStatus.SetWindowText(sStatus);
             m_cStatus.Invalidate();
             m_cHardwareID.SetWindowText(pDoc->GetHardwareID());
@@ -657,7 +657,7 @@ void CUSBLogView::OnEditCopyCutDelete(BOOL bPlaceInClipboard, BOOL bDeleteFromTh
     {
         CMyMemFile NullFile;
         SerializeURBsToArchive(&NullFile, arURBs);
-        UINT nBinaryLength = NullFile.GetLength();
+        ULONGLONG nBinaryLength = NullFile.GetLength();
         TRACE("Binary Length: %d bytes\n", nBinaryLength);
 
         int nDataCnt = arData.GetSize();
@@ -714,7 +714,7 @@ void CUSBLogView::OnEditCopyCutDelete(BOOL bPlaceInClipboard, BOOL bDeleteFromTh
             {
                 AfxThrowMemoryException();
             }
-            HGLOBAL hBinary = GlobalAlloc(GMEM_MOVEABLE, nBinaryLength);
+            HGLOBAL hBinary = GlobalAlloc(GMEM_MOVEABLE, (SIZE_T)nBinaryLength);
             if(NULL == hBinary)
             {
                 GlobalFree(hText);
@@ -736,7 +736,7 @@ void CUSBLogView::OnEditCopyCutDelete(BOOL bPlaceInClipboard, BOOL bDeleteFromTh
                             pText += _tcslen(pText);
                             if((LOGCOL_MAX_COLUMN - 1) != nCol)
                             {
-                                _tcscat(pText, "\t");
+                                _tcscat(pText, _T("\t"));
                                 pText += _tcslen(pText);
                             }
                         }
@@ -749,7 +749,7 @@ void CUSBLogView::OnEditCopyCutDelete(BOOL bPlaceInClipboard, BOOL bDeleteFromTh
                         pText += _tcslen(pText);
                     }
                 }
-                _tcscat(pText, "\n");
+                _tcscat(pText, _T("\n"));
                 pText += _tcslen(pText);
                 GetApp().IncrementWorkTick();
             }

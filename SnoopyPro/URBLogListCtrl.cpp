@@ -27,7 +27,7 @@ CURBLogListCtrl::CURBLogListCtrl()
     m_pImageList->Add(GetApp().LoadIcon(IDI_OPENINV));
 
     m_pCourier = new CFont();
-    m_pCourier->CreatePointFont(100, "Courier");
+    m_pCourier->CreatePointFont(100, _T("Courier"));
 }
 
 CURBLogListCtrl::~CURBLogListCtrl()
@@ -61,14 +61,14 @@ void CURBLogListCtrl::OnInitialUpdate(void)
     m_ColWidths[LOGCOL_DATA] = 100;
     m_ColWidths[LOGCOL_RESULT] =  30;
     
-    InsertColumn(LOGCOL_EXPAND,     "*",          LVCFMT_CENTER, m_ColWidths[LOGCOL_EXPAND]);
-    InsertColumn(LOGCOL_SEQUENCE,   "Seq",        LVCFMT_RIGHT,  m_ColWidths[LOGCOL_SEQUENCE]);
-    InsertColumn(LOGCOL_DIRECTION,  "Dir",        LVCFMT_LEFT,   m_ColWidths[LOGCOL_DIRECTION]);
-    InsertColumn(LOGCOL_ENDPOINT,   "Endpoint",   LVCFMT_CENTER, m_ColWidths[LOGCOL_ENDPOINT]);
-    InsertColumn(LOGCOL_TIME,       "Time",       LVCFMT_RIGHT,  m_ColWidths[LOGCOL_TIME]);
-    InsertColumn(LOGCOL_FUNCTION,   "Function",   LVCFMT_LEFT,   m_ColWidths[LOGCOL_FUNCTION]);
-    InsertColumn(LOGCOL_DATA,       "Data",       LVCFMT_LEFT,   m_ColWidths[LOGCOL_DATA]);
-    InsertColumn(LOGCOL_RESULT,     "Result",     LVCFMT_RIGHT,  m_ColWidths[LOGCOL_RESULT]);
+    InsertColumn(LOGCOL_EXPAND,     _T("*"),          LVCFMT_CENTER, m_ColWidths[LOGCOL_EXPAND]);
+    InsertColumn(LOGCOL_SEQUENCE,   _T("Seq"),        LVCFMT_RIGHT,  m_ColWidths[LOGCOL_SEQUENCE]);
+    InsertColumn(LOGCOL_DIRECTION,  _T("Dir"),        LVCFMT_LEFT,   m_ColWidths[LOGCOL_DIRECTION]);
+    InsertColumn(LOGCOL_ENDPOINT,   _T("Endpoint"),   LVCFMT_CENTER, m_ColWidths[LOGCOL_ENDPOINT]);
+    InsertColumn(LOGCOL_TIME,       _T("Time"),       LVCFMT_RIGHT,  m_ColWidths[LOGCOL_TIME]);
+    InsertColumn(LOGCOL_FUNCTION,   _T("Function"),   LVCFMT_LEFT,   m_ColWidths[LOGCOL_FUNCTION]);
+    InsertColumn(LOGCOL_DATA,       _T("Data"),       LVCFMT_LEFT,   m_ColWidths[LOGCOL_DATA]);
+    InsertColumn(LOGCOL_RESULT,     _T("Result"),     LVCFMT_RIGHT,  m_ColWidths[LOGCOL_RESULT]);
 }
 
 void CURBLogListCtrl::AutoFitColumns(void)
@@ -314,7 +314,7 @@ BOOL CURBLogListCtrl::GetURBText(CURB *pURB, int nLine, int nCol, LPTSTR sBuffer
         break;
 
     case LOGCOL_TIME:
-        _stprintf(sBuffer, "%5.3f", pURB->GetTime(m_parURB) / 1000.0f);
+        _stprintf(sBuffer, _T("%5.3f"), pURB->GetTime(m_parURB) / 1000.0f);
         break;
 
     case LOGCOL_FUNCTION:
@@ -328,7 +328,7 @@ BOOL CURBLogListCtrl::GetURBText(CURB *pURB, int nLine, int nCol, LPTSTR sBuffer
     case LOGCOL_RESULT:
         if(pURB->IsComingUp())
         {
-            _stprintf(sBuffer, "0x%08x", pURB->GetStatus());
+            _stprintf(sBuffer, _T("0x%08x"), pURB->GetStatus());
         }
         else
         {

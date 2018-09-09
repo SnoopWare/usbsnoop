@@ -21,7 +21,7 @@ CReadmeDlg::CReadmeDlg(CWnd* pParent /*=NULL*/)
 	//}}AFX_DATA_INIT
     m_fCourier.CreateFont(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, ANSI_CHARSET, 
         OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FF_MODERN,
-        "Courier New");
+        _T("Courier New"));
 }
 
 CReadmeDlg::~CReadmeDlg(void)
@@ -50,9 +50,9 @@ BOOL CReadmeDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 	
-    m_cReadme.SetWindowText("Couldn't find readme data...");
+    m_cReadme.SetWindowText(_T("Couldn't find readme data..."));
 
-	HRSRC hRsrc = FindResource(AfxGetResourceHandle(), "README", "TEXT");
+	HRSRC hRsrc = FindResource(AfxGetResourceHandle(), _T("README"), _T("TEXT"));
     if(NULL != hRsrc)
     {
         HGLOBAL hGlobal = LoadResource(AfxGetResourceHandle(), hRsrc);

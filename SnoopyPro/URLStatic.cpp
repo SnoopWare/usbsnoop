@@ -86,16 +86,16 @@ void CURLStatic::OnLButtonUp(UINT nFlags, CPoint point)
 		if(ERROR_SUCCESS == RegQueryValue(hReg, NULL, url.GetBuffer(lSize), &lSize))
 		{
 			url.ReleaseBuffer();
-			if(-1 != url.Find("%1"))
+			if(-1 != url.Find(_T("%1")))
             {
-                url.Replace("%1", s);
+                url.Replace(_T("%1"), s);
             }
             else
             {
                 url += " ";
                 url += s;
             }
-			WinExec(url, SW_NORMAL);
+			WinExec((LPCSTR)(LPCTSTR)url, SW_NORMAL);
 		}
 		RegCloseKey(hReg);
 		hReg = NULL;
@@ -114,9 +114,9 @@ BOOL CURLStatic::CheckMouse(void)
     return PtInRect(rcExtents, ptMouse);
 }
 
-UINT CURLStatic::OnNcHitTest(CPoint point) 
+LRESULT CURLStatic::OnNcHitTest(CPoint point) 
 {
-	UINT nResult = CStatic::OnNcHitTest(point);
+	LRESULT nResult = CStatic::OnNcHitTest(point);
     if(HTCLIENT == nResult)
     {
         // tofix: this doesn't seem to have an effect!

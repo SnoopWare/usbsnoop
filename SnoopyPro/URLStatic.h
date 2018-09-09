@@ -39,7 +39,7 @@ protected:
 	//{{AFX_MSG(CURLStatic)
 	afx_msg void OnPaint();
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
-	afx_msg UINT OnNcHitTest(CPoint point);
+	afx_msg LRESULT OnNcHitTest(CPoint point);
 	//}}AFX_MSG
 
 	DECLARE_MESSAGE_MAP()
