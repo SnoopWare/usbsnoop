@@ -2,6 +2,8 @@
 
 USBSnoop is a package designed to log USB packets going from your Windows device driver to your hardware device and vice-versa. The latest version is designed to work on modern 32-bit and 64-bit Windows systems.
 
+USBSnoop is a tool for advanced USB programmers. It allows you to record each URB sent to and received from a USB device. This traces can be saved, loaded, edited, printed and combined into new traces.
+
 ## How this is done?
 
 Original version was using a WDM filter driver, which can filter all traffic flowing between the selected USB device driver (ECI USB modem driver for instance) and USBD (which drivers the USB bus). Later versions use the same principles, but work even if the driver above was not passing USB request down to the driver stack. Obviously, it's based on Windows internals and might therefore not be portable.

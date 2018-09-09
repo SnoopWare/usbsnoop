@@ -19,6 +19,48 @@
 	Fixed formatting slightly to make blank lines sane,
 	and better deliniate each packet.
 
+--/--/--:
+
+	V 0.22
+	
+	Bumped version info to 0.22, fixed a bug in the exporter where it
+	wouldn't take the filename selected as output file. Added XML output
+	for isochronous transfers.
+
+--/--/--:
+
+	V 0.21
+
+	Added export functionality. The only export format is XML for now, and
+	only a very limited amount of information is exported for each URB.
+	The selection of URB's is not implemented either, so trim down the log
+	before invoking 'File', 'Export' to limit the amount of data exported.
+
+--/--/--:
+
+	V 0.20
+
+	Added endpoint number as a column in the log.
+
+	Added some analyzing log functionality: should figure out better
+	which URBs are IN or OUT or INOUT and determines endpoint addresses
+
+	Fixed isochronous IN transferbuffer handling: correctly gathers
+	the individual buffers with the (variable) length
+
+	Now adding the filter in front of the LowerFilters registry
+	entry, so it's loaded first.
+
+	Timestamping mess: should store plug-in stamp in front
+	of trace and UI can either offset or not...
+	-> allows comparison of timestamps across traces 
+
+	Figure out why the update cmd ui in the devices dialog
+	doesn't work... because the updatecmdui gets called on
+	command invocation as well... doh
+
+	sister device objects on newly arrived devices... wuah!
+
 15/07/2001: Benoit Papillault <benoit.papillault@free.fr>
 
 	V 0.13
