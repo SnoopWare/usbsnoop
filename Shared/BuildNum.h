@@ -9,7 +9,7 @@
 
 #define _VERSION_MAJOR_         0
 #define _VERSION_MINOR_         26
-#define _VERSION_BUILD_         0
+#define _VERSION_BUILD_         1
 #define _VERSION_SUBBUILD_      0
 
 #define _VERSION_STR_           "0.26G.1"
