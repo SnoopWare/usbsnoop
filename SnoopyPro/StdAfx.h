@@ -40,6 +40,21 @@ typedef ULONG PDEVICE_OBJECT;
 
 #include "malloc.h"
 
+#define SNOOPYPRO_MANIFEST(cpu)                 \
+    "/manifestdependency:\"type='win32'         \
+     name='Microsoft.Windows.Common-Controls'   \
+     version='6.0.0.0'                          \
+     processorArchitecture='"cpu"'              \
+     publicKeyToken='6595b64144ccf1df'          \
+     language='*'\""
+
+#if defined _M_IX86
+    #pragma comment(linker, SNOOPYPRO_MANIFEST("x86"))
+#elif defined _M_X64
+    #pragma comment(linker, SNOOPYPRO_MANIFEST("amd64"))
+#else
+    #pragma comment(linker, SNOOPYPRO_MANIFEST("*"))
+#endif
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.

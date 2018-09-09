@@ -2,6 +2,14 @@ cmake_minimum_required(VERSION 3.0)
 
 project(usbsnoop)
 
+include(${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/TargetArch/cmake/TargetArch.cmake)
+
+target_architecture(ARCH)
+message(STATUS "Target architecture is \"${ARCH}\"")
+
+enable_language(ASM_MASM)
+enable_language(RC)
+
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/FindWDK/cmake")
 find_package(WDK REQUIRED)
 
@@ -53,6 +61,22 @@ target_include_directories(${SNOOPYPRO} PRIVATE
 target_include_directories(${SNOOPYPRO} PRIVATE
 	"${CMAKE_CURRENT_SOURCE_DIR}/Shared")
 set_target_properties(${SNOOPYPRO} PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS /MANIFEST:NO")
+
+if (${ARCH} STREQUAL "i386")
+target_compile_definitions(${SNOOPYPRO} PUBLIC SNOOPYPRO_MANIFEST="${SNOOPYPRO}.exe.x86.manifest")
+add_custom_command(TARGET ${SNOOPYPRO}
+	POST_BUILD COMMAND
+	"mt.exe" -manifest \"${CMAKE_CURRENT_SOURCE_DIR}\\${SNOOPYPRO}\\${SNOOPYPRO}.exe.x86.manifest\" -outputresource:\"$<TARGET_FILE:${SNOOPYPRO}>\"\;\#1
+	COMMENT "Adding custom manifest file...")
+elseif (${ARCH} STREQUAL "x86_64")
+target_compile_definitions(${SNOOPYPRO} PUBLIC SNOOPYPRO_MANIFEST="${SNOOPYPRO}.exe.x64.manifest")
+add_custom_command(TARGET ${SNOOPYPRO}
+	POST_BUILD COMMAND
+	"mt.exe" -manifest \"${CMAKE_CURRENT_SOURCE_DIR}\\${SNOOPYPRO}\\${SNOOPYPRO}.exe.x64.manifest\" -outputresource:\"$<TARGET_FILE:${SNOOPYPRO}>\"\;\#1
+	COMMENT "Adding custom manifest file...")
+else()
+message(FATAL_ERROR "Unsupported target architecture \"${ARCH}\"")
+endif()
 
 set_target_properties(${SNOOPYPRO}
     PROPERTIES
