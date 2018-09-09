@@ -97,7 +97,7 @@ BOOL CSetupDIMgr::GetRegProperty(CString &sProperty, DWORD dwWhich)
 				while(0 != _tcslen(sScanner))
 				{
 					sProperty += sScanner;
-					sScanner += _tcslen(sScanner) + sizeof(TCHAR);
+					sScanner += _tcslen(sScanner) + 1;
 					if(0 != _tcslen(sScanner))
 					{
 						sProperty += ",";
@@ -114,9 +114,10 @@ BOOL CSetupDIMgr::GetRegProperty(CString &sProperty, DWORD dwWhich)
 
 		// if the device name starts with \Device, cut that off (all
         // devices will start with it, so it is redundant)
-		if(_tcsncmp(deviceName, _T("\\Device"), 7) == 0)
+		if(_tcsncmp(deviceName, _T("\\Device"), _tcslen(_T("\\Device"))) == 0)
         {
-            memmove(deviceName, deviceName+7, (_tcslen(deviceName)-6)*sizeof(_TCHAR));
+            memmove(deviceName, deviceName + _tcslen(_T("\\Device")) * sizeof(_TCHAR),
+				(_tcslen(deviceName) - _tcslen(_T("\\Device")) + 1) * sizeof(_TCHAR));
         }
 
 		sProperty = deviceName;

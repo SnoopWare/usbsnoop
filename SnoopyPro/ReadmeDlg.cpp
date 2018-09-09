@@ -59,19 +59,12 @@ BOOL CReadmeDlg::OnInitDialog()
         if(NULL != hGlobal)
         {
             PVOID pReadme = LockResource(hGlobal);
-            if(NULL != pReadme)
-            {
-                DWORD dwSize = SizeofResource(AfxGetResourceHandle(), hRsrc);
-                LPTSTR pBuffer = new TCHAR[dwSize + 1];
-                if(NULL != pBuffer)
-                {
-                    CopyMemory(pBuffer, pReadme, dwSize);
-                    pBuffer[dwSize] = 0x00;
-                    m_cReadme.SetWindowText(pBuffer);
-                    delete pBuffer;
-                    pBuffer = NULL;
-                }
-            }
+			if (NULL != pReadme)
+			{
+				DWORD dwSize = SizeofResource(AfxGetResourceHandle(), hRsrc) / sizeof(TCHAR);
+				CString readme((TCHAR*)pReadme, dwSize);
+				m_cReadme.SetWindowText(readme.GetBuffer());
+			}
         }
     }
 
