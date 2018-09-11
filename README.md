@@ -43,7 +43,9 @@ cd build
 cmake ..
 ```
 
-Then open the generated Visual Studio solution and build it. The resulting executable will be placed in `build\$(Configuration)`, e.g. in `build\Debug`.
+Then open the generated Visual Studio solution and build it. During build, password inputs will be prompted for generation and use of SSL certificates. For local use you may choose a simple password, e.g. "x".
+
+The resulting executable will be placed in `build\$(Configuration)`, e.g. in `build\Debug`.
 
 ## Deployment
 
