@@ -24,21 +24,23 @@ set(WINSDK ${WDK_ROOT}/bin/${WDK_VERSION}/x86)
 set(OPENSSL "openssl.exe")
 set(MAKECERT "${WINSDK}/makecert.exe")
 set(CERTUTIL "certutil.exe")
+set(CERTMGR "certmgr.exe")
+set(CERT2SPC "cert2spc.exe")
 set(PVK2PFX "${WINSDK}/pvk2pfx.exe")
 set(SIGNTOOL "${WINSDK}/signtool.exe")
 
-add_custom_command(OUTPUT ${SNOOPYPRO_CERT}_SPC.pfx
-	COMMAND "${CMAKE_COMMAND}" -E remove ${SNOOPYPRO_CERT}.pvk ${SNOOPYPRO_CERT}.cer ${SNOOPYPRO_CERT}.pfx
-	COMMAND "${MAKECERT}" -r -pe -n \"CN=USBSnoop Kernel Drivers Signature\" -ss CA -sr CurrentUser -a sha256 -cy authority -sky signature -sv ${SNOOPYPRO_CERT}.pvk ${SNOOPYPRO_CERT}.cer
-	COMMAND "${CERTUTIL}" -user -addstore Root ${SNOOPYPRO_CERT}.cer
-	COMMAND "${CMAKE_COMMAND}" -E remove ${SNOOPYPRO_CERT}_SPC.pvk ${SNOOPYPRO_CERT}_SPC.cer ${SNOOPYPRO_CERT}_SPC.pfx
-	COMMAND "${MAKECERT}" -pe -n \"CN=USBSnoop Kernel Drivers Signature SPC\" -a sha256 -cy end -sky signature -ic ${SNOOPYPRO_CERT}.cer -iv ${SNOOPYPRO_CERT}.pvk -sv ${SNOOPYPRO_CERT}_SPC.pvk ${SNOOPYPRO_CERT}_SPC.cer
-	COMMAND "${PVK2PFX}" -pvk ${SNOOPYPRO_CERT}_SPC.pvk -spc ${SNOOPYPRO_CERT}_SPC.cer -pfx ${SNOOPYPRO_CERT}_SPC.pfx
+add_custom_command(OUTPUT ${SNOOPYPRO_CERT}.pfx
+	COMMAND "${CMAKE_COMMAND}" -E remove ${SNOOPYPRO_CERT}.pvk ${SNOOPYPRO_CERT}.cer ${SNOOPYPRO_CERT}.pfx ${SNOOPYPRO_CERT}.spc
+	COMMAND "${MAKECERT}" -b 09/09/2018 -r -n \"CN=USBSnoop Kernel Drivers Signature\" -sv ${SNOOPYPRO_CERT}.pvk ${SNOOPYPRO_CERT}.cer
+	COMMAND "${CERTMGR}" -add ${SNOOPYPRO_CERT}.cer -s -r localMachine ROOT
+	COMMAND "${CERTMGR}" -add ${SNOOPYPRO_CERT}.cer -s -r localMachine TRUSTEDPUBLISHER
+	COMMAND "${CERT2SPC}" ${SNOOPYPRO_CERT}.cer ${SNOOPYPRO_CERT}.spc
+	COMMAND "${PVK2PFX}" -pvk ${SNOOPYPRO_CERT}.pvk -spc ${SNOOPYPRO_CERT}.spc -pfx ${SNOOPYPRO_CERT}.pfx
 	WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
 	COMMENT "Generating SSL certificates to sign the drivers and executable ...")
 
 add_custom_target(${SNOOPYPRO_CERT}
-	DEPENDS ${SNOOPYPRO_CERT}_SPC.pfx)
+	DEPENDS ${SNOOPYPRO_CERT}.pfx)
 
 set(USBSNOOP USBSnoop)
 
@@ -56,7 +58,7 @@ target_include_directories(${USBSNOOP} PRIVATE
 
 add_custom_command(TARGET ${USBSNOOP}
 	POST_BUILD
-	COMMAND "${SIGNTOOL}" sign /v /f ${SNOOPYPRO_CERT}_SPC.pfx /t http://timestamp.verisign.com/scripts/timstamp.dll $<TARGET_FILE:${USBSNOOP}>
+	COMMAND "${SIGNTOOL}" sign /v /f ${SNOOPYPRO_CERT}.pfx /t http://timestamp.verisign.com/scripts/timstamp.dll $<TARGET_FILE:${USBSNOOP}>
         COMMENT "Signing $<TARGET_FILE:${USBSNOOP} ...")
 
 set(USBSNPYS USBSnpys)
@@ -75,7 +77,7 @@ target_include_directories(${USBSNPYS} PRIVATE
 
 add_custom_command(TARGET ${USBSNOOP}
 	POST_BUILD
-	COMMAND "${SIGNTOOL}" sign /v /f ${SNOOPYPRO_CERT}_SPC.pfx /t http://timestamp.verisign.com/scripts/timstamp.dll $<TARGET_FILE:${USBSNPYS}>
+	COMMAND "${SIGNTOOL}" sign /v /f ${SNOOPYPRO_CERT}.pfx /t http://timestamp.verisign.com/scripts/timstamp.dll $<TARGET_FILE:${USBSNPYS}>
 	COMMENT "Signing $<TARGET_FILE:${USBSNPYS} ...")
 
 set(SNOOPYPRO SnoopyPro)
@@ -102,14 +104,15 @@ target_compile_definitions(${SNOOPYPRO} PUBLIC SNOOPYPRO_MANIFEST="${SNOOPYPRO}.
 add_custom_command(TARGET ${SNOOPYPRO}
 	POST_BUILD 
 	COMMAND "mt.exe" -manifest \"${CMAKE_CURRENT_SOURCE_DIR}\\${SNOOPYPRO}\\${SNOOPYPRO}.exe.x86.manifest\" -outputresource:\"$<TARGET_FILE:${SNOOPYPRO}>\"\;\#1
-	COMMAND "${SIGNTOOL}" sign /v /f ${SNOOPYPRO_CERT}_SPC.pfx /t http://timestamp.verisign.com/scripts/timstamp.dll $<TARGET_FILE:${SNOOPYPRO}>
+	COMMAND "${SIGNTOOL}" sign /v /f ${SNOOPYPRO_CERT}.pfx /t http://timestamp.verisign.com/scripts/timstamp.dll $<TARGET_FILE:${SNOOPYPRO}>
 	COMMENT "Adding custom manifest file and signing the executable ...")
 elseif (${ARCH} STREQUAL "x86_64")
 target_compile_definitions(${SNOOPYPRO} PUBLIC SNOOPYPRO_MANIFEST="${SNOOPYPRO}.exe.x64.manifest")
 add_custom_command(TARGET ${SNOOPYPRO}
 	POST_BUILD
 	COMMAND "mt.exe" -manifest \"${CMAKE_CURRENT_SOURCE_DIR}\\${SNOOPYPRO}\\${SNOOPYPRO}.exe.x64.manifest\" -outputresource:\"$<TARGET_FILE:${SNOOPYPRO}>\"\;\#1
-	COMMAND "${SIGNTOOL}" sign /v /f ${SNOOPYPRO_CERT}_SPC.pfx /t http://timestamp.verisign.com/scripts/timstamp.dll $<TARGET_FILE:${SNOOPYPRO}>
+	COMMAND "${SIGNTOOL}" sign /v /f ${SNOOPYPRO_CERT}_SPC.pfx /t http://timestamp.digicert.com $<TARGET_FILE:${SNOOPYPRO}>
+	COMMAND "${SIGNTOOL}" sign /td sha256 /fd sha256 /v /f ${SNOOPYPRO_CERT}_SPC.pfx /tr http://timestamp.digicert.com $<TARGET_FILE:${SNOOPYPRO}>
 	COMMENT "Adding custom manifest file and signing the executable ...")
 else()
 message(FATAL_ERROR "Unsupported target architecture \"${ARCH}\"")
