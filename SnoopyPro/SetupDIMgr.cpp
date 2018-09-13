@@ -468,7 +468,26 @@ BOOL CSetupDIMgr::InstallService(LPCTSTR sFilterServiceName, LPCTSTR sFilterBina
 				SERVICE_ERROR_NORMAL, sFilterBinaryPath, NULL, NULL, NULL, NULL, NULL);
 			if(hService)
             {
-                bResult = TRUE;
+				SERVICE_STATUS_PROCESS status;
+				do
+				{
+					DWORD needed = 0;
+					if (QueryServiceStatusEx(hService, SC_STATUS_PROCESS_INFO, (LPBYTE)&status, sizeof(status), &needed) == 0)
+					{
+						TRACE("QueryServiceStatusEx(Service) failed with %08x\n", GetLastError());
+					}
+				} while (status.dwCurrentState == SERVICE_START_PENDING);
+
+				if (status.dwCurrentState == SERVICE_RUNNING)
+					bResult = TRUE;
+				else
+				{
+					TRACE("CreateService(Service) failed to start the service\n");
+
+					// Remove service, since it's not working properly.
+					RemoveService(sFilterServiceName);
+				}
+
 				CloseServiceHandle(hService);
 			}
 			else
