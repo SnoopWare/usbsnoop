@@ -31,7 +31,7 @@ Prerequisites:
  * Windows Driver Kit (WDK): https://docs.microsoft.com/en-us/windows-hardware/drivers/download-the-wdk
  * CMake for Windows
 
-Run the following commands from the command line:
+In order to get the actual code and configure the build rules, run the following commands from the command line:
 
 ```
 git clone https://github.com/dmikushin/usbsnoop.git
@@ -49,7 +49,15 @@ The resulting executable will be placed in `build\$(Configuration)`, e.g. in `bu
 
 ## Deployment
 
-To run it on a 64 bit Vista or Win7 machine, you need to boot while pressing F8, and then continue with the option that allows you to run unsigned drivers. Then run SnoopyPro as administrator. It can be a bit flaky, and can sometimes take multiple attempts to get it all working. Sometimes the order seems to matter (ie. of installing the Snoopy bridge, enabling snooping of the particular device, and actually plugging the device in.) 
+The target system must be configured to enable installation of self-signed drivers:
+
+```
+Bcdedit.exe -set TESTSIGNING ON
+```
+
+The usbsnoop executable is supposed to be always run as Administrator, as it has to deal with system service management.
+
+It can be a bit flaky, and can sometimes take multiple attempts to get it all working. Sometimes the order seems to matter (ie. of installing the Snoopy bridge, enabling snooping of the particular device, and actually plugging the device in.) 
 
 ## LEGAL
 

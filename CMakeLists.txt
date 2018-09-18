@@ -31,7 +31,7 @@ set(SIGNTOOL "${WINSDK}/signtool.exe")
 
 add_custom_command(OUTPUT ${SNOOPYPRO_CERT}.pfx
 	COMMAND "${CMAKE_COMMAND}" -E remove ${SNOOPYPRO_CERT}.pvk ${SNOOPYPRO_CERT}.cer ${SNOOPYPRO_CERT}.pfx ${SNOOPYPRO_CERT}.spc
-	COMMAND "${MAKECERT}" -b 09/09/2018 -r -n \"CN=USBSnoop Kernel Drivers Signature\" -sv ${SNOOPYPRO_CERT}.pvk ${SNOOPYPRO_CERT}.cer
+	COMMAND "${MAKECERT}" -b 09/09/2018 -r -n \"CN=SnoopWare\" -sv ${SNOOPYPRO_CERT}.pvk ${SNOOPYPRO_CERT}.cer
 	COMMAND "${CERTMGR}" -add ${SNOOPYPRO_CERT}.cer -s -r localMachine ROOT
 	COMMAND "${CERTMGR}" -add ${SNOOPYPRO_CERT}.cer -s -r localMachine TRUSTEDPUBLISHER
 	COMMAND "${CERT2SPC}" ${SNOOPYPRO_CERT}.cer ${SNOOPYPRO_CERT}.spc
@@ -66,6 +66,7 @@ set(USBSNPYS USBSnpys)
 
 file(GLOB_RECURSE USBSNPYS_SRC
 	"${CMAKE_CURRENT_SOURCE_DIR}/${USBSNPYS}/*.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/${USBSNPYS}/*.rc"
 	"${CMAKE_CURRENT_SOURCE_DIR}/Shared/*.cpp")
 
 wdk_add_driver(${USBSNPYS} ${USBSNPYS_SRC})
@@ -85,7 +86,6 @@ set(SNOOPYPRO SnoopyPro)
 
 file(GLOB_RECURSE SNOOPYPRO_SRC
 	"${CMAKE_CURRENT_SOURCE_DIR}/${SNOOPYPRO}/*.cpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/${SNOOPYPRO}/*.rc"
 	"${CMAKE_CURRENT_SOURCE_DIR}/${SNOOPYPRO}/*.rc")
 
 add_executable(${SNOOPYPRO} ${SNOOPYPRO_SRC})
@@ -113,8 +113,7 @@ target_compile_definitions(${SNOOPYPRO} PUBLIC SNOOPYPRO_MANIFEST="${SNOOPYPRO}.
 add_custom_command(TARGET ${SNOOPYPRO}
 	POST_BUILD
 	COMMAND "mt.exe" -manifest \"${CMAKE_CURRENT_SOURCE_DIR}\\${SNOOPYPRO}\\${SNOOPYPRO}.exe.x64.manifest\" -outputresource:\"$<TARGET_FILE:${SNOOPYPRO}>\"\;\#1
-	COMMAND "${SIGNTOOL}" sign /v /f ${SNOOPYPRO_CERT}_SPC.pfx /t http://timestamp.digicert.com $<TARGET_FILE:${SNOOPYPRO}>
-	COMMAND "${SIGNTOOL}" sign /td sha256 /fd sha256 /v /f ${SNOOPYPRO_CERT}_SPC.pfx /tr http://timestamp.digicert.com $<TARGET_FILE:${SNOOPYPRO}>
+	COMMAND "${SIGNTOOL}" sign /v /f ${SNOOPYPRO_CERT}.pfx /t http://timestamp.digicert.com $<TARGET_FILE:${SNOOPYPRO}>
 	COMMENT "Adding custom manifest file and signing the executable ...")
 else()
 message(FATAL_ERROR "Unsupported target architecture \"${ARCH}\"")
