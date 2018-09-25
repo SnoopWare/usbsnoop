@@ -1,3 +1,14 @@
+2018: Dmitry Mikushin <dmitry@parallel-computing.pro>
+
+	V 0.26g.1
+
+	First release of USBSnoop since 2010. The code has been modernized
+	to use Visual Studio 2017 and CMake building system.
+
+	The functionality stays the same.
+
+	Tested on Windows 10 64-bit.
+
 2010: Graeme W. Gill <graeme@argyllcms.com>
 
 	V 0.26g
