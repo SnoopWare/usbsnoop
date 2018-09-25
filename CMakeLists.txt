@@ -77,7 +77,7 @@ target_include_directories(${USBSNPYS} PRIVATE
 target_include_directories(${USBSNPYS} PRIVATE
 	"${CMAKE_CURRENT_SOURCE_DIR}/Shared")
 
-add_custom_command(TARGET ${USBSNOOP}
+add_custom_command(TARGET ${USBSNPYS}
 	POST_BUILD
 	COMMAND "${SIGNTOOL}" sign /v /f ${SNOOPYPRO_CERT}.pfx /t http://timestamp.verisign.com/scripts/timstamp.dll $<TARGET_FILE:${USBSNPYS}>
 	COMMENT "Signing $<TARGET_FILE:${USBSNPYS} ...")
