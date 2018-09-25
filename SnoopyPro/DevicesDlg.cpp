@@ -576,7 +576,7 @@ BOOL CDevicesDlg::PreTranslateMessage(MSG* pMsg)
 	return CDialog::PreTranslateMessage(pMsg);
 }
 
-void CDevicesDlg::OnTimer(UINT nIDEvent) 
+void CDevicesDlg::OnTimer(UINT_PTR nIDEvent) 
 {
     OnRefreshSnpysStatus();
     

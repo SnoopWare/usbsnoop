@@ -31,7 +31,11 @@ Prerequisites:
  * Windows Driver Kit (WDK): https://docs.microsoft.com/en-us/windows-hardware/drivers/download-the-wdk
  * CMake for Windows
 
-In order to get the actual code and configure the build rules, run the following commands from the command line:
+Note you must build 32-bit version for 32-bit Windows and 64-bit for 64-bit Windows, respectively. This is due to bundling of drivers for the corresponding architecture within the USBSnoop executable. 32-bit drivers won't work on 64-bit Windows and vise versa.
+
+In order to get the actual code and configure the build rules, run the following commands from the command prompt:
+
+32-bit:
 
 ```
 git clone https://github.com/dmikushin/usbsnoop.git
@@ -43,21 +47,31 @@ cd build
 cmake ..
 ```
 
+64-bit:
+
+```
+git clone https://github.com/dmikushin/usbsnoop.git
+cd usbsnoop
+git submodule init
+git submodule update
+mkdir build
+cd build
+cmake -DCMAKE_GENERATOR_PLATFORM=x64 ..
+```
+
 Then open the generated Visual Studio solution and build it. During build, password inputs will be prompted for generation and use of SSL certificates. For local use you may choose a simple password, e.g. "x".
 
-The resulting executable will be placed in `build\$(Configuration)`, e.g. in `build\Debug`.
+The resulting executable with (architecture suffix appended) will be placed into `build\$(Configuration)`, e.g. into `build\Debug`.
 
 ## Deployment
 
-The target system must be configured to enable installation of self-signed drivers:
+The target system must be configured to enable installation of self-signed drivers. Do the following from the Administrator command prompt:
 
 ```
 Bcdedit.exe -set TESTSIGNING ON
 ```
 
-The usbsnoop executable is supposed to be always run as Administrator, as it has to deal with system service management.
-
-It can be a bit flaky, and can sometimes take multiple attempts to get it all working. Sometimes the order seems to matter (ie. of installing the Snoopy bridge, enabling snooping of the particular device, and actually plugging the device in.) 
+The USBSnoop executable is supposed to be always run as Administrator, as it has to deal with system service management. In order to run (e.g. Debug) USBSnoop for within Visual Studio, it also has to be started on behalf of Administrator. 
 
 ## LEGAL
 

@@ -99,7 +99,7 @@ target_include_directories(${SNOOPYPRO} PRIVATE
 target_include_directories(${SNOOPYPRO} PRIVATE
 	"${CMAKE_CURRENT_SOURCE_DIR}/Shared")
 set_target_properties(${SNOOPYPRO} PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS /MANIFEST:NO")
-set_target_properties(${SNOOPYPRO} PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
+set_target_properties(${SNOOPYPRO} PROPERTIES OUTPUT_NAME ${PROJECT_NAME}_${ARCH})
 
 if (${ARCH} STREQUAL "i386")
 target_compile_definitions(${SNOOPYPRO} PUBLIC SNOOPYPRO_MANIFEST="${SNOOPYPRO}.exe.x86.manifest")

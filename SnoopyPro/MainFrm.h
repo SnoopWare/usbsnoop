@@ -57,9 +57,9 @@ protected:
 	//{{AFX_MSG(CMainFrame)
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnViewDevices();
-	afx_msg void OnTimer(UINT nIDEvent);
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	//}}AFX_MSG
-    afx_msg BOOL OnDeviceChange(UINT nEventType, DWORD dwData);
+    afx_msg BOOL OnDeviceChange(UINT nEventType, DWORD_PTR dwData);
 	DECLARE_MESSAGE_MAP()
 };
 

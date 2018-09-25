@@ -478,15 +478,7 @@ BOOL CSetupDIMgr::InstallService(LPCTSTR sFilterServiceName, LPCTSTR sFilterBina
 					}
 				} while (status.dwCurrentState == SERVICE_START_PENDING);
 
-				if (status.dwCurrentState == SERVICE_RUNNING)
-					bResult = TRUE;
-				else
-				{
-					TRACE("CreateService(Service) failed to start the service\n");
-
-					// Remove service, since it's not working properly.
-					RemoveService(sFilterServiceName);
-				}
+				bResult = TRUE;
 
 				CloseServiceHandle(hService);
 			}

@@ -193,7 +193,7 @@ void CMainFrame::GetURBS(void)
     }
 }
 
-BOOL CMainFrame::OnDeviceChange(UINT nEventType, DWORD dwData)
+BOOL CMainFrame::OnDeviceChange(UINT nEventType, DWORD_PTR dwData)
 {
     TRACE("CMainFrame::OnWMDeviceChange(0x%08x, 0x%08x)\n", nEventType, dwData);
     switch(nEventType)
@@ -247,7 +247,7 @@ BOOL CMainFrame::OnDeviceChange(UINT nEventType, DWORD dwData)
     return CMDIFrameWnd::OnDeviceChange(nEventType, dwData);
 }
 
-void CMainFrame::OnTimer(UINT nIDEvent) 
+void CMainFrame::OnTimer(UINT_PTR nIDEvent) 
 {
     GetApp().ScanForNewSnoopedDevices();	
 	CMDIFrameWnd::OnTimer(nIDEvent);

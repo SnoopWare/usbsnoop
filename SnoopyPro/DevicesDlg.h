@@ -74,7 +74,7 @@ protected:
 	afx_msg void OnUnpackDrivers();
 	afx_msg void OnRestartDevice();
 	afx_msg void OnViewDevices();
-	afx_msg void OnTimer(UINT nIDEvent);
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnInstallRestart();
 	afx_msg void OnUninstallRestart();
 	//}}AFX_MSG
