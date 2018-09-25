@@ -64,7 +64,7 @@ LPCTSTR CChunkAllocator::AllocLine(LPCTSTR sLine, int nLen)
     {
         LPTSTR sResult = &m_CurrentChunk[m_nCurrentOffset];
         m_nCurrentOffset += nLen + sizeof(TCHAR);
-        memcpy(sResult, sLine, nLen + sizeof(TCHAR));
+		wcscpy(sResult, sLine);
         return sResult;
     }
 
@@ -428,7 +428,7 @@ void CURB::AddPropLine(LPCTSTR sFormat, ...)
     ASSERT(NULL != m_pCA);
     va_list params;
     va_start(params, sFormat);
-    _vstprintf(sBuffer, sFormat, params);
+    _vsntprintf(sBuffer, 2048, sFormat, params);
     va_end(params);
     m_arRenderedLines.Add(m_pCA->AllocLine(sBuffer, _tcslen(sBuffer)));
 }
