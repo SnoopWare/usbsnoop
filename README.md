@@ -61,7 +61,7 @@ cmake -DCMAKE_GENERATOR_PLATFORM=x64 ..
 
 Then open the generated Visual Studio solution and build it. During build, password inputs will be prompted for generation and use of SSL certificates. For local use you may choose a simple password, e.g. "x".
 
-The resulting executable with (architecture suffix appended) will be placed into `build\$(Configuration)`, e.g. into `build\Debug`.
+The resulting executable (with architecture suffix appended) will be placed into `build\$(Configuration)`, e.g. into `build\Debug`.
 
 ## Deployment
 
