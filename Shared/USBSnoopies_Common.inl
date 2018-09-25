@@ -91,29 +91,31 @@ LONG RemovePacket(IN CRingBuffer *pRingBuffer, PUCHAR pOutBuffer, PULONG pBuffer
     return 0;
 }
 
-CRingBuffer *DeviceArrival(PDEVICE_OBJECT DeviceObject, 
-                           char *HardwareID, 
-                           ULONG uTimeStampZero, 
-                           CRingBuffer *pRingBuffer)
+CRingBuffer *DeviceArrival(PDEVICE_OBJECT DeviceObject,
+	char *HardwareID,
+	ULONG uTimeStampZero,
+	CRingBuffer *pRingBuffer)
 {
-    if(GlobalData.Snooped.uCount < MAX_SNOOPY_DRIVERS - 1)
-    {
-        KdPrint(("USBSnpys - DeviceArrival: DO: 0x%08x on index %d\n", DeviceObject, GlobalData.Snooped.uCount));
-        KdPrint(("USBSnpys -   ... HardwareID: %S\n", HardwareID));
-        GlobalData.HasBeenRemoved[GlobalData.Snooped.uCount] = FALSE;
-        PSNOOPED_DEVICE pSnooped = &GlobalData.Snooped.Entry[GlobalData.Snooped.uCount];
-        pSnooped->uDeviceID = GlobalData.nNextDeviceID;
-        InterlockedIncrement(&GlobalData.nNextDeviceID);
-        pSnooped->DeviceObject = DeviceObject;
-        RtlZeroMemory(pSnooped->sHardwareIDs, MAX_PATH);
-        RtlCopyMemory(pSnooped->sHardwareIDs, HardwareID, MAX_PATH - 1);
-        pSnooped->uTimeStampZero = uTimeStampZero;
-        RtlCopyMemory(&pSnooped->Buffer, pRingBuffer, sizeof(CRingBuffer));
-        ++GlobalData.Snooped.uCount;
-        return &pSnooped->Buffer;
-    }
+	KdPrint(("USBSnpys - DeviceArrival: DO: 0x%08x on index %d\n", DeviceObject, GlobalData.Snooped.uCount));
+	KdPrint(("USBSnpys -   ... HardwareID: %S\n", HardwareID));
 
-    return NULL;
+	if (GlobalData.Snooped.uCount >= MAX_SNOOPY_DRIVERS - 1)
+	{
+		KdPrint(("USBSnpys - Not enough slots to add device with HardwareID: %S\n", HardwareID));
+		return NULL;
+	}
+
+	GlobalData.HasBeenRemoved[GlobalData.Snooped.uCount] = FALSE;
+	PSNOOPED_DEVICE pSnooped = &GlobalData.Snooped.Entry[GlobalData.Snooped.uCount];
+	pSnooped->uDeviceID = GlobalData.nNextDeviceID;
+	InterlockedIncrement(&GlobalData.nNextDeviceID);
+	pSnooped->DeviceObject = DeviceObject;
+	RtlZeroMemory(pSnooped->sHardwareIDs, MAX_PATH);
+	RtlCopyMemory(pSnooped->sHardwareIDs, HardwareID, MAX_PATH - 1);
+	pSnooped->uTimeStampZero = uTimeStampZero;
+	RtlCopyMemory(&pSnooped->Buffer, pRingBuffer, sizeof(CRingBuffer));
+	++GlobalData.Snooped.uCount;
+	return &pSnooped->Buffer;
 }
 
 ULONG DeviceRemoval(PDEVICE_OBJECT DeviceObject)
