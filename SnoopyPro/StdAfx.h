@@ -32,7 +32,7 @@
 #include <usbioctl.h>
 #include <usbdi.h>
 
-typedef ULONG PDEVICE_OBJECT;
+typedef struct _DEVICE_OBJECT *PDEVICE_OBJECT; // same as in <wdm.h>
 
 #include "Interface.h"
 
