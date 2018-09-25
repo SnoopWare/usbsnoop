@@ -12,10 +12,10 @@
 #define _VERSION_BUILD_         1
 #define _VERSION_SUBBUILD_      0
 
-#define _VERSION_STR_           "0.26G.1"
+#define _VERSION_STR_           "0.26G.2"
 
-#define _VERSION_WORD_          (0x2610)
-#define _VERSION_DWORD_         (0x00002610)
+#define _VERSION_WORD_          (0x2620)
+#define _VERSION_DWORD_         (0x00002620)
 
 #endif // !_BUILDNUM_H_INCLUDED_ 
 

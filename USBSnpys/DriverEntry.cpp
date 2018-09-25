@@ -53,8 +53,11 @@ extern "C" NTSTATUS __stdcall DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUN
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = DispatchIOCTL;
     DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = DispatchInternalIOCTL;
 
-    return CreateControllerObject(DriverObject);
+	NTSTATUS status = CreateControllerObject(DriverObject);
 
+	KdPrint(("USBSnpys " _VERSION_STR_ " - DriverEntry returned %ld\n", status));
+
+	return status;
 }
 
 //////////////////////////////////////////////////////////////////////////

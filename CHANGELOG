@@ -1,4 +1,13 @@
-2018: Dmitry Mikushin <dmitry@parallel-computing.pro>
+25/09/2018: Dmitry Mikushin <dmitry@parallel-computing.pro>
+
+	V 0.26g.2
+
+	Bugfixing release after more extensive testing.
+
+	Correcting type alias for PDRIVER_OBJECT.
+	Resolving crashes due to 1-byte char strings implications.
+
+24/09/2018: Dmitry Mikushin <dmitry@parallel-computing.pro>
 
 	V 0.26g.1
 
@@ -9,14 +18,14 @@
 
 	Tested on Windows 10 64-bit.
 
-2010: Graeme W. Gill <graeme@argyllcms.com>
+--/--/2010: Graeme W. Gill <graeme@argyllcms.com>
 
 	V 0.26g
 
 	Added 64 bit driver support. As a result, the DDK needs to be
 	used to build 64 bit USBSnoop, before the main application is built.
 
-2008/12/13: Graeme M. Gill <graeme@argyllcms.com>
+13/12/2008: Graeme M. Gill <graeme@argyllcms.com>
 
 	V 0.23g
 
@@ -80,10 +89,10 @@
 	line, instead of per byte
 
 	Added a PipeHandle/Endpoint matching table, which is used to display
-    endpoint numbers instead of Windows PipeHandle
+	endpoint numbers instead of Windows PipeHandle
 
 	Corrected display of URB_FUNCTION_SELECT_CONFIGURATION. Analize was wrong
-    in case of several interfaces.
+	in case of several interfaces.
 
 14/07/2001: Benoit Papillault <benoit.papillault@free.fr>
 
